@@ -157,12 +157,50 @@ export class SystemParamsService {
 
   /**
    * Busca os parâmetros da API
+   * NOTA: Como migramos para Funifier, não temos mais o endpoint /client/system-params
+   * Retornamos valores padrão para manter a compatibilidade
    */
   private async fetchFromApi(): Promise<SystemParams> {
     try {
-      const url = `/client/system-params`;
+      console.log('⚙️ Usando parâmetros padrão do sistema (Funifier mode)');
       
-      const params = await firstValueFrom(this.http.get<SystemParams>(environment.backend_url_base + url));
+      // Valores padrão para manter a aplicação funcionando
+      const params: SystemParams = {
+        max_level: { value: 100, inherited: false },
+        client_name: { value: 'Game4U', inherited: false },
+        coins_alias: { value: 'Moedas', inherited: false },
+        action_alias: { value: 'Ações', inherited: false },
+        points_alias: { value: 'Pontos', inherited: false },
+        reward_rules: { tiers: [] },
+        default_theme: { value: 'light', inherited: false },
+        enable_mascot: { value: false, inherited: false },
+        primary_color: { value: '#1976d2', inherited: false },
+        delivery_alias: { value: 'Entregas', inherited: false },
+        mascot_img_url: { value: '', inherited: false },
+        season_end_date: { value: '2025-12-31', inherited: false },
+        secondary_color: { value: '#424242', inherited: false },
+        default_language: { value: 'pt-BR', inherited: false },
+        points_per_level: { value: 1000, inherited: false },
+        enable_challenges: { value: true, inherited: false },
+        season_start_date: { value: '2025-01-01', inherited: false },
+        team_monthly_goal: { value: 10000, inherited: false },
+        allow_theme_switch: { value: true, inherited: false },
+        enable_achievements: { value: true, inherited: false },
+        enable_leaderboards: { value: true, inherited: false },
+        enable_update_notes: { value: false, inherited: false },
+        client_dark_logo_url: { value: '', inherited: false },
+        enable_virtual_store: { value: true, inherited: false },
+        points_exchange_rate: { value: 1, inherited: false },
+        client_light_logo_url: { value: '', inherited: false },
+        delivery_redirect_url: { value: '', inherited: false },
+        language_multilingual: { value: false, inherited: false },
+        enable_social_features: { value: true, inherited: false },
+        individual_monthly_goal: { value: 1000, inherited: false },
+        user_action_redirect_url: { value: '', inherited: false },
+        client_login_background_url: { value: '', inherited: false },
+        team_redirect_urls: {}
+      };
+      
       // Atualiza o cache
       this.cachedParams = params;
       this.lastFetchTime = Date.now();

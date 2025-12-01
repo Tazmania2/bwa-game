@@ -50,50 +50,18 @@ export class CampaignService {
 
   /**
    * Busca a campanha atual da API
+   * NOTA: Como migramos para Funifier, não temos mais o endpoint /campaign/current
+   * Retornamos uma campanha padrão baseada no ano atual
    */
   private async fetchCurrentCampaign(): Promise<Campaign> {
     try {
-      const response: any = await this.apiProvider.get('/campaign/current');
+      console.log('⚙️ Usando campanha padrão (Funifier mode)');
       
-      // Verifica diferentes formatos possíveis de resposta
-      let campaignData: any = null;
-      
-      if (response && response.data) {
-        // Formato: { data: { ... } }
-        campaignData = response.data;
-      } else if (response && response.id) {
-        // Formato: { id: 1, name: "...", ... }
-        campaignData = response;
-      } else if (Array.isArray(response) && response.length > 0) {
-        // Formato: [{ id: 1, name: "...", ... }]
-        campaignData = response[0];
-      } else {
-        throw new Error('Formato de resposta não reconhecido');
-      }
-      
-      // Valida se os campos obrigatórios existem
-      if (!campaignData.id || !campaignData.starts_at || !campaignData.finishes_at) {
-        console.warn('Campos obrigatórios ausentes na resposta:', campaignData);
-        throw new Error('Campos obrigatórios ausentes na resposta da API');
-      }
-      
-      const campaign: Campaign = {
-        id: campaignData.id,
-        created_at: campaignData.created_at || new Date().toISOString(),
-        name: campaignData.name || 'Temporada Atual',
-        client_id: campaignData.client_id || 'default',
-        starts_at: campaignData.starts_at,
-        finishes_at: campaignData.finishes_at,
-        isDefault: false // Campanha real da API
-      };
-
-      return campaign;
+      // Retorna campanha padrão para o ano atual
+      const defaultCampaign = this.getDefaultCampaign();
+      return defaultCampaign;
     } catch (error) {
       console.error('❌ Erro ao carregar campanha atual:', error);
-      console.error('📋 Detalhes do erro:', {
-        message: error instanceof Error ? error.message : 'Erro desconhecido',
-        stack: error instanceof Error ? error.stack : undefined
-      });
       
       // Retorna campanha padrão em caso de erro
       const defaultCampaign = this.getDefaultCampaign();
@@ -103,22 +71,24 @@ export class CampaignService {
 
   /**
    * Retorna uma campanha padrão em caso de erro
+   * Usa o ano inteiro como período da campanha
    */
   private getDefaultCampaign(): Campaign {
     const now = new Date();
-    const startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-    const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    const startDate = new Date(now.getFullYear(), 0, 1); // Janeiro 1
+    const endDate = new Date(now.getFullYear(), 11, 31); // Dezembro 31
 
     const defaultCampaign = {
       id: 1,
       created_at: startDate.toISOString(),
-      name: 'Temporada Padrão',
+      name: `Temporada ${now.getFullYear()}`,
       client_id: 'default',
       starts_at: this.formatToDateString(startDate),
       finishes_at: this.formatToDateString(endDate),
       isDefault: true // Indica que é uma campanha padrão de fallback
     };
 
+    console.log('📅 Campanha padrão criada:', defaultCampaign);
     return defaultCampaign;
   }
 
