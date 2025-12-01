@@ -333,14 +333,14 @@ textarea:focus-visible {
   align-items: center;
   justify-content: center;
   padding: $spacing-lg;
-  background: linear-gradient(135deg, rgba($warning-yellow, 0.1), rgba($warning-yellow, 0.05));
-  border: 1px dashed rgba($warning-yellow, 0.5);
-  border-radius: $border-radius-md;
+  background: linear-gradient(135deg, rgba($warning-orange, 0.1), rgba($warning-orange, 0.05));
+  border: 1px dashed rgba($warning-orange, 0.5);
+  border-radius: $border-radius-sm;
   min-height: 80px;
   
   .missing-data-text {
     color: $text-secondary;
-    font-size: $font-size-base;
+    font-size: $font-size-body;
     font-style: italic;
     text-align: center;
   }

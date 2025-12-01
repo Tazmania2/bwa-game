@@ -37,15 +37,35 @@ export class CompanyService {
     const request$ = this.funifierApi.get<any>(`/v3/player/${playerId}/status`).pipe(
       map(response => {
         // Extract companies from extra.companies
-        const companiesData = response.extra?.companies || [];
+        // Companies can be a string (separated by ; or ,) or an array
+        const companiesData = response.extra?.companies;
         
         // Handle case where data is not present
-        if (!Array.isArray(companiesData)) {
+        if (!companiesData) {
           console.warn('Companies data not available in player status');
           return [];
         }
         
-        let companies = companiesData.map((item: any) => this.mapper.toCompany(item));
+        // Parse companies - could be string or array
+        let companyIds: string[] = [];
+        if (typeof companiesData === 'string') {
+          // Parse string format (e.g., "CNPJ1;CNPJ2;CNPJ3")
+          companyIds = companiesData.split(/[;,]/)
+            .map((v: string) => v.trim())
+            .filter((v: string) => v.length > 0);
+        } else if (Array.isArray(companiesData)) {
+          companyIds = companiesData.map((item: any) => 
+            typeof item === 'string' ? item : item._id || item.cnpj || ''
+          ).filter((v: string) => v.length > 0);
+        }
+        
+        // Create company objects from IDs
+        // For now, create basic company objects - details will be fetched separately
+        let companies = companyIds.map((cnpj: string) => this.mapper.toCompany({ 
+          _id: cnpj, 
+          cnpj: cnpj,
+          name: `Empresa ${cnpj}`
+        }));
         
         // Apply filters
         if (filter) {

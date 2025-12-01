@@ -245,14 +245,14 @@ describe('GamificationDashboardComponent - Performance Tests', () => {
 
   describe('TrackBy Functions', () => {
     it('should have trackBy function for KPI list', () => {
-      const mockKpi = { id: 'kpi-1', name: 'Test KPI', value: 100, target: 200 };
+      const mockKpi = { id: 'kpi-1', label: 'Test KPI', current: 100, target: 200 };
       const result = component.trackByKpiId(0, mockKpi);
       
       expect(result).toBe('kpi-1');
     });
 
     it('should return consistent values for trackBy', () => {
-      const mockKpi = { id: 'kpi-1', name: 'Test KPI', value: 100, target: 200 };
+      const mockKpi = { id: 'kpi-1', label: 'Test KPI', current: 100, target: 200 };
       
       const result1 = component.trackByKpiId(0, mockKpi);
       const result2 = component.trackByKpiId(0, mockKpi);

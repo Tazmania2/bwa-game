@@ -54,6 +54,11 @@ export class AuthInterceptor implements HttpInterceptor {
         
         // For Funifier requests, add Bearer token if available (but don't add client_id)
         if (isFunifierRequest) {
+            // Don't modify requests that already have Authorization header (e.g., Basic Auth for database)
+            if (request.headers.has('Authorization')) {
+                return next.handle(request);
+            }
+            
             const token = this.sessao.token;
             if (token && !requestUrl.includes('/auth/token')) {
                 // Add Bearer token for authenticated Funifier requests

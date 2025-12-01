@@ -248,6 +248,18 @@ export function randomItem<T>(array: T[]): T {
 }
 
 /**
+ * Generate multiple companies
+ */
+export function createMockCompanies(count: number): MockCompany[] {
+  return generateMockArray((index) => createMockCompany({
+    id: `company-${index + 1}`,
+    name: `Empresa ${index + 1} LTDA`,
+    cnpj: `${10000000 + index}.000/0001-${String(index).padStart(2, '0')}`,
+    healthScore: randomInt(50, 100)
+  }), count);
+}
+
+/**
  * Alias functions for consistency with test imports
  */
 export const generateCompany = createMockCompany;
@@ -257,3 +269,5 @@ export const generateKPIData = createMockKPIData;
 export const generatePlayerStatus = createMockPlayerStatus;
 export const generatePointWallet = createMockPointWallet;
 export const generateSeasonProgress = createMockSeasonProgress;
+export const generateMockCompanies = createMockCompanies;
+export const generateMockPlayerStatus = createMockPlayerStatus;

@@ -8,6 +8,9 @@ import { PlayerService } from '@services/player.service';
 import { CompanyService } from '@services/company.service';
 import { KPIService } from '@services/kpi.service';
 import { ToastService } from '@services/toast.service';
+import { ActionLogService } from '@services/action-log.service';
+import { PerformanceMonitorService } from '@services/performance-monitor.service';
+import { SessaoProvider } from '@providers/sessao/sessao.provider';
 import { 
   generatePlayerStatus, 
   generatePointWallet, 
@@ -46,13 +49,35 @@ describe('GamificationDashboardComponent - Integration Tests', () => {
       'success'
     ]);
 
+    const actionLogServiceSpy = jasmine.createSpyObj('ActionLogService', [
+      'getProgressMetrics'
+    ]);
+    actionLogServiceSpy.getProgressMetrics.and.returnValue(of({
+      activity: { pendentes: 0, emExecucao: 0, finalizadas: 0, pontos: 0 },
+      macro: { pendentes: 0, incompletas: 0, finalizadas: 0 }
+    }));
+
+    const performanceMonitorSpy = jasmine.createSpyObj('PerformanceMonitorService', [
+      'measureRenderTime',
+      'trackChangeDetection',
+      'logPerformanceReport'
+    ]);
+    performanceMonitorSpy.measureRenderTime.and.returnValue(() => {});
+
+    const sessaoProviderSpy = jasmine.createSpyObj('SessaoProvider', [], {
+      usuario: { _id: 'test-user', email: 'test@example.com', roles: [] }
+    });
+
     await TestBed.configureTestingModule({
       declarations: [GamificationDashboardComponent],
       providers: [
         { provide: PlayerService, useValue: playerServiceSpy },
         { provide: CompanyService, useValue: companyServiceSpy },
         { provide: KPIService, useValue: kpiServiceSpy },
-        { provide: ToastService, useValue: toastServiceSpy }
+        { provide: ToastService, useValue: toastServiceSpy },
+        { provide: ActionLogService, useValue: actionLogServiceSpy },
+        { provide: PerformanceMonitorService, useValue: performanceMonitorSpy },
+        { provide: SessaoProvider, useValue: sessaoProviderSpy }
       ],
       schemas: [NO_ERRORS_SCHEMA]
     }).compileComponents();
