@@ -1,0 +1,13 @@
+node_modules
+.angular
+coverage
+dist
+.git
+.vscode
+.kiro
+*.log
+*.map
+.env
+.env.local
+.DS_Store
+Thumbs.db
