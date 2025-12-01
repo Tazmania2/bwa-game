@@ -29,24 +29,18 @@ export class AuthProvider {
 
     console.log('🔐 Making POST request to Funifier...');
     
-    // Add X-Funifier-Request header to bypass the auth interceptor
-    const headers = {
-      'X-Funifier-Request': 'true',
-      'Content-Type': 'application/json'
-    };
-    
+    // Don't add custom headers - Funifier blocks them via CORS
+    // The interceptor will recognize Funifier URLs by domain
     return firstValueFrom(
-      this.http.post<LoginResponse>(`${this.funifierBaseUrl}/v3/auth/token`, authBody, { headers })
+      this.http.post<LoginResponse>(`${this.funifierBaseUrl}/v3/auth/token`, authBody)
     );
   }
 
   userInfo(): Observable<any> {
     // Get user info from Funifier player status
-    // Add X-Funifier-Request header to bypass the auth interceptor
-    const headers = {
-      'X-Funifier-Request': 'true'
-    };
-    return this.http.get(`${this.funifierBaseUrl}/v3/player/me/status`, { headers });
+    // Don't add custom headers - Funifier blocks them via CORS
+    // The interceptor will recognize Funifier URLs by domain
+    return this.http.get(`${this.funifierBaseUrl}/v3/player/me/status`);
   }
 
   async requestPasswordReset(email: string) {

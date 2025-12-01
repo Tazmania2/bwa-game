@@ -46,8 +46,11 @@ export class AuthInterceptor implements HttpInterceptor {
     }
 
     intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-        // NÃO sobrescreve Authorization se for requisição Funifier
-        if (request.headers.has('X-Funifier-Request')) {
+        // Check if this is a Funifier API request by URL
+        const isFunifierRequest = WHITELISTED_URLS.some(item => request.url.includes(item));
+        
+        // Don't intercept Funifier requests - they handle their own auth
+        if (isFunifierRequest) {
             return next.handle(request);
         }
 
@@ -57,10 +60,6 @@ export class AuthInterceptor implements HttpInterceptor {
                 client_id: environment.client_id!
             }
         })
-
-        // Não intercepta requisições de autenticação
-        if (WHITELISTED_URLS.some(item => request.url.includes(item)))
-            return next.handle(modifiedRequest);
 
         const token = this.sessao.token;
         if (!token) {

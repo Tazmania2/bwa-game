@@ -129,8 +129,9 @@ export class FunifierApiService {
    */
   private getHeaders(endpoint: string): HttpHeaders {
     let headers = new HttpHeaders({
-      'Content-Type': 'application/json',
-      'X-Funifier-Request': 'true' // Marker to prevent auth interceptor from overriding
+      'Content-Type': 'application/json'
+      // Don't add X-Funifier-Request - Funifier blocks custom headers via CORS
+      // The interceptor recognizes Funifier URLs by domain
     });
 
     // Check if this is a database endpoint
