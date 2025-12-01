@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable, of, throwError } from 'rxjs';
-import { map, catchError, shareReplay, tap } from 'rxjs/operators';
+import { map, catchError, shareReplay, tap, timeout } from 'rxjs/operators';
 import { FunifierApiService } from './funifier-api.service';
 import { PlayerMapper } from './player-mapper.service';
 import { PlayerStatus, PointWallet, SeasonProgress } from '@model/gamification-dashboard.model';
@@ -10,11 +10,21 @@ interface CacheEntry<T> {
   timestamp: number;
 }
 
+interface RawPlayerData {
+  response: any;
+  timestamp: number;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class PlayerService {
   private readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+  private readonly REQUEST_TIMEOUT = 15000; // 15 seconds timeout
+  
+  // Single cache for raw API response to avoid duplicate requests
+  private rawDataCache = new Map<string, Observable<any>>();
+  
   private playerStatusCache = new Map<string, CacheEntry<PlayerStatus>>();
   private pointsCache = new Map<string, CacheEntry<PointWallet>>();
   private progressCache = new Map<string, CacheEntry<SeasonProgress>>();
@@ -30,6 +40,44 @@ export class PlayerService {
   ) {}
 
   /**
+   * Get raw player data from API with caching
+   * This is shared across all player data methods to avoid duplicate requests
+   */
+  private getRawPlayerData(playerId: string): Observable<any> {
+    const cached = this.rawDataCache.get(playerId);
+    if (cached) {
+      console.log('📊 Using cached raw player data for:', playerId);
+      return cached;
+    }
+
+    console.log('📊 Fetching raw player data for:', playerId);
+    
+    const request$ = this.funifierApi.get<any>(`/v3/player/${playerId}/status`).pipe(
+      timeout(this.REQUEST_TIMEOUT),
+      tap(response => {
+        console.log('📊 Raw player data received:', response);
+      }),
+      catchError(error => {
+        console.error('📊 Error fetching raw player data:', error);
+        // Remove from cache on error so next request tries again
+        this.rawDataCache.delete(playerId);
+        return throwError(() => error);
+      }),
+      // shareReplay AFTER catchError so errors are also shared
+      shareReplay({ bufferSize: 1, refCount: false })
+    );
+
+    this.rawDataCache.set(playerId, request$);
+    
+    // Clear cache after duration
+    setTimeout(() => {
+      this.rawDataCache.delete(playerId);
+    }, this.CACHE_DURATION);
+
+    return request$;
+  }
+
+  /**
    * Get player status with caching
    */
   getPlayerStatus(playerId: string): Observable<PlayerStatus> {
@@ -38,7 +86,7 @@ export class PlayerService {
       return cached;
     }
 
-    const request$ = this.funifierApi.get<any>(`/v3/player/${playerId}/status`).pipe(
+    const request$ = this.getRawPlayerData(playerId).pipe(
       map(response => this.mapper.toPlayerStatus(response)),
       tap(status => {
         this.lastKnownPlayerStatus = status;
@@ -53,8 +101,7 @@ export class PlayerService {
         }
         
         return throwError(() => error);
-      }),
-      shareReplay({ bufferSize: 1, refCount: true, windowTime: this.CACHE_DURATION })
+      })
     );
 
     this.setCachedData(this.playerStatusCache, playerId, request$);
@@ -70,7 +117,7 @@ export class PlayerService {
       return cached;
     }
 
-    const request$ = this.funifierApi.get<any>(`/v3/player/${playerId}/status`).pipe(
+    const request$ = this.getRawPlayerData(playerId).pipe(
       map(response => this.mapper.toPointWallet(response)),
       tap(points => {
         this.lastKnownPoints = points;
@@ -85,8 +132,7 @@ export class PlayerService {
         }
         
         return throwError(() => error);
-      }),
-      shareReplay({ bufferSize: 1, refCount: true, windowTime: this.CACHE_DURATION })
+      })
     );
 
     this.setCachedData(this.pointsCache, playerId, request$);
@@ -104,8 +150,8 @@ export class PlayerService {
       return cached;
     }
 
-    // Use player status endpoint - progress data is in the same response
-    const request$ = this.funifierApi.get<any>(`/v3/player/${playerId}/status`).pipe(
+    // Use shared raw data - progress data is in the same response
+    const request$ = this.getRawPlayerData(playerId).pipe(
       map(response => this.mapper.toSeasonProgress(response, seasonDates)),
       tap(progress => {
         this.lastKnownProgress = progress;
@@ -120,8 +166,7 @@ export class PlayerService {
         }
         
         return throwError(() => error);
-      }),
-      shareReplay({ bufferSize: 1, refCount: true, windowTime: this.CACHE_DURATION })
+      })
     );
 
     this.setCachedData(this.progressCache, cacheKey, request$);
@@ -132,6 +177,7 @@ export class PlayerService {
    * Clear all caches
    */
   clearCache(): void {
+    this.rawDataCache.clear();
     this.playerStatusCache.clear();
     this.pointsCache.clear();
     this.progressCache.clear();
@@ -141,6 +187,7 @@ export class PlayerService {
    * Clear cache for specific player
    */
   clearPlayerCache(playerId: string): void {
+    this.rawDataCache.delete(playerId);
     this.playerStatusCache.delete(playerId);
     this.pointsCache.delete(playerId);
     

@@ -103,9 +103,16 @@ export class FunifierApiService {
     const headers = this.getHeaders(endpoint);
     const url = `${this.baseUrl}${endpoint}`;
     
+    console.log('🌐 FunifierAPI GET:', url);
+    console.log('🌐 Headers (before interceptor):', headers.keys());
+    
     return this.http.get<T>(url, { headers, params }).pipe(
-      retry({ count: 3, delay: 1000 }),
-      catchError(this.handleError)
+      tap(response => console.log('🌐 FunifierAPI Response:', response)),
+      retry({ count: 2, delay: 1000 }), // Reduced retries
+      catchError(error => {
+        console.error('🌐 FunifierAPI Error after retries:', error);
+        return this.handleError(error);
+      })
     );
   }
 

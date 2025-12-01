@@ -176,29 +176,49 @@ export class GamificationDashboardComponent implements OnInit, OnDestroy, AfterV
    */
   private loadPlayerData(): void {
     this.isLoadingPlayer = true;
+    this.cdr.markForCheck();
     
     const playerId = this.getPlayerId();
     
     // Load player status
     console.log('📊 Loading player data for:', playerId);
+    console.log('📊 Token available:', !!this.sessaoProvider.token);
+    console.log('📊 Token value:', this.sessaoProvider.token?.substring(0, 20) + '...');
+    
+    // Safety timeout to prevent infinite loading state
+    const loadingTimeout = setTimeout(() => {
+      if (this.isLoadingPlayer) {
+        console.warn('📊 Loading timeout reached, forcing loading state to false');
+        this.isLoadingPlayer = false;
+        this.cdr.markForCheck();
+      }
+    }, 20000); // 20 second timeout
+    
     this.playerService.getPlayerStatus(playerId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (status) => {
           console.log('📊 Player status loaded:', status);
+          clearTimeout(loadingTimeout);
           this.playerStatus = status;
           this.isLoadingPlayer = false;
           this.cdr.markForCheck();
         },
         error: (error) => {
           console.error('📊 Failed to load player status:', error);
+          clearTimeout(loadingTimeout);
           this.toastService.error('Erro ao carregar dados do jogador');
           this.isLoadingPlayer = false;
           this.cdr.markForCheck();
+        },
+        complete: () => {
+          console.log('📊 Player status request completed');
+          clearTimeout(loadingTimeout);
         }
       });
     
     // Load point wallet
+    console.log('📊 Starting point wallet request...');
     this.playerService.getPlayerPoints(playerId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
@@ -209,11 +229,17 @@ export class GamificationDashboardComponent implements OnInit, OnDestroy, AfterV
         },
         error: (error) => {
           console.error('📊 Failed to load point wallet:', error);
+          // Set default values on error so UI doesn't stay stuck
+          this.pointWallet = { moedas: 0, bloqueados: 0, desbloqueados: 0 };
           this.cdr.markForCheck();
+        },
+        complete: () => {
+          console.log('📊 Point wallet request completed');
         }
       });
     
     // Load season progress
+    console.log('📊 Starting season progress request...');
     this.playerService.getSeasonProgress(playerId, this.seasonDates)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
@@ -224,7 +250,17 @@ export class GamificationDashboardComponent implements OnInit, OnDestroy, AfterV
         },
         error: (error) => {
           console.error('📊 Failed to load season progress:', error);
+          // Set default values on error so UI doesn't stay stuck
+          this.seasonProgress = {
+            metas: { current: 0, target: 0 },
+            clientes: 0,
+            tarefasFinalizadas: 0,
+            seasonDates: this.seasonDates
+          };
           this.cdr.markForCheck();
+        },
+        complete: () => {
+          console.log('📊 Season progress request completed');
         }
       });
   }

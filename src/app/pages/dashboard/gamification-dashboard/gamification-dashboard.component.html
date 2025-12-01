@@ -21,7 +21,7 @@
           [metadata]="playerStatus.metadata">
         </c4u-season-level>
         
-        <c4u-shimmer *ngIf="isLoadingPlayer" [height]="'120px'"></c4u-shimmer>
+        <c4u-shimmer *ngIf="isLoadingPlayer && !playerStatus" [height]="'120px'"></c4u-shimmer>
         
         <div class="missing-data" *ngIf="!isLoadingPlayer && !playerStatus">
           <span class="missing-data-text">Faltam dados</span>
@@ -35,7 +35,7 @@
           [points]="pointWallet">
         </c4u-point-wallet>
         
-        <c4u-shimmer *ngIf="isLoadingPlayer" [height]="'180px'"></c4u-shimmer>
+        <c4u-shimmer *ngIf="isLoadingPlayer && !pointWallet" [height]="'180px'"></c4u-shimmer>
         
         <div class="missing-data" *ngIf="!isLoadingPlayer && !pointWallet">
           <span class="missing-data-text">Faltam dados</span>
@@ -52,7 +52,7 @@
           [seasonDates]="seasonProgress.seasonDates">
         </c4u-season-progress>
         
-        <c4u-shimmer *ngIf="isLoadingPlayer" [height]="'200px'"></c4u-shimmer>
+        <c4u-shimmer *ngIf="isLoadingPlayer && !seasonProgress" [height]="'200px'"></c4u-shimmer>
         
         <div class="missing-data" *ngIf="!isLoadingPlayer && !seasonProgress">
           <span class="missing-data-text">Faltam dados</span>
