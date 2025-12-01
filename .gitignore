@@ -49,7 +49,7 @@ Thumbs.db
 *.env
 
 # API keys and secrets
-src/environments/environment.prod.ts
+# Note: environment.prod.ts uses process.env variables, so it's safe to commit
 *.key
 *.pem
 *.secret
