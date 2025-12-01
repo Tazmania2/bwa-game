@@ -49,8 +49,19 @@ export class AuthInterceptor implements HttpInterceptor {
         // Check if this is a Funifier API request by URL
         const isFunifierRequest = WHITELISTED_URLS.some(item => request.url.includes(item));
         
-        // Don't intercept Funifier requests - they handle their own auth
+        // For Funifier requests, add Bearer token if available (but don't add client_id)
         if (isFunifierRequest) {
+            const token = this.sessao.token;
+            if (token && !request.url.includes('/auth/token')) {
+                // Add Bearer token for authenticated Funifier requests
+                const modifiedRequest = request.clone({
+                    setHeaders: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                return next.handle(modifiedRequest);
+            }
+            // For login endpoint or when no token, pass through unchanged
             return next.handle(request);
         }
 

@@ -38,8 +38,7 @@ export class AuthProvider {
 
   userInfo(): Observable<any> {
     // Get user info from Funifier player status
-    // Don't add custom headers - Funifier blocks them via CORS
-    // The interceptor will recognize Funifier URLs by domain
+    // The interceptor will add the Bearer token from sessionStorage
     return this.http.get(`${this.funifierBaseUrl}/v3/player/me/status`);
   }
 

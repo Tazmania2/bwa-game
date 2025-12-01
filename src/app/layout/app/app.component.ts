@@ -41,7 +41,13 @@ export class AppComponent implements OnInit {
   }
 
 
-  async ngOnInit() {
+  ngOnInit() {
+    // Initialize system params asynchronously without blocking
+    // This prevents NullInjectorError issues with async initialization
+    this.initializeSystem();
+  }
+
+  private async initializeSystem() {
     try {
       console.log('🚀 Iniciando aplicação com inicialização otimizada...');
       
@@ -58,10 +64,12 @@ export class AppComponent implements OnInit {
         this.paramReady = true;
       } else {
         console.warn('⚠️ Alguns parâmetros do sistema não foram inicializados completamente');
+        this.paramReady = true; // Mark as ready even if some params failed
       }
     } catch (error) {
       console.error('❌ Erro ao inicializar parâmetros do sistema na aplicação principal:', error);
       // Não bloqueia a aplicação se falhar, apenas loga o erro
+      this.paramReady = true; // Mark as ready to allow app to continue
     }
   }
 
