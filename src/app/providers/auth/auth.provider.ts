@@ -28,14 +28,25 @@ export class AuthProvider {
     };
 
     console.log('🔐 Making POST request to Funifier...');
+    
+    // Add X-Funifier-Request header to bypass the auth interceptor
+    const headers = {
+      'X-Funifier-Request': 'true',
+      'Content-Type': 'application/json'
+    };
+    
     return firstValueFrom(
-      this.http.post<LoginResponse>(`${this.funifierBaseUrl}/v3/auth/token`, authBody)
+      this.http.post<LoginResponse>(`${this.funifierBaseUrl}/v3/auth/token`, authBody, { headers })
     );
   }
 
   userInfo(): Observable<any> {
     // Get user info from Funifier player status
-    return this.http.get(`${this.funifierBaseUrl}/v3/player/me/status`);
+    // Add X-Funifier-Request header to bypass the auth interceptor
+    const headers = {
+      'X-Funifier-Request': 'true'
+    };
+    return this.http.get(`${this.funifierBaseUrl}/v3/player/me/status`, { headers });
   }
 
   async requestPasswordReset(email: string) {

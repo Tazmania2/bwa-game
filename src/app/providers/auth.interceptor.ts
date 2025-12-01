@@ -21,7 +21,8 @@ const WHITELISTED_URLS = [
     '/auth/login',
     '/auth/refresh',
     '/client/system-params',
-    '/campaign/current'
+    '/campaign/current',
+    'funifier.com' // Whitelist all Funifier API calls
 ]
 
 @Injectable()
