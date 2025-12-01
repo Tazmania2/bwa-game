@@ -1,0 +1,201 @@
+<div full flexItem="1" class="ranking-container">
+  <div flex direction="column" flexItem="1" class="ranking-content">
+    
+    <!-- Header -->
+    <div class="ranking-header" flexItem="0">
+      <div class="header-content">
+        <div class="title-section">
+          <h1 class="page-title">
+            <i class="ri-trophy-line"></i>
+            Rankings
+          </h1>
+          <p class="page-subtitle">Acompanhe o desempenho dos participantes</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filters-section" flexItem="0">
+      <c4u-card class="filters-card" flex>
+        <div flex [gap]="24" class="filters-content">
+          
+          <!-- Seletor de Tipo de Ranking -->
+          <div flexItem="1" class="filter-group">
+            <label class="filter-label">Tipo de Ranking</label>
+            <ng-select
+              class="ng-select-custom"
+              [clearable]="false"
+              [searchable]="false"
+              [items]="rankingTypes"
+              [(ngModel)]="selectedRankingType"
+              (change)="onRankingTypeChange($event)"
+              bindLabel="name"
+              bindValue="id"
+              placeholder="Selecione o tipo de ranking">
+              <ng-template ng-option-tmp let-item="item">
+                <div class="option-content">
+                  <div class="option-title">{{ item.name }}</div>
+                  <div class="option-description">{{ item.description }}</div>
+                </div>
+              </ng-template>
+            </ng-select>
+          </div>
+
+          <!-- Seletor de Data de Início -->
+          <div flexItem="1" class="filter-group">
+            <label class="filter-label">Data de Início</label>
+            <input
+              type="date"
+              class="date-input"
+              [(ngModel)]="selectedDateRange.startDate"
+              (change)="onDateRangeChange(selectedDateRange)"
+              [max]="selectedDateRange.endDate"
+            />
+          </div>
+
+          <!-- Seletor de Data de Fim -->
+          <div flexItem="1" class="filter-group">
+            <label class="filter-label">Data de Fim</label>
+            <input
+              type="date"
+              class="date-input"
+              [(ngModel)]="selectedDateRange.endDate"
+              (change)="onDateRangeChange(selectedDateRange)"
+              [min]="selectedDateRange.startDate"
+            />
+          </div>
+
+          <!-- Botão Gerar Ranking -->
+          <div flexItem="0" class="filter-group">
+            <label class="filter-label">&nbsp;</label>
+            <button
+              class="generate-button"
+              [disabled]="!selectedRankingType || isLoading"
+              (click)="generateRanking()">
+              <i class="ri-refresh-line" *ngIf="!isLoading"></i>
+              <i class="ri-loader-4-line animate-spin" *ngIf="isLoading"></i>
+              {{ isLoading ? 'Gerando...' : 'Gerar Ranking' }}
+            </button>
+          </div>
+
+        </div>
+      </c4u-card>
+    </div>
+
+    <!-- Conteúdo Principal -->
+    <div class="ranking-main" flexItem="1">
+      
+      <!-- Estado de Carregamento -->
+      <div *ngIf="isLoading" class="loading-state">
+        <div class="loading-animation">
+          <div class="loading-dots">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+          </div>
+        </div>
+        <p>Carregando ranking...</p>
+      </div>
+
+      <!-- Estado Inicial - Nenhum Ranking Gerado -->
+      <div *ngIf="!isLoading && !hasGeneratedRanking" class="initial-state">
+        <div class="initial-icon">
+          <i class="ri-trophy-line"></i>
+        </div>
+        <h3>Selecione os filtros e gere o ranking</h3>
+        <p>Escolha o tipo de ranking e o período desejado, depois clique em "Gerar Ranking" para ver os resultados</p>
+      </div>
+
+      <!-- Lista de Participantes -->
+      <div *ngIf="!isLoading && hasGeneratedRanking" class="participants-list">
+        
+        <!-- Informações do Ranking Selecionado -->
+        <div class="ranking-info" *ngIf="selectedRankingType">
+          <h2>{{ selectedRankingType.name }} - {{ formatDateRangeName(selectedDateRange) }}</h2>
+          <p>{{ selectedRankingType.description }}</p>
+          <div class="ranking-stats" *ngIf="currentRankingData">
+            <span class="stat-item">
+              <i class="ri-user-line"></i>
+              {{ currentRankingData.totalParticipants }} participantes
+            </span>
+            <span class="stat-item">
+              <i class="ri-time-line"></i>
+              Atualizado em {{ currentRankingData.lastUpdated | date:'dd/MM/yyyy HH:mm' }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Lista de Participantes -->
+        <div class="participants-container">
+          <div 
+            *ngFor="let participant of filteredParticipants; trackBy: trackByParticipant"
+            class="participant-card"
+            [ngClass]="getPositionClass(participant.position)">
+            
+            <!-- Posição -->
+            <div class="position-badge" [ngClass]="getPositionClass(participant.position)">
+              <span class="position-icon">{{ getPositionIcon(participant.position) }}</span>
+              <span class="position-number">{{ participant.position }}</span>
+            </div>
+
+            <!-- Informações do Participante -->
+            <div class="participant-info">
+              <div class="participant-main">
+                <h3 class="participant-name">{{ participant.name }}</h3>
+                <span class="participant-team">{{ participant.teamName }}</span>
+                <div class="participant-movement" *ngIf="participant.movement">
+                  <span class="movement-indicator" [ngClass]="participant.movement">
+                    <i class="ri-arrow-up-line" *ngIf="participant.movement === 'up'"></i>
+                    <i class="ri-arrow-down-line" *ngIf="participant.movement === 'down'"></i>
+                    <i class="ri-minus-line" *ngIf="participant.movement === 'stop'"></i>
+                    <i class="ri-star-line" *ngIf="participant.movement === 'new'"></i>
+                  </span>
+                  <span class="movement-text">{{ getMovementText(participant.movement) }}</span>
+                </div>
+              </div>
+              
+              <div class="participant-stats">
+                <div class="stat-item">
+                  <span class="stat-label">Pontos</span>
+                  <span class="stat-value points">{{ participant.points.toLocaleString() }}</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-label">Nível</span>
+                  <span class="stat-value level">{{ participant.level }}</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-label">Conquistas</span>
+                  <span class="stat-value achievements">{{ participant.achievements }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Indicador de Progresso -->
+            <div class="progress-indicator">
+              <div class="progress-bar">
+                <div 
+                  class="progress-fill" 
+                  [style.width.%]="participant.progress">
+                </div>
+              </div>
+              <span class="progress-text">{{ participant.progress }}%</span>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Estado Vazio -->
+        <div *ngIf="filteredParticipants.length === 0" class="empty-state">
+          <div class="empty-icon">
+            <i class="ri-user-line"></i>
+          </div>
+          <h3>Nenhum participante encontrado</h3>
+          <p>Tente ajustar os filtros para ver mais resultados</p>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+</div>

@@ -1,0 +1,74 @@
+.season-level {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+
+  .level-badge {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    flex-shrink: 0;
+
+    .level-number {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #ffffff;
+    }
+  }
+
+  .player-info {
+    flex: 1;
+    min-width: 0;
+
+    .player-name {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #ffffff;
+      margin: 0 0 0.25rem 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .player-metadata {
+      font-size: 0.75rem;
+      color: rgba(255, 255, 255, 0.7);
+      margin: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .season-level {
+    .level-badge {
+      width: 50px;
+      height: 50px;
+
+      .level-number {
+        font-size: 1.25rem;
+      }
+    }
+
+    .player-info {
+      .player-name {
+        font-size: 0.875rem;
+      }
+
+      .player-metadata {
+        font-size: 0.625rem;
+      }
+    }
+  }
+}

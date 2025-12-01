@@ -1,0 +1,31 @@
+<div class="metrics-container">
+  <c4u-card class="metric-card">
+    <div class="metric-icon">
+      <i class="ri-coins-line"></i>
+    </div>
+    <h2 class="metric-value">{{ coins }}</h2>
+    <p class="metric-label">{{ 'LABEL_MY_COINS' | translate }}</p>
+  </c4u-card>
+
+  <c4u-card class="metric-card">
+    <div class="metric-icon">
+      <i class="ri-settings-line"></i>
+    </div>
+    <h2 class="metric-value">{{ points }}</h2>
+    <p class="metric-label">{{ 'LABEL_COMPLETED_INDICATORS' | translate }}</p>
+  </c4u-card>
+
+  <c4u-card class="metric-card">
+    <div class="metric-icon">
+      <i class="ri-focus-3-line"></i>
+    </div>
+    <h2 class="metric-value">{{ price }}</h2>
+    <p class="metric-label">{{ 'LABEL_COMPLETED_GOALS' | translate }}</p>
+  </c4u-card>
+
+  <div style="display: flex; justify-content: center; width: 100%; margin-top: 1.5rem;">
+    <button class="convert-button" (click)="openConvertPointsModal()">
+      Converter pontos por moedas
+    </button>
+  </div>
+</div> 

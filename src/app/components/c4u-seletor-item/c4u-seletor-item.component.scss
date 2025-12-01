@@ -1,0 +1,18 @@
+@import "tools";
+@import "variables";
+
+[class^=icon-] {
+  font-size: 32px;
+}
+
+ng-select {
+  width: 100%;
+}
+
+.div-selector {
+  @include fullWidth;
+}
+
+:host {
+
+}

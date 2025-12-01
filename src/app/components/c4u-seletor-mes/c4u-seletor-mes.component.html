@@ -1,0 +1,85 @@
+<div class="w-full flex flex-col items-center space-y-4 px-4">
+    <!-- Título -->
+    <h3 class="text-sm font-medium text-white/80 text-center hidden md:block">
+        {{'LABEL_SELECTED_MONTH' | translate}}
+    </h3>
+
+    <!-- Estado de carregamento -->
+    <div *ngIf="isLoading" class="flex items-center justify-center space-x-3 py-8">
+        <div class="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+        <span class="text-sm text-white/70 font-medium">Carregando meses...</span>
+    </div>
+
+    <!-- Conteúdo principal (só mostra quando não está carregando) -->
+    <div *ngIf="!isLoading" class="w-full animate-fade-in-up">
+        <!-- Layout Desktop (oculto no mobile) -->
+        <div class="hidden md:flex items-center justify-center space-x-8">
+            <div class="flex-1 flex justify-end">
+                <button 
+                    class="flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                    [disabled]="!prevEnabled"
+                    (click)="goLeft()">
+                    <i class="icon-arrow_back_ios text-white/70 text-lg"></i>
+                    <span class="text-sm font-bold text-white/70">{{getPrevMonth()}}</span>
+                </button>
+            </div>
+            
+            <ng-select class="ng-select-large"
+                       [clearable]="false"
+                       [searchable]="false"
+                       [items]="months"
+                       [(ngModel)]="selected"
+                       (change)="onChange()"
+                       bindLabel="name"
+                       notFoundText="Sem itens"
+                       bindValue="id">
+            </ng-select>
+            
+            <div class="flex-1 flex justify-start">
+                <button 
+                    class="flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                    [disabled]="!nextEnabled"
+                    (click)="goRight()">
+                    <span class="text-sm font-bold text-white/70">{{getNextMonth()}}</span>
+                    <i class="icon-arrow_forward_ios text-white/70 text-lg"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Layout Mobile (visível apenas no mobile) -->
+        <div class="md:hidden space-y-4">
+            <!-- Select principal -->
+            <div class="w-full">
+                <ng-select class="w-full"
+                           [clearable]="false"
+                           [searchable]="false"
+                           [items]="months"
+                           [(ngModel)]="selected"
+                           (change)="onChange()"
+                           bindLabel="name"
+                           notFoundText="Sem itens"
+                           bindValue="id">
+                </ng-select>
+            </div>
+            
+            <!-- Botões de navegação -->
+            <div class="flex items-center justify-between space-x-4">
+                <button 
+                    class="flex-1 h-12 flex items-center justify-center space-x-2 bg-white/10 hover:bg-white/20 disabled:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg py-3 px-4 transition-all duration-200"
+                    [disabled]="!prevEnabled"
+                    (click)="goLeft()">
+                    <i class="icon-arrow_back_ios text-white text-lg"></i>
+                    <span class="text-sm font-bold text-white">{{getPrevMonth()}}</span>
+                </button>
+                
+                <button 
+                    class="flex-1 h-12 flex items-center justify-center space-x-2 bg-white/10 hover:bg-white/20 disabled:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg py-3 px-4 transition-all duration-200"
+                    [disabled]="!nextEnabled"
+                    (click)="goRight()">
+                    <span class="text-sm font-bold text-white">{{getNextMonth()}}</span>
+                    <i class="icon-arrow_forward_ios text-white text-lg"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,248 @@
+import { TestBed } from '@angular/core/testing';
+import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import * as fc from 'fast-check';
+import { PlayerService } from './player.service';
+import { CompanyService } from './company.service';
+import { KPIService } from './kpi.service';
+import { FunifierApiService } from './funifier-api.service';
+import { PlayerMapper } from './player-mapper.service';
+import { CompanyMapper } from './company-mapper.service';
+import { KPIMapper } from './kpi-mapper.service';
+import { createMockPlayerStatus, generateCompany, generateKPIData } from '@app/testing/mock-data-generators';
+
+describe('Property-Based Tests: Error Handling', () => {
+  let httpMock: HttpTestingController;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      imports: [HttpClientTestingModule],
+      providers: [
+        PlayerService,
+        CompanyService,
+        KPIService,
+        FunifierApiService,
+        PlayerMapper,
+        CompanyMapper,
+        KPIMapper
+      ]
+    });
+
+    httpMock = TestBed.inject(HttpTestingController);
+  });
+
+  afterEach(() => {
+    httpMock.verify();
+  });
+
+  /**
+   * Feature: gamification-dashboard, Property 8: API Error Handling Graceful Degradation
+   * Validates: Requirements 11.2, 11.5
+   */
+  describe('Property 8: API Error Handling Graceful Degradation', () => {
+    it('should maintain previous valid state when API request fails after successful request', (done) => {
+      fc.assert(
+        fc.asyncProperty(
+          fc.string({ minLength: 1, maxLength: 50 }), // playerId
+          fc.integer({ min: 400, max: 599 }), // HTTP error status
+          async (playerId, errorStatus) => {
+            const playerService = TestBed.inject(PlayerService);
+            const mockPlayerStatus = createMockPlayerStatus();
+
+            // First request succeeds
+            const firstRequest = playerService.getPlayerStatus(playerId);
+            const firstPromise = new Promise((resolve, reject) => {
+              firstRequest.subscribe({
+                next: (data) => resolve(data),
+                error: (err) => reject(err)
+              });
+            });
+
+            const req1 = httpMock.expectOne((req) => req.url.includes(`/v3/player/${playerId}/status`));
+            req1.flush(mockPlayerStatus);
+
+            const firstResult = await firstPromise;
+            expect(firstResult).toBeDefined();
+
+            // Clear cache to force new request
+            playerService.clearPlayerCache(playerId);
+
+            // Second request fails
+            const secondRequest = playerService.getPlayerStatus(playerId);
+            const secondPromise = new Promise((resolve, reject) => {
+              secondRequest.subscribe({
+                next: (data) => resolve(data),
+                error: (err) => reject(err)
+              });
+            });
+
+            const req2 = httpMock.expectOne((req) => req.url.includes(`/v3/player/${playerId}/status`));
+            req2.flush('Error', { status: errorStatus, statusText: 'Error' });
+
+            // Should fallback to cached data (lastKnownPlayerStatus)
+            const secondResult = await secondPromise;
+            
+            // The service should return the last known good data
+            expect(secondResult).toBeDefined();
+            expect(secondResult).toEqual(firstResult);
+          }
+        ),
+        { numRuns: 20, timeout: 10000 }
+      ).then(() => done()).catch((err) => done.fail(err));
+    });
+
+    it('should throw error when no cached data is available and API fails', (done) => {
+      fc.assert(
+        fc.asyncProperty(
+          fc.string({ minLength: 1, maxLength: 50 }), // playerId
+          fc.integer({ min: 400, max: 599 }), // HTTP error status
+          async (playerId, errorStatus) => {
+            const playerService = TestBed.inject(PlayerService);
+
+            // Clear any existing cache
+            playerService.clearCache();
+
+            // First request fails with no cached data
+            const request = playerService.getPlayerStatus(playerId);
+            
+            let errorThrown = false;
+            try {
+              await new Promise((resolve, reject) => {
+                request.subscribe({
+                  next: (data) => resolve(data),
+                  error: (err) => reject(err)
+                });
+              });
+            } catch (error) {
+              errorThrown = true;
+            }
+
+            const req = httpMock.expectOne((req) => req.url.includes(`/v3/player/${playerId}/status`));
+            req.flush('Error', { status: errorStatus, statusText: 'Error' });
+
+            // Should throw error when no cached data available
+            expect(errorThrown).toBe(true);
+          }
+        ),
+        { numRuns: 20, timeout: 10000 }
+      ).then(() => done()).catch((err) => done.fail(err));
+    });
+
+    it('should handle network errors gracefully for CompanyService', (done) => {
+      fc.assert(
+        fc.asyncProperty(
+          fc.string({ minLength: 1, maxLength: 50 }), // playerId
+          async (playerId) => {
+            const companyService = TestBed.inject(CompanyService);
+
+            const request = companyService.getCompanies(playerId);
+            
+            let errorCaught = false;
+            const promise = new Promise((resolve, reject) => {
+              request.subscribe({
+                next: (data) => resolve(data),
+                error: (err) => {
+                  errorCaught = true;
+                  reject(err);
+                }
+              });
+            });
+
+            const req = httpMock.expectOne((req) => req.url.includes(`/v3/player/${playerId}/companies`));
+            req.error(new ProgressEvent('Network error'));
+
+            try {
+              await promise;
+            } catch (error) {
+              // Error should be caught
+            }
+
+            // Should have caught the error
+            expect(errorCaught).toBe(true);
+          }
+        ),
+        { numRuns: 20, timeout: 10000 }
+      ).then(() => done()).catch((err) => done.fail(err));
+    });
+
+    it('should handle server errors gracefully for KPIService', (done) => {
+      fc.assert(
+        fc.asyncProperty(
+          fc.string({ minLength: 1, maxLength: 50 }), // playerId
+          fc.constantFrom(500, 502, 503, 504), // Server error codes
+          async (playerId, errorStatus) => {
+            const kpiService = TestBed.inject(KPIService);
+
+            const request = kpiService.getPlayerKPIs(playerId);
+            
+            let errorCaught = false;
+            const promise = new Promise((resolve, reject) => {
+              request.subscribe({
+                next: (data) => resolve(data),
+                error: (err) => {
+                  errorCaught = true;
+                  reject(err);
+                }
+              });
+            });
+
+            const req = httpMock.expectOne((req) => req.url.includes(`/v3/player/${playerId}/kpis`));
+            req.flush('Server Error', { status: errorStatus, statusText: 'Server Error' });
+
+            try {
+              await promise;
+            } catch (error) {
+              // Error should be caught
+            }
+
+            // Should have caught the error
+            expect(errorCaught).toBe(true);
+          }
+        ),
+        { numRuns: 20, timeout: 10000 }
+      ).then(() => done()).catch((err) => done.fail(err));
+    });
+
+    it('should preserve data integrity when recovering from errors', (done) => {
+      fc.assert(
+        fc.asyncProperty(
+          fc.string({ minLength: 1, maxLength: 50 }), // playerId
+          async (playerId) => {
+            const playerService = TestBed.inject(PlayerService);
+            const mockPlayerStatus = createMockPlayerStatus();
+
+            // First request succeeds
+            const firstRequest = playerService.getPlayerStatus(playerId);
+            const firstPromise = new Promise((resolve) => {
+              firstRequest.subscribe((data) => resolve(data));
+            });
+
+            const req1 = httpMock.expectOne((req) => req.url.includes(`/v3/player/${playerId}/status`));
+            req1.flush(mockPlayerStatus);
+
+            const firstResult: any = await firstPromise;
+
+            // Clear cache
+            playerService.clearPlayerCache(playerId);
+
+            // Second request fails
+            const secondRequest = playerService.getPlayerStatus(playerId);
+            const secondPromise = new Promise((resolve) => {
+              secondRequest.subscribe((data) => resolve(data));
+            });
+
+            const req2 = httpMock.expectOne((req) => req.url.includes(`/v3/player/${playerId}/status`));
+            req2.flush('Error', { status: 500, statusText: 'Error' });
+
+            const secondResult: any = await secondPromise;
+
+            // Data should be identical (fallback to cached)
+            expect(secondResult._id).toBe(firstResult._id);
+            expect(secondResult.name).toBe(firstResult.name);
+            expect(secondResult.level).toBe(firstResult.level);
+          }
+        ),
+        { numRuns: 20, timeout: 10000 }
+      ).then(() => done()).catch((err) => done.fail(err));
+    });
+  });
+});

@@ -1,0 +1,74 @@
+@import "tools";
+@import "variables";
+//@import "bootstrap";
+@import "bootstrap/scss/functions";
+@import "bootstrap/scss/variables";
+@import "bootstrap/scss/mixins";
+
+@mixin modalFade() {
+  $anim-time: $default-anim-time * 2;
+
+  &.fade {
+    transition: transform $anim-time;
+
+    &.show {
+      animation: fadeIn;
+      animation-duration: $anim-time;
+    }
+
+    animation: fadeOut;
+    animation-duration: $anim-time * 1.1;
+  }
+}
+
+ngb-modal-window {
+  z-index: 2000;
+  @include fullSize;
+  @include flexCenter;
+  position: fixed;
+  left: 0;
+  top: 0;
+
+  @include modalFade;
+}
+
+ngb-modal-backdrop {
+  @include fullSize;
+  position: fixed;
+  left: 0;
+  top: 0;
+  background: rgba(0, 0, 0, 0.4);
+
+  @include modalFade;
+}
+
+
+c4u-typeahead ngb-typeahead-window {
+  transform: translate(0, 56px) !important;
+  @include fullWidth;
+  z-index: 100;
+  background: rgba(0, 9, 20, 0.9);
+  backdrop-filter: blur(7.5);
+  border: solid 1px $texto-cinza;
+  border-radius: 0 0 8px 8px;
+
+  button.dropdown-item {
+    @include fullWidth;
+    text-align: left;
+    padding: 10px 24px;
+    display: block;
+    cursor: pointer;
+    outline: none;
+    border: none;
+    background: none;
+    appearance: none;
+    font-family: inherit;
+    font-size: inherit;
+    color: inherit;
+    font-weight: 600;
+
+    .ngb-highlight {
+      font-weight: 600;
+    }
+  }
+}

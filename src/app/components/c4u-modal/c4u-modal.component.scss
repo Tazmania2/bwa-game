@@ -1,0 +1,78 @@
+@import "tools";
+@import "variables";
+@import "tailwind";
+@reference "tailwindcss";
+
+.container {
+  border-radius: size(3);
+  padding: size(2);
+  @screen md {
+    padding: size(4);
+    height: 90vh;
+    width: 66vw;
+  }
+  background: $background-escuro;
+  box-shadow: 4px 4px 8px #000000;
+  height: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+.btnClose {
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.title-content {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+
+  & i {
+    font-size: 25px;
+  }
+
+  & p {
+    font-weight: 300;
+    font-size: 20px;
+    margin: 0px;
+  }
+}
+
+// Accessibility improvements
+.modal-title {
+  font-weight: 300;
+  font-size: 20px;
+  margin: 0;
+}
+
+.btnClose {
+  background: none;
+  border: none;
+  color: inherit;
+  padding: 0.5rem;
+  
+  &:focus-visible {
+    outline: 2px solid #00d4ff;
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  
+  &:hover {
+    opacity: 0.8;
+  }
+}
+
+// Ensure modal has proper focus styles
+.container:focus-within {
+  outline: none;
+}
+
+// High contrast mode support
+@media (prefers-contrast: high) {
+  .container {
+    border: 2px solid currentColor;
+  }
+}

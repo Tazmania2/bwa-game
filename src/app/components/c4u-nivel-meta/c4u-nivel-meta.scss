@@ -1,0 +1,130 @@
+@import "tools";
+
+:host {
+  display: block;
+  width: 94px;
+  height: 112px;
+  position: relative;
+  @include flexCenter;
+  overflow: hidden;
+  border-radius: 0 size(2) 0 size(2);
+}
+
+.level {
+  background: #C56685;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 900;
+  font-size: 32px;
+  line-height: 38px;
+
+  &.gold {
+    background: linear-gradient(180deg, #956F0E 20.59%, #DBCAA0 50%, #956F0E 79.41%);
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  &.green {
+    background: #37CC42;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+}
+
+span.star {
+  @include square(12px);
+  @include flexCenter;
+  position: absolute;
+  background: url("/assets/images/star.png") no-repeat;
+  background-size: 100%;
+  animation: rotate45 5s infinite linear;
+
+  &:after {
+    @include square(12px);
+    box-shadow: 0 0 15px rgba(237, 197, 76, 0.7215686275);
+    content: "";
+    border-radius: 50%;
+    background: rgb(237 197 76 / 17%);
+  }
+
+  &:nth-child(2) {
+    top: 12px;
+    animation: rotate 5s infinite linear;
+  }
+
+  &:nth-child(3) {
+    left: 12px;
+    top: 30px;
+    transform: rotate(45deg);
+  }
+
+  &:nth-child(4) {
+    right: 12px;
+    top: 30px;
+    transform: rotate(45deg);
+  }
+
+  &:nth-child(5) {
+    bottom: 12px;
+    animation: rotate 5s infinite linear;
+  }
+
+  &:nth-child(6) {
+    left: 12px;
+    bottom: 30px;
+    transform: rotate(45deg);
+  }
+
+  &:nth-child(7) {
+    right: 12px;
+    bottom: 30px;
+    transform: rotate(45deg);
+  }
+}
+
+@keyframes rotate {
+  0% {
+    transform: rotate(0);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes rotate45 {
+  0% {
+    transform: rotate(45deg);
+  }
+
+  100% {
+    transform: rotate(405deg);
+  }
+}
+
+@keyframes bright {
+  0% {
+    top: -1000px;
+  }
+
+  95% {
+    top: -1000px;
+  }
+
+  100% {
+    top: calc(100% + 64px);
+  }
+}
+
+.bright {
+  top: -1000px;
+  height: 128px;
+  width: 500px;
+  position: absolute;
+  opacity: 0.15;
+  transform: rotate(45deg);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.92) 43.75%, rgba(255, 255, 255, 0.92) 63.02%, rgba(255, 255, 255, 0) 100%);
+  animation: bright infinite alternate 10s;
+}
+
+

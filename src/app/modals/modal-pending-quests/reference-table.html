@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meu Progresso</title>
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <script>tailwind.config={theme:{extend:{colors:{primary:'#3b82f6',secondary:'#10b981'},borderRadius:{'none':'0px','sm':'4px',DEFAULT:'8px','md':'12px','lg':'16px','xl':'20px','2xl':'24px','3xl':'32px','full':'9999px','button':'8px'}}}}</script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css">
+    <style>
+        :where([class^="ri-"])::before { content: "\f3c2"; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f9fafb;
+        }
+        .modal {
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+        .modal-content {
+            background-color: #1e1e1e;
+            color: #ffffff;
+        }
+        .tab-active {
+            background-color: #2d2d2d;
+            color: white;
+        }
+        .tab-inactive {
+            color: #a0a0a0;
+        }
+        .table-row:nth-child(odd) {
+            background-color: #262626;
+        }
+        .table-row:nth-child(even) {
+            background-color: #1e1e1e;
+        }
+        .table-header {
+            background-color: #333333;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+    <div class="modal fixed inset-0 flex items-center justify-center z-50">
+        <div class="modal-content w-full max-w-5xl rounded-lg shadow-xl overflow-hidden">
+            <!-- Modal Header -->
+            <div class="flex justify-between items-center p-6 border-b border-gray-700">
+                <h2 class="text-xl font-semibold">Meu progresso em JUN/25</h2>
+                <button class="text-gray-400 hover:text-white">
+                    <div class="w-6 h-6 flex items-center justify-center">
+                        <i class="ri-close-line ri-lg"></i>
+                    </div>
+                </button>
+            </div>
+            
+            <!-- Tabs -->
+            <div class="flex border-b border-gray-700">
+                <button class="tab-active px-6 py-3 font-medium">Atividades</button>
+                <button class="tab-inactive px-6 py-3 font-medium">Processos</button>
+            </div>
+            
+            <!-- Status Tabs -->
+            <div class="flex border-b border-gray-700">
+                <div class="flex-1 flex items-center justify-center py-4 border-b-2 border-red-500">
+                    <div class="w-5 h-5 flex items-center justify-center mr-2 text-red-500">
+                        <i class="ri-lock-line"></i>
+                    </div>
+                    <span class="font-medium">Pendentes</span>
+                </div>
+                <div class="flex-1 flex items-center justify-center py-4">
+                    <div class="w-5 h-5 flex items-center justify-center mr-2 text-green-500">
+                        <i class="ri-checkbox-circle-line"></i>
+                    </div>
+                    <span class="font-medium text-gray-400">Finalizadas</span>
+                </div>
+            </div>
+            
+            <!-- Description -->
+            <div class="p-6 text-center text-gray-300">
+                <p>São atividades atribuídas à mim que estão em "Aguardando execução".</p>
+            </div>
+            
+            <!-- Table -->
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr class="table-header text-left">
+                            <th class="px-6 py-3 font-medium">Task ID</th>
+                            <th class="px-6 py-3 font-medium">Título</th>
+                            <th class="px-6 py-3 font-medium">Status</th>
+                            <th class="px-6 py-3 font-medium">Executor</th>
+                            <th class="px-6 py-3 font-medium">Pontos</th>
+                            <th class="px-6 py-3 font-medium">Data</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="table-row">
+                            <td class="px-6 py-4">N/A</td>
+                            <td class="px-6 py-4">TX | Mapear o crédito</td>
+                            <td class="px-6 py-4">PENDING</td>
+                            <td class="px-6 py-4">Jennifer Carvalho</td>
+                            <td class="px-6 py-4">48</td>
+                            <td class="px-6 py-4">Criado dia 06/06/2025</td>
+                        </tr>
+                        <tr class="table-row">
+                            <td class="px-6 py-4">427822</td>
+                            <td class="px-6 py-4">TX | Demanda Extra</td>
+                            <td class="px-6 py-4">PENDING</td>
+                            <td class="px-6 py-4">Jennifer Carvalho</td>
+                            <td class="px-6 py-4">0</td>
+                            <td class="px-6 py-4">Criado dia 12/06/2025</td>
+                        </tr>
+                        <tr class="table-row">
+                            <td class="px-6 py-4">427804</td>
+                            <td class="px-6 py-4">TX | Demanda Extra</td>
+                            <td class="px-6 py-4">PENDING</td>
+                            <td class="px-6 py-4">Jennifer Carvalho</td>
+                            <td class="px-6 py-4">0</td>
+                            <td class="px-6 py-4">Criado dia 12/06/2025</td>
+                        </tr>
+                        <tr class="table-row">
+                            <td class="px-6 py-4">428542</td>
+                            <td class="px-6 py-4">TX | Realizar ajuste necessário no processo</td>
+                            <td class="px-6 py-4">PENDING</td>
+                            <td class="px-6 py-4">Luciana Soares</td>
+                            <td class="px-6 py-4">90</td>
+                            <td class="px-6 py-4">Criado dia 16/06/2025</td>
+                        </tr>
+                        <tr class="table-row">
+                            <td class="px-6 py-4">428544</td>
+                            <td class="px-6 py-4">TX | Realizar ajuste necessário no processo</td>
+                            <td class="px-6 py-4">PENDING</td>
+                            <td class="px-6 py-4">Samuel Silva</td>
+                            <td class="px-6 py-4">90</td>
+                            <td class="px-6 py-4">Criado dia 16/06/2025</td>
+                        </tr>
+                        <tr class="table-row">
+                            <td class="px-6 py-4">428738</td>
+                            <td class="px-6 py-4">TX | Realizar ajuste necessário no processo</td>
+                            <td class="px-6 py-4">PENDING</td>
+                            <td class="px-6 py-4">Luciana Soares</td>
+                            <td class="px-6 py-4">90</td>
+                            <td class="px-6 py-4">Criado dia 16/06/2025</td>
+                        </tr>
+                        <tr class="table-row">
+                            <td class="px-6 py-4">429098</td>
+                            <td class="px-6 py-4">TX | Demanda Extra</td>
+                            <td class="px-6 py-4">PENDING</td>
+                            <td class="px-6 py-4">Juliane Oliveira</td>
+                            <td class="px-6 py-4">0</td>
+                            <td class="px-6 py-4">Criado dia 16/06/2025</td>
+                        </tr>
+                        <tr class="table-row">
+                            <td class="px-6 py-4">429110</td>
+                            <td class="px-6 py-4">TX | Acessar as informações e identificar os documentos</td>
+                            <td class="px-6 py-4">PENDING</td>
+                            <td class="px-6 py-4">Jennifer Carvalho</td>
+                            <td class="px-6 py-4">18</td>
+                            <td class="px-6 py-4">Criado dia 16/06/2025</td>
+                        </tr>
+                        <tr class="table-row">
+                            <td class="px-6 py-4">429876</td>
+                            <td class="px-6 py-4">TX | Preparar, Transmitir e Registrar a Solicitação</td>
+                            <td class="px-6 py-4">PENDING</td>
+                            <td class="px-6 py-4">Jennifer Carvalho</td>
+                            <td class="px-6 py-4">180</td>
+                            <td class="px-6 py-4">Criado dia 17/06/2025</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script id="tabSwitcher">
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabs = document.querySelectorAll('.tab-active, .tab-inactive');
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    tabs.forEach(t => {
+                        t.classList.remove('tab-active');
+                        t.classList.add('tab-inactive');
+                    });
+                    
+                    this.classList.remove('tab-inactive');
+                    this.classList.add('tab-active');
+                });
+            });
+        });
+    </script>
+    
+    <script id="modalClose">
+        document.addEventListener('DOMContentLoaded', function() {
+            const closeButton = document.querySelector('.ri-close-line').parentElement.parentElement;
+            
+            closeButton.addEventListener('click', function() {
+                document.querySelector('.modal').style.display = 'none';
+            });
+        });
+    </script>
+</body>
+</html>

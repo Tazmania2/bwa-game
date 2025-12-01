@@ -1,0 +1,571 @@
+@import "tools";
+@import "variables";
+
+// Estilos específicos para o termômetro
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-bounce {
+  animation: bounce 1s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: .5;
+  }
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(-25%);
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+  }
+  50% {
+    transform: none;
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  }
+}
+
+// Layout principal
+.thermometer-container {
+  height: 100vh;
+  background-color: #111827;
+  color: #ffffff;
+//   padding: 1.5rem;
+}
+
+.thermometer-content {
+  max-width: 72rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.thermometer-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.thermometer-title {
+  font-size: 2.25rem;
+  line-height: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  background: linear-gradient(to right, #60a5fa, #c084fc);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.thermometer-subtitle {
+  color: #9ca3af;
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+}
+
+.thermometer-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2rem;
+}
+
+.thermometer-card {
+  background-color: #1f2937;
+  border-radius: 0.75rem;
+  padding: 2rem;
+  border: 1px solid #374151;
+}
+
+.thermometer-card-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.thermometer-card-title {
+  font-size: 1.5rem;
+  line-height: 2rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.thermometer-card-subtitle {
+  color: #9ca3af;
+}
+
+// Termômetro visual
+.thermometer-visual {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.thermometer-base {
+  position: relative;
+  width: 4rem;
+  height: 24rem;
+  background-color: #374151;
+  border-radius: 9999px;
+  position: relative;
+  overflow: hidden;
+  border: 2px solid #4b5563;
+}
+
+.thermometer-stage-bg {
+  position: absolute;
+  width: 100%;
+}
+
+.thermometer-stage-red {
+  bottom: 0;
+  height: 25%;
+  background-color: rgba(127, 29, 29, 0.2);
+}
+
+.thermometer-stage-orange {
+  bottom: 25%;
+  height: 25%;
+  background-color: rgba(154, 52, 18, 0.2);
+}
+
+.thermometer-stage-cyan {
+  bottom: 50%;
+  height: 20%;
+  background-color: rgba(21, 94, 117, 0.2);
+}
+
+.thermometer-stage-green {
+  bottom: 75%;
+  height: 25%;
+  background-color: rgba(20, 83, 45, 0.2);
+}
+
+.thermometer-fill {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  border-radius: 9999px;
+  transition: all 1s ease-out;
+}
+
+.thermometer-fill-animation {
+  position: absolute;
+  inset: 0;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  opacity: 0.5;
+  background: linear-gradient(to top, rgba(255, 255, 255, 0.2), transparent);
+}
+
+.thermometer-stage-indicator {
+  position: absolute;
+  left: 0;
+  width: 100%;
+}
+
+.thermometer-stage-line {
+  width: 100%;
+  height: 0.125rem;
+  background-color: rgba(255, 255, 255, 0.4);
+}
+
+.thermometer-stage-current {
+  position: absolute;
+  left: -0.25rem;
+  top: -0.75rem;
+  width: 4.5rem;
+  height: 1.5rem;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  font-weight: 700;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.thermometer-stage-label {
+  position: absolute;
+  right: -4rem;
+  top: -0.5rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 600;
+}
+
+.thermometer-stage-reward {
+  position: absolute;
+  right: -6rem;
+  top: 0.5rem;
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
+
+.thermometer-achievement {
+  position: absolute;
+  top: 0.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.thermometer-achievement-icon {
+  width: 3rem;
+  height: 3rem;
+  background-color: #10b981;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: bounce 1s infinite;
+}
+
+.thermometer-bulb {
+  width: 5rem;
+  height: 5rem;
+  border-radius: 9999px;
+  position: absolute;
+  bottom: -0.5rem;
+  left: -0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.thermometer-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  color: white;
+}
+
+// Progresso atual
+.thermometer-progress {
+  text-align: center;
+}
+
+.thermometer-progress-value {
+  font-size: 3rem;
+  line-height: 1;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.thermometer-progress-label {
+  color: #9ca3af;
+}
+
+.thermometer-stage-info {
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+  font-weight: 600;
+  margin-top: 0.5rem;
+}
+
+// Seção de recompensas
+.rewards-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.reward-card {
+  background-color: #1f2937;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  border: 1px solid #374151;
+}
+
+.reward-card-next {
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.reward-card-header {
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.reward-card-content {
+  text-align: center;
+}
+
+.reward-tier-name {
+  font-size: 1.875rem;
+  line-height: 2.25rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.reward-percentage {
+  font-size: 1.5rem;
+  line-height: 2rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.reward-pot {
+  color: #9ca3af;
+  margin-bottom: 1rem;
+}
+
+.reward-button {
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  color: white;
+}
+
+.reward-button-current {
+  background: linear-gradient(to right, #10b981, #3b82f6);
+}
+
+.reward-button-next {
+  background: linear-gradient(to right, #3b82f6, #8b5cf6);
+  opacity: 0.75;
+}
+
+// Breakdown de tiers
+.tier-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.tier-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  border: 2px solid transparent;
+}
+
+.tier-item-current {
+  border-color: currentColor;
+}
+
+.tier-item-current-red {
+  background-color: rgba(127, 29, 29, 0.2);
+  color: #f87171;
+}
+
+.tier-item-current-orange {
+  background-color: rgba(154, 52, 18, 0.2);
+  color: #fb923c;
+}
+
+.tier-item-current-cyan {
+  background-color: rgba(21, 94, 117, 0.2);
+  color: #22d3ee;
+}
+
+.tier-item-current-green {
+  background-color: rgba(20, 83, 45, 0.2);
+  color: #4ade80;
+}
+
+.tier-item-inactive {
+  background-color: rgba(31, 41, 55, 0.5);
+}
+
+.tier-range {
+  font-weight: 600;
+}
+
+.tier-percentage {
+  font-weight: 600;
+}
+
+.tier-current-label {
+  font-size: 0.75rem;
+  line-height: 1rem;
+  font-weight: 700;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+// Estatísticas da equipe
+.team-stats {
+  margin-top: 2rem;
+  background-color: #1f2937;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  border: 1px solid #374151;
+}
+
+.team-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  text-align: center;
+}
+
+.team-stat-value {
+  font-size: 1.5rem;
+  line-height: 2rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.team-stat-label {
+  color: #9ca3af;
+}
+
+// Cores
+.text-blue-400 { color: #60a5fa; }
+.text-green-400 { color: #4ade80; }
+.text-orange-400 { color: #fb923c; }
+.text-cyan-400 { color: #22d3ee; }
+.text-red-400 { color: #f87171; }
+.text-purple-400 { color: #c084fc; }
+.text-blue-400-header { color: #60a5fa; }
+
+// Responsividade
+@media (max-width: 1024px) {
+  .thermometer-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .team-stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .thermometer-title {
+    font-size: 1.875rem;
+    line-height: 2.25rem;
+  }
+  
+  .thermometer-progress-value {
+    font-size: 2.25rem;
+    line-height: 2.5rem;
+  }
+  
+  .thermometer-card {
+    padding: 1.5rem;
+  }
+  
+  .thermometer-base {
+    width: 3rem;
+    height: 20rem;
+  }
+}
+
+.menu-shadow {
+  transition: all $default-anim-time;
+  width: $side-menu-size;
+  min-width: $side-menu-size;
+}
+
+
+
+.menu-handler {
+  cursor: pointer;
+  position: absolute;
+  top: 120px;
+  left: $side-menu-size;
+  width: size(1);
+  height: size(5);
+  padding: 0;
+  border: none;
+  outline: none;
+
+  background: rgba(82, 84, 87, 0.5);
+  box-shadow: 0 4px 4px rgba(0, 0, 0, 0.25);
+  border-radius: 0 8px 8px 0;
+
+  z-index: 100;
+
+  .icon-arrow_forward_ios {
+    color: $cor-seta-menu;
+    font-size: 24px;
+    opacity: 0;
+    transition: all $default-anim-time;
+
+    &.invert {
+      transform: rotate(180deg);
+    }
+  }
+
+  transition: width $default-anim-time;
+
+  &:hover {
+    width: size(3);
+
+    .icon-arrow_forward_ios {
+      opacity: 1;
+    }
+  }
+}
+
+aside {
+  z-index: 1;
+  width: $side-menu-size;
+  position: absolute;
+  transition: left $default-anim-time;
+  left: 0;
+  @include fullHeight;
+}
+
+.menu-items {
+  display: flex;
+  flex-direction: column;
+  gap: size(2);
+  margin-top: size(4);
+  width: 100%;
+}
+
+.menu-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: size(2);
+  padding: size(2);
+  border-radius: 8px;
+  text-decoration: none;
+  color: inherit;
+  transition: background-color 0.5s, color 0.5s;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+  }
+
+  i {
+    font-size: 22px;
+    min-width: 22px;
+    text-align: center;
+  }
+
+  span {
+    white-space: nowrap;
+    overflow: hidden;
+    transition: opacity 0.5s, margin 0.5s;
+    opacity: 1;
+    margin-left: 12px;
+  }
+
+  .menu-tooltip {
+    display: none;
+    position: absolute;
+    left: 110%;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #222;
+    color: #fff;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 2000;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+    opacity: 0.95;
+    transition: opacity 0.2s, transform 0.2s;
+  }
+}

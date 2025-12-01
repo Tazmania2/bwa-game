@@ -1,0 +1,26 @@
+<div class="modal-confirm">
+  <div class="modal-confirm-content">
+    <div class="modal-confirm-icon"><i class="ri-close-line"></i></div>
+    <div class="modal-confirm-text">
+      <h3>Confirmar Cancelamento</h3>
+      <p>Tem certeza que deseja cancelar esta delivery?</p>
+    </div>
+    
+    <div class="delivery-info">
+      <strong>Delivery:</strong> {{ deliveryTitle || 'N/A' }}
+    </div>
+    
+    <div class="warning-message">
+      <p><i class="ri-error-warning-line"></i> Esta ação não pode ser desfeita. A delivery será movida para a lista de canceladas.</p>
+    </div>
+    
+    <div class="modal-confirm-footer">
+      <button class="btn-ghost" (click)="cancelar()">
+        <i class="icon-cancel"></i> Cancelar
+      </button>
+      <button class="btn-danger" (click)="confirmar()">
+        <i class="icon-cancel"></i> Confirmar Cancelamento
+      </button>
+    </div>
+  </div>
+</div> 

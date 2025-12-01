@@ -1,0 +1,31 @@
+@import "tools";
+
+:host {
+  @include fullSize;
+  display: block;
+  background: #36393D;
+  position: relative;
+  overflow: hidden;
+  opacity: 0.9;
+
+  &:before {
+    z-index: 0;
+    @include fullHeight;
+    width: 100%;
+    content: '';
+    position: absolute;
+    top: 0;
+    background: linear-gradient(90deg, transparent 0%, rgba(93, 98, 104, 0.38) 50%, transparent 100%);
+    animation: slide 2000ms linear infinite;
+  }
+
+  @keyframes slide {
+    0% {
+      left: -100%;
+    }
+
+    100% {
+      left: 100%;
+    }
+  }
+}

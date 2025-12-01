@@ -1,0 +1,32 @@
+@import "variables";
+@import "tailwind";
+@reference "tailwindcss";
+
+:host {
+  position: relative;
+  display: block;
+}
+
+// Estilos específicos que não podem ser facilmente convertidos para Tailwind
+// ou que precisam de customização adicional podem ser mantidos aqui
+.arrow {
+  position: relative;
+  top: 3px;
+  cursor: pointer;
+  border: 5px solid transparent;
+  border-top-color: $texto-branco;
+}
+
+.pointer {
+  cursor: pointer;
+}
+
+.container {
+  // gap: 0.5rem;
+
+  @apply border border-[#83878B] h-12 gap-2 rounded-lg px-2 flex;
+
+  @screen md {
+    @apply flex items-center h-fit gap-6 p-3 px-6 rounded-none rounded-t-lg border-r-0 border-l-0 border-t-0 border-b border-b-gray-400 bg-gradient-to-br from-white/20 to-white/0;
+  }
+}

@@ -1,0 +1,29 @@
+@import "variables";
+@import "tools";
+
+:host {
+  height: size(3);
+  display: block;
+  background: $texto-cinza;
+  position: relative;
+  border-radius: size(5);
+  overflow: hidden;
+}
+
+.bar {
+  transition: width $default-anim-time * 10 ease-out;
+  width: 0;
+  height: 100%;
+
+  &.red {
+    background: linear-gradient(180deg, #440017 0%, #743248 50%, #440017 100%);
+  }
+
+  &.gold {
+    background: linear-gradient(180deg, #956F0E 0%, #DBCAA0 50%, #956F0E 100%);
+  }
+
+  &.green {
+    background: linear-gradient(180deg, #006F09 0%, #37CC42 50%, #006F09 100%);
+  }
+}

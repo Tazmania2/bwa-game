@@ -1,0 +1,26 @@
+<div class="modal-confirm">
+  <div class="modal-confirm-content">
+    <div class="modal-confirm-icon"><i class="ri-error-warning-line"></i></div>
+    <div class="modal-confirm-text">
+      <h3>Confirmar Desfazer</h3>
+      <p>Tem certeza que deseja desfazer esta delivery?</p>
+    </div>
+    
+    <div class="delivery-info">
+      <strong>Delivery:</strong> {{ deliveryTitle || 'N/A' }}
+    </div>
+    
+    <div class="warning-message">
+      <p><i class="ri-error-warning-line"></i> A delivery será movida de volta para a lista de incompletas e poderá ser completada novamente.</p>
+    </div>
+    
+    <div class="modal-confirm-footer">
+      <button class="btn-ghost" (click)="cancelar()">
+        <i class="icon-cancel"></i> Cancelar
+      </button>
+      <button class="btn-warning" (click)="confirmar()">
+        <i class="icon-refresh"></i> Confirmar Desfazer
+      </button>
+    </div>
+  </div>
+</div> 

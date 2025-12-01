@@ -1,0 +1,84 @@
+@import "tools";
+@import "variables";
+@import "tailwind";
+@reference "tailwindcss";
+
+// Estilos específicos para ícones
+[class^=icon-] {
+  font-size: 18px;
+
+  @screen md {
+    font-size: 24px;
+  }
+}
+
+// Estilos para o ng-select
+ng-select {
+
+  // Desktop
+  @screen md {
+    width: 145px;
+  }
+
+  // Mobile - largura total
+  width: 100%;
+
+  // Customizações do ng-select para melhor aparência
+  ng-select::ng-deep {
+    .ng-select-container {
+      @apply bg-white/10 border-white/20 text-white rounded-lg;
+
+      &:hover {
+        @apply bg-white/15 border-white/30;
+      }
+
+      &.ng-select-focused {
+        @apply bg-white/15 border-white/40 ring-2 ring-white/20;
+      }
+    }
+
+    .ng-arrow-wrapper {
+      .ng-arrow {
+        @apply border-white;
+      }
+    }
+
+    .ng-placeholder {
+      @apply text-white/60;
+    }
+
+    .ng-value {
+      @apply text-white;
+    }
+  }
+
+  .ng-dropdown-panel {
+    @apply bg-gray-800 border-white/20;
+
+    .ng-option {
+      @apply text-white hover:bg-white/10;
+
+      &.ng-option-selected {
+        @apply bg-white/20;
+      }
+    }
+  }
+}
+
+// Animações personalizadas
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Aplicar animação suave aos elementos
+.animate-fade-in-up {
+  animation: fadeInUp 0.3s ease-out;
+}

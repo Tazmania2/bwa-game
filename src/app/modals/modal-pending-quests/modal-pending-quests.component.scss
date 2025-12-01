@@ -1,0 +1,231 @@
+:host {
+  display: block;
+  width: 70vw;
+  height: 95vh;
+  margin: 0 auto;
+  border-radius: 24px;
+}
+
+// c4u-modal {
+//   max-width: 1100px;
+//   margin: 0 auto;
+// }
+
+.content-items-header {
+  display: flex;
+  justify-content: flex-start;
+  // gap: 1rem;
+  border-bottom: 1px solid #E0E0E0;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.modal-content {
+  overflow-y: hidden;
+
+
+  p {
+    margin-block-start: 0.5em;
+    margin-block-end: 0.5em;
+  }
+
+  .modal-id {
+    font-weight: bold;
+  }
+
+  .modal-text {
+    white-space: nowrap;
+    color: #B2B2B2;
+    text-align: right;
+  }
+
+  .sem-resultados {
+    text-align: center;
+    margin-top: 2rem;
+  }
+
+  .button-modal {
+    margin-bottom: 0.5em;
+  }
+
+  &::-webkit-scrollbar {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+  }
+
+  &::-webkit-scrollbar-track {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    position: absolute;
+    background: radial-gradient(50% 50% at 50% 50%, #9c9c9c 0%, #656565 100%);
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-corner {
+    position: absolute;
+    background: transparent;
+  }
+}
+
+c4u-painel-vidro {
+  padding: size(2);
+
+  &:before {
+    z-index: 0;
+  }
+
+  &:after {
+    z-index: 0;
+  }
+
+  div {
+    margin: 16px;
+  }
+}
+
+.table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 0.75rem;
+}
+
+.tableHeader th {
+  padding: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-align: left;
+  text-transform: uppercase;
+  border-bottom: 1px solid #E0E0E0;
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+  background: #202326;
+}
+
+.tableHeader th:first-child {
+  padding-left: 0.5rem;
+}
+
+.tableHeader th:last-child {
+  padding-right: 0.5rem;
+}
+
+.tableBody td {
+  padding: 0.25rem;
+}
+
+.tableBody td:first-child {
+  padding-left: 0.5rem;
+}
+
+.tableBody td:last-child {
+  padding-right: 0.5rem;
+}
+
+.tableBody tr:last-child td {
+  border-bottom: none;
+}
+
+a {
+  color: #8ab4f8;
+  cursor: pointer;
+  word-break: break-all;
+  font-weight: 500;
+  
+  &:hover {
+    color: #ffd700;
+    text-decoration: underline;
+  }
+}
+
+.link-style {
+  color: #8ab4f8;
+  cursor: pointer;
+  word-break: break-all;
+  font-weight: 500;
+  
+  &:hover {
+    color: #ffd700;
+    text-decoration: underline;
+  }
+}
+
+.disabled-link {
+  color: #999 !important;
+  cursor: not-allowed !important;
+  text-decoration: none !important;
+  pointer-events: none !important;
+  
+  &:hover {
+    color: #999 !important;
+    text-decoration: none !important;
+  }
+}
+
+:host {
+  min-width: 0;
+  max-width: 100vw;
+
+  width: 100%;
+  height: 100vh;
+  @screen md {
+    width: unset;
+    height: unset;
+    max-width: 100vw;
+  }
+}
+c4u-modal {
+  max-width: 100vw;
+}
+.modal-content {
+  height: auto;
+  min-width: 0;
+}
+table {
+  font-size: 14px;
+  max-width: 100vw;
+}
+td, thead td, th {
+  padding: 8px 6px; // Reduzido de 10px para 8px
+  min-width: 80px;
+  max-width: 120px;
+  line-height: 1.3; // Reduz altura da linha para evitar quebras
+  white-space: nowrap; // Evita quebras de linha
+}
+
+// Coluna de Título mais larga
+.tableHeader th:nth-child(2), // Título está na 2ª coluna
+.tableBody td:nth-child(2) {
+  min-width: 250px;
+  max-width: 350px;
+  width: 30%; // Ocupa 30% da largura da tabela
+  white-space: normal; // Permite quebras de linha no título
+  word-break: break-word; // Quebra palavras longas se necessário
+}
+
+.statusPending { color: #ef4444 !important; font-weight: 600; }    /* vermelho */
+.statusDoing { color: #fbbf24 !important; font-weight: 600; }      /* amarelo */
+.statusIncomplete { color: #fbbf24 !important; font-weight: 600; }      /* amarelo */
+.statusDone { color: #10b981 !important; font-weight: 600; }       /* verde */
+.statusDelivered { color: #6366f1 !important; font-weight: 600; }  /* roxo */
+.statusPaid { color: #22d3ee !important; font-weight: 600; }       /* ciano */
+.statusLost { color: #9ca3af !important; font-weight: 600; }       /* cinza */
+.statusCancelled { color: #9ca3af !important; font-weight: 600; }  /* cinza */
+
+.disabled-link {
+  color: #999 !important;
+  cursor: not-allowed !important;
+  text-decoration: none !important;
+  pointer-events: none !important;
+  
+  &:hover {
+    color: #999 !important;
+    text-decoration: none !important;
+  }
+}

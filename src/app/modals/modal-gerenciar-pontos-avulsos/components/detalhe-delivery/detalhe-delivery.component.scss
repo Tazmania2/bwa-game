@@ -1,0 +1,479 @@
+.detalhe-delivery-container {
+  .back-btn {
+    background: none;
+    border: none;
+    color: #6b7280;
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 0.5rem 0;
+    margin-bottom: 1rem;
+    transition: color 0.2s ease;
+    
+    &:hover {
+      color: #374151;
+    }
+  }
+
+  .detalhe-delivery-content {
+    background: white;
+    border-radius: 0.5rem;
+    padding: 2rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+
+  .detalhe-delivery-status {
+    padding: 0.75rem 1rem;
+    border-radius: 0.375rem;
+    margin-bottom: 1.5rem;
+    font-weight: 500;
+    
+    &.detalhe-vermelho {
+      background-color: #fef2f2;
+      color: #dc2626;
+      border-left: 4px solid #dc2626;
+    }
+    
+    &.detalhe-verde {
+      background-color: #f0fdf4;
+      color: #16a34a;
+      border-left: 4px solid #16a34a;
+    }
+    
+    &.detalhe-azul {
+      background-color: #eff6ff;
+      color: #2563eb;
+      border-left: 4px solid #2563eb;
+    }
+    
+    &.detalhe-cinza {
+      background-color: #f9fafb;
+      color: #6b7280;
+      border-left: 4px solid #6b7280;
+    }
+    
+    &.detalhe-amarelo {
+      background-color: #fffbeb;
+      color: #d97706;
+      border-left: 4px solid #d97706;
+    }
+  }
+
+  .detalhe-delivery-nome {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 0.5rem;
+  }
+
+  .detalhe-delivery-id {
+    color: #6b7280;
+    font-size: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .detalhe-delivery-info {
+    background-color: #f9fafb;
+    padding: 1.5rem;
+    border-radius: 0.375rem;
+    margin-bottom: 2rem;
+    
+    .info-item {
+      margin-bottom: 1rem;
+      
+      &:last-child {
+        margin-bottom: 0;
+      }
+      
+      strong {
+        color: #374151;
+        margin-right: 0.5rem;
+      }
+      
+      span {
+        color: #6b7280;
+        font-size: 0.875rem;
+      }
+    }
+  }
+
+  .progress-container {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+    
+    .progress-bar {
+      flex: 1;
+      height: 8px;
+      background-color: #e5e7eb;
+      border-radius: 4px;
+      overflow: hidden;
+      
+      .progress-fill {
+        height: 100%;
+        background-color: #10b981;
+        transition: width 0.3s ease;
+      }
+    }
+    
+    .progress-text {
+      font-size: 0.875rem;
+      color: #6b7280;
+      min-width: 2.5rem;
+      text-align: right;
+      font-weight: 500;
+    }
+  }
+
+  .detalhe-delivery-estatisticas {
+    margin-bottom: 2rem;
+    
+    h4 {
+      margin: 0 0 1rem 0;
+      color: #111827;
+      font-size: 1.125rem;
+    }
+    
+    .estatisticas-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 1rem;
+      
+      .estatistica-item {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.375rem;
+        padding: 1rem;
+        text-align: center;
+        
+        .estatistica-valor {
+          font-size: 1.5rem;
+          font-weight: 600;
+          color: #111827;
+          margin-bottom: 0.25rem;
+        }
+        
+        .estatistica-label {
+          font-size: 0.875rem;
+          color: #6b7280;
+        }
+      }
+    }
+  }
+
+  .detalhe-delivery-tarefas {
+    margin-bottom: 2rem;
+    
+    .tarefas-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      
+      h4 {
+        margin: 0;
+        color: #111827;
+        font-size: 1.125rem;
+      }
+      
+      .btn-criar-tarefa {
+        background-color: #3b82f6;
+        color: white;
+        border: none;
+        border-radius: 0.375rem;
+        padding: 0.5rem 1rem;
+        cursor: pointer;
+        font-size: 0.875rem;
+        font-weight: 500;
+        transition: background-color 0.2s ease;
+        
+        &:hover:not(:disabled) {
+          background-color: #2563eb;
+        }
+        
+        &:disabled {
+          background-color: #9ca3af;
+          cursor: not-allowed;
+        }
+        
+        i {
+          margin-right: 0.25rem;
+        }
+      }
+    }
+    
+    .tarefas-lista {
+      .tarefa-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.375rem;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        transition: border-color 0.2s ease;
+        
+        &:hover {
+          border-color: #3b82f6;
+        }
+        
+        .tarefa-info {
+          flex: 1;
+          
+          .tarefa-titulo {
+            font-weight: 500;
+            color: #111827;
+            margin-bottom: 0.5rem;
+          }
+          
+          .tarefa-detalhes {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            
+            .tarefa-executor {
+              display: flex;
+              align-items: center;
+              gap: 0.25rem;
+              color: #6b7280;
+              font-size: 0.875rem;
+              
+              i {
+                font-size: 0.75rem;
+              }
+            }
+            
+            .tarefa-status {
+              font-size: 0.75rem;
+              padding: 0.25rem 0.5rem;
+              border-radius: 0.25rem;
+              font-weight: 500;
+              text-transform: uppercase;
+              
+              &.statusPending {
+                background-color: #fef3c7;
+                color: #d97706;
+              }
+              
+              &.statusDoing {
+                background-color: #dbeafe;
+                color: #2563eb;
+              }
+              
+              &.statusDone {
+                background-color: #d1fae5;
+                color: #059669;
+              }
+              
+              &.statusDelivered {
+                background-color: #e0e7ff;
+                color: #7c3aed;
+              }
+              
+              &.statusCancelled {
+                background-color: #f3f4f6;
+                color: #6b7280;
+              }
+            }
+            
+            .tarefa-data {
+              color: #9ca3af;
+              font-size: 0.75rem;
+            }
+          }
+        }
+        
+        .tarefa-pontos {
+          .pontos-badge {
+            background-color: #f59e0b;
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+          }
+        }
+      }
+    }
+    
+    .tarefas-vazio {
+      .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+        
+        i {
+          font-size: 3rem;
+          color: #d1d5db;
+          margin-bottom: 1rem;
+          display: block;
+        }
+        
+        p {
+          color: #6b7280;
+          margin: 0 0 0.5rem 0;
+          font-size: 1.125rem;
+        }
+        
+        small {
+          color: #9ca3af;
+          font-size: 0.875rem;
+          display: block;
+          margin-bottom: 1.5rem;
+        }
+        
+        .btn-criar-primeira-tarefa {
+          background-color: #3b82f6;
+          color: white;
+          border: none;
+          border-radius: 0.375rem;
+          padding: 0.75rem 1.5rem;
+          cursor: pointer;
+          font-weight: 500;
+          transition: background-color 0.2s ease;
+          
+          &:hover {
+            background-color: #2563eb;
+          }
+          
+          i {
+            margin-right: 0.5rem;
+          }
+        }
+      }
+    }
+  }
+
+  .detalhe-delivery-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e5e7eb;
+    
+    .footer-actions-left {
+      .btn-cancelar {
+        background-color: #6b7280;
+        color: white;
+        border: none;
+        border-radius: 0.375rem;
+        padding: 0.75rem 1.5rem;
+        cursor: pointer;
+        font-weight: 500;
+        transition: background-color 0.2s ease;
+        
+        &:hover:not(:disabled) {
+          background-color: #4b5563;
+        }
+        
+        &:disabled {
+          background-color: #d1d5db;
+          cursor: not-allowed;
+        }
+        
+        i {
+          margin-right: 0.5rem;
+        }
+      }
+    }
+    
+    .footer-actions-right {
+      display: flex;
+      gap: 0.75rem;
+      
+      .btn-completar {
+        background-color: #10b981;
+        color: white;
+        border: none;
+        border-radius: 0.375rem;
+        padding: 0.75rem 1.5rem;
+        cursor: pointer;
+        font-weight: 500;
+        transition: background-color 0.2s ease;
+        
+        &:hover:not(:disabled) {
+          background-color: #059669;
+        }
+        
+        &:disabled {
+          background-color: #9ca3af;
+          cursor: not-allowed;
+        }
+        
+        i {
+          margin-right: 0.5rem;
+        }
+      }
+      
+      .btn-desfazer {
+        background-color: #f59e0b;
+        color: white;
+        border: none;
+        border-radius: 0.375rem;
+        padding: 0.75rem 1.5rem;
+        cursor: pointer;
+        font-weight: 500;
+        transition: background-color 0.2s ease;
+        
+        &:hover:not(:disabled) {
+          background-color: #d97706;
+        }
+        
+        &:disabled {
+          background-color: #fbbf24;
+          cursor: not-allowed;
+        }
+        
+        i {
+          margin-right: 0.5rem;
+        }
+      }
+      
+      .btn-restaurar {
+        background-color: #3b82f6;
+        color: white;
+        border: none;
+        border-radius: 0.375rem;
+        padding: 0.75rem 1.5rem;
+        cursor: pointer;
+        font-weight: 500;
+        transition: background-color 0.2s ease;
+        
+        &:hover:not(:disabled) {
+          background-color: #2563eb;
+        }
+        
+        &:disabled {
+          background-color: #93c5fd;
+          cursor: not-allowed;
+        }
+        
+        i {
+          margin-right: 0.5rem;
+        }
+      }
+    }
+  }
+}
+
+// Classes de status
+.statusPending {
+  color: #f59e0b;
+  font-weight: 500;
+}
+
+.statusIncomplete {
+  color: #f97316;
+  font-weight: 500;
+}
+
+.statusDelivered {
+  color: #10b981;
+  font-weight: 500;
+}
+
+.statusCancelled {
+  color: #6b7280;
+  font-weight: 500;
+} 

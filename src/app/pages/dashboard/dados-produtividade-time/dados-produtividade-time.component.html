@@ -1,0 +1,124 @@
+<c4u-card [titulo]="'LABEL_PRODUCTIVITY_ANALYSIS' | translate" [marginTop]="24" flexItem="100%">
+  <div flex gap="40px 56px" wrap="wrap">
+    <c4u-painel-info flexItem="100%">
+      <div flex vAlign="center" [marginBottom]="8" wrap="wrap" [gap]="8">
+        <div flex [gap]="8" vAlign="center">
+          <span translate="LABEL_SHOW_LAST"></span>
+          <ng-select
+            [items]="dateRanges"
+            [clearable]="false"
+            [searchable]="false"
+            [(ngModel)]="selectedDateRange"
+            (change)="updateGrafico()"
+            bindLabel="text"
+            bindValue="val"
+          >
+          </ng-select>
+        </div>
+
+        <span flexItem="auto"></span>
+        <div flex [gap]="8" vAlign="center" direction="column">
+          <span translate="LABEL_CHART_TYPE"></span>
+          <c4u-botao-selecao
+            [items]="itemsButton"
+            [(selection)]="chartSelection"
+          ></c4u-botao-selecao>
+        </div>
+      </div>
+    </c4u-painel-info>
+
+    <c4u-painel-info flexItem="100%" *enableShimmer="[!chartLoaded, {height: 378, borderRadius: 16}]">
+      <h1>
+        {{
+          (isCSLayout
+            ? "LABEL_TICKETS_FINALIZED_PER_DAY"
+            : "LABEL_FINISHED_QUESTS_PER_DAY"
+          ) | translate : {actionAlias: actionAlias}
+        }}
+      </h1>
+      <c4u-grafico-linhas
+        [values]="valuesAtividades"
+        [labels]="labels"
+        [showLegend]="true"
+        *ngIf="chartSelection == 0 && chartLoaded"
+      ></c4u-grafico-linhas>
+      <c4u-grafico-barras
+        [values]="valuesAtividades"
+        [labels]="labels"
+        [showLegend]="true"
+        *ngIf="chartSelection == 1 && chartLoaded"
+      ></c4u-grafico-barras>
+    </c4u-painel-info>
+
+    <c4u-painel-info flexItem="100%" *enableShimmer="[!chartLoaded, {height: 378, borderRadius: 16}]">
+      <h1>
+        {{
+          (isCSLayout
+            ? "LABEL_POINTS_UNBLOCKED_PER_DAY"
+            : "LABEL_GENERATED_POINTS_PER_DAY"
+          ) | translate : {pointAlias: pointAlias}
+        }}
+      </h1>
+      <c4u-grafico-linhas
+        [values]="valuesPontos"
+        [labels]="labels"
+        [showLegend]="true"
+        *ngIf="chartSelection == 0 && chartLoaded"
+      ></c4u-grafico-linhas>
+      <c4u-grafico-barras
+        [values]="valuesPontos"
+        [labels]="labels"
+        [showLegend]="true"
+        *ngIf="chartSelection == 1 && chartLoaded"
+      ></c4u-grafico-barras>
+    </c4u-painel-info>
+
+    <c4u-painel-info flexItem="100%" *enableShimmer="[!chartLoaded, {height: 378, borderRadius: 16}]">
+      <h1>
+        {{
+          (isCSLayout
+            ? "LABEL_INDIVIDUAL_CONTRIBUTION_TICKETS"
+            : "LABEL_INDIVIDUAL_CONTRIBUTION_QUESTS"
+          ) | translate : {actionAlias: actionAlias}
+        }}
+      </h1>
+      <c4u-grafico-barras
+        [values]="valuesParticipacaoAtividades"
+        [labels]="labelsParticipacaoAtividades"
+        *ngIf="chartLoaded"
+      ></c4u-grafico-barras>
+    </c4u-painel-info>
+
+    <c4u-painel-info flexItem="100%" *enableShimmer="[!chartLoaded, {height: 378, borderRadius: 16}]">
+      <h1>
+        {{
+          (isCSLayout
+            ? "LABEL_INDIVIDUAL_CONTRIBUTION_POINTS_UNBLOCKED"
+            : "LABEL_INDIVIDUAL_CONTRIBUTION_POINTS"
+          ) | translate : {pointAlias: pointAlias}
+        }}
+      </h1>
+      <c4u-grafico-barras
+        [values]="valuesParticipacaoPontos"
+        [labels]="labelsParticipacaoPontos"
+        *ngIf="chartLoaded"
+      ></c4u-grafico-barras>
+    </c4u-painel-info>
+
+    <!-- <c4u-painel-info flexItem="100%" *enableShimmer="[!chartLoaded, {height: 378, borderRadius: 16}]">
+      <h1>
+        {{
+          (isCSLayout
+            ? "LABEL_INDIVIDUAL_CONTRIBUTION_POINTS_EXPIRED"
+            : "LABEL_INDIVIDUAL_CONTRIBUTION_POINTS"
+          ) | translate
+        }}
+      </h1>
+      <c4u-grafico-barras
+        [values]="expiredPointsParticipationValues"
+        [labels]="labelsExpiredPointsParticipationValues"
+        *ngIf="chartLoaded"
+      ></c4u-grafico-barras>
+    </c4u-painel-info> -->
+  </div>
+</c4u-card>

@@ -1,0 +1,27 @@
+<div class="grid lg:!grid-cols-[2fr_8fr] grid-cols-1 gap-6 mt-6">
+  <c4u-card [titulo]="'LABEL_GOALS' | translate" class="min-w-max">
+    <div flex flexItem="100%" wrap="wrap" align="center">
+      <div *ngIf="isLevelsEnabled()" flexItem="100%" class="item-progresso">
+        <c4u-porcentagem-circular [percent]="getPercentNivel(maxLevel)" [valor]="nivelMeta?.nivel || 0"
+          [total]="maxLevel" [theme]="nivelMeta?.tema || 'red'"></c4u-porcentagem-circular>
+        <div class="label-progresso"><b>Nível do time</b></div>
+      </div>
+
+      <div flexItem="100%" class="item-progresso">
+        <c4u-porcentagem-circular [percent]="getPercentMacro(teamMonthlyGoal)" [valor]="dadosMes?.completedDeliveries"
+          [total]="teamMonthlyGoal" theme="green"></c4u-porcentagem-circular>
+        <div class="label-progresso"><b>{{"LABEL_PROCESSES_QUESTS_FINISHED" | translate: {deliveryAlias:
+            deliveryAlias} }}</b></div>
+      </div>
+    </div>
+  </c4u-card>
+
+  <c4u-card [titulo]="'LABEL_PROGRESS' | translate">
+    <div flex gap="40px 56px" wrap="wrap" marginBottom="1.5rem">
+      <dados-mes-atual flexItem="1" [dadosMesAtual]="dadosMes" [showVertical]="true" [idUsuario]="idTime"
+        [tipoConsulta]="tipoConsulta" *ngIf="!mesAnterior"></dados-mes-atual>
+      <dados-mes-anterior flexItem="1" [dadosMesAnterior]="dadosMes" [mesesAnteriores]="mesAnterior"
+        [idUsuario]="idTime" [tipoConsulta]="tipoConsulta" *ngIf="mesAnterior"></dados-mes-anterior>
+    </div>
+  </c4u-card>
+</div>

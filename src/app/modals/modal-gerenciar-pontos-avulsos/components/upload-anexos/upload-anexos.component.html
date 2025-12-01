@@ -1,0 +1,88 @@
+<div class="upload-anexos-container">
+  <!-- Anexos existentes -->
+  <div class="anexos-existentes" *ngIf="!loadingAnexos && anexosExistentes.length > 0">
+    <h5>Anexos existentes</h5>
+    <div class="anexos-lista">
+      <div class="anexo-item" *ngFor="let anexo of anexosExistentes">
+        <div class="anexo-info">
+          <i class="icon-file"></i>
+          <span class="anexo-nome">{{ anexo.original_name || anexo.filename || 'arquivo' }}</span>
+          <span class="anexo-tamanho">{{ formatFileSize(anexo.size) }}</span>
+          <span class="anexo-data">{{ anexo.created_at | date:'dd/MM/yyyy HH:mm' }}</span>
+        </div>
+        <button class="btn-download" 
+                (click)="fazerDownloadAnexo(anexo)" 
+                [title]="getDownloadTooltip(anexo)"
+                [disabled]="downloadingAnexos.has(anexo.id)">
+          <i *ngIf="!downloadingAnexos.has(anexo.id)" class="ri-download-line"></i>
+          <span>Baixar</span>
+          <i *ngIf="downloadingAnexos.has(anexo.id)" class="icon-spinner"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading de anexos -->
+  <div class="anexos-loading" *ngIf="loadingAnexos">
+    <div class="loading-spinner">Carregando anexos...</div>
+  </div>
+
+  <!-- Upload de novos anexos -->
+  <div class="evidencias-lista" *ngIf="arquivosSelecionados.length > 0">
+    <h5>Novos anexos para upload</h5>
+    <div class="evidencia-item" *ngFor="let arquivo of arquivosSelecionados; let i = index">
+      <div class="evidencia-info">
+        <i class="icon-file"></i>
+        <span class="evidencia-nome">{{ arquivo.name }}</span>
+        <span class="evidencia-tamanho">{{ formatFileSize(arquivo.size) }}</span>
+      </div>
+      <button class="btn-remover" (click)="removerArquivo(i)">
+        <i class="icon-delete"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Área de upload -->
+  <div class="evidencias-upload-area">
+    <div class="upload-zone" 
+         (click)="fileInput.click()" 
+         (dragover)="onDragOver($event)" 
+         (drop)="onDrop($event)">
+      <i class="icon-upload"></i>
+      <p>Clique ou arraste arquivos aqui</p>
+      <small>Formatos aceitos: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG, MP4</small>
+      <input #fileInput type="file" multiple 
+             (change)="onFileSelected($event)" 
+             style="display: none;" 
+             accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.mp4,.avi,.mov"
+             title="Formatos aceitos: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG, MP4">
+    </div>
+  </div>
+
+  <!-- Progresso de upload -->
+  <div class="upload-progress" *ngIf="fazendoUpload">
+    <div class="progress-bar">
+      <div class="progress-fill" [style.width.%]="getProgressoUpload()"></div>
+    </div>
+    <span class="progress-text">{{ getProgressoUploadTexto() }}</span>
+  </div>
+
+  <!-- Ações -->
+  <div class="evidencias-actions">
+    <div class="actions-buttons">
+      <button class="btn-upload" 
+              (click)="fazerUpload()"
+              [disabled]="!podeFazerUpload()">
+        <i class="icon-upload"></i> Enviar Anexos
+      </button>
+      <button class="btn-limpar" 
+              (click)="removerTodosArquivos()" 
+              [disabled]="!podeLimparArquivos()">
+        <i class="icon-delete"></i> Limpar Todos
+      </button>
+    </div>
+    <small *ngIf="arquivosSelecionados.length >= maxArquivos" class="upload-limit">
+      Máximo {{ maxArquivos }} arquivos permitidos
+    </small>
+  </div>
+</div> 

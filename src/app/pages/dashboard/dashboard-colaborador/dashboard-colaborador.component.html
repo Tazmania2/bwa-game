@@ -1,0 +1,36 @@
+<c4u-card class="md:mt-0 mt-6" [titulo]="'LABEL_MY_GOALS' | translate" hover>
+
+  <div flex wrap="wrap" [gap]="80">
+    <ng-container *ngIf="isLevelsEnabled()">
+      <c4u-mostrador-progresso [title]="'LABEL_LEVEL_GOAL' | translate"
+                               [level]="nivelMeta?.nivel || 0"
+                               [max]="nivelMeta?.maxLevel || 0"
+                               [percent]="nivelMeta ? getLevelPercent(nivelMeta.maxLevel) : 0"
+                               [stars]="nivelMeta?.estrelas || 0"
+                               [description]="statusJogador?.label || ''"
+                               [theme]="nivelMeta?.tema || 'red'"
+                               [subtitle]="nivelMeta ? ('LABEL_REACH_LEVEL' | translate : {level: nivelMeta.maxLevel}) : ''"
+                               [icon]="statusJogador?.icon || ''"
+                               flexItem="1"
+                               *enableShimmer="[!dadosMes || !nivelMeta, getShimmerConfig()]">
+      </c4u-mostrador-progresso>
+    </ng-container>
+
+    <c4u-mostrador-progresso [level]="macrosFinalizadasMes" [max]="individualMonthlyGoal" [percent]="getPercentMacro(individualMonthlyGoal)"
+                             [title]="'LABEL_PROCESSES_QUESTS_FINISHED' | translate : {deliveryAlias: deliveryAlias}" theme="green"
+                             subtitle="Colaborar com a finalização de {{individualMonthlyGoal}} {{deliveryAlias}}" flexItem="1"
+                             *enableShimmer="[!dadosMes, getShimmerConfig()]">
+    </c4u-mostrador-progresso>
+  </div>
+</c4u-card>
+<c4u-card [marginTop]="24" [titulo]="'LABEL_MY_PROGRESS' | translate">
+  <div flex gap="40px 56px" wrap="wrap">
+    <dados-mes-atual flexItem="1" [dadosMesAtual]="dadosMes"
+                     [idUsuario]="idUsuario" [tipoConsulta]="tipoConsulta"
+                     *ngIf="!mesAnterior" [showVertical]="true"></dados-mes-atual>
+    <dados-mes-anterior flexItem="1" [dadosMesAnterior]="dadosMes" [tipoConsulta]="tipoConsulta"
+                        [idUsuario]="idUsuario" [mesesAnteriores]="mesAnterior"
+                        *ngIf="mesAnterior" [showVertical]="true"></dados-mes-anterior>
+  </div>
+
+</c4u-card>

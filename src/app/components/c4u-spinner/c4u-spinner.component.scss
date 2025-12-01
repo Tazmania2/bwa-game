@@ -1,0 +1,6 @@
+@import "tools";
+
+:host {
+  @include flexCenter;
+  @include fullSize;
+}

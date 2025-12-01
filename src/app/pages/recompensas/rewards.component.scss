@@ -1,0 +1,522 @@
+@import "tools";
+@import "variables";
+// @import "theme";
+
+:host{
+  position: relative;
+  display: block;
+  box-sizing: border-box;
+  @include fullHeight;
+
+  & > div {
+    @include fullHeight;
+  }
+}
+
+.menu-shadow {
+  transition: all $default-anim-time;
+  width: $side-menu-size;
+  min-width: $side-menu-size;
+}
+
+.menu-handler {
+  cursor: pointer;
+  position: absolute;
+  top: 120px;
+  left: $side-menu-size;
+  width: size(1);
+  height: size(5);
+  padding: 0;
+  border: none;
+  outline: none;
+
+  background: rgba(82, 84, 87, 0.5);
+  box-shadow: 0 4px 4px rgba(0, 0, 0, 0.25);
+  border-radius: 0 8px 8px 0;
+
+  z-index: 100;
+
+  .icon-arrow_forward_ios {
+    color: $cor-seta-menu;
+    font-size: 24px;
+    opacity: 0;
+    transition: all $default-anim-time;
+
+    &.invert {
+      transform: rotate(180deg);
+    }
+  }
+
+  transition: width $default-anim-time;
+
+  &:hover {
+    width: size(3);
+
+    .icon-arrow_forward_ios {
+      opacity: 1;
+    }
+  }
+}
+
+aside {
+  z-index: 1;
+  width: $side-menu-size;
+  position: absolute;
+  transition: left $default-anim-time;
+  left: 0;
+  @include fullHeight;
+}
+
+main {
+  position: absolute;
+  @include fullSize;
+}
+
+.logo-c4u {
+  position: absolute;
+  right: size(4);
+  top: size(4);
+}
+
+.sub-content {
+  padding: 0 size(5) size(5);
+}
+
+.recompensas-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.recompensas-sidenav {
+  width: 318px;
+  min-width: 318px;
+  background: #151c2c;
+  box-shadow: 2px 0 8px rgba(0,0,0,0.08);
+  padding: 0;
+  z-index: 2;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+.recompensas-main {
+  position: absolute;
+  max-width: 100%;
+  height: 100%;
+  
+  // Adicionando a barra de rolagem personalizada
+  &::-webkit-scrollbar {
+    width: 12px;
+    height: 10px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: radial-gradient(50% 50% at 50% 50%, #9c9c9c 0%, #656565 100%);
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+}
+
+
+.metrics-grid {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.metric-card {
+  background: #191e29;
+  border-radius: 8px;
+  flex: 1 1 0;
+  min-width: 180px;
+  padding: 24px 16px 20px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.convert-metric-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  background: #191e29;
+  border-radius: 8px;
+  flex: 1 1 0;
+  min-width: 180px;
+  padding: 24px 16px 20px 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.metric-icon {
+  font-size: 2.2rem;
+  color: #bfcfff;
+  margin-bottom: 8px;
+}
+
+.metric-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 4px;
+}
+
+.metric-label {
+  font-size: 1rem;
+  color: #bfcfff;
+  opacity: 0.85;
+}
+
+.distribution-pot-card {
+  background: #191e29;
+  border-radius: 8px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 32px 32px 24px 32px;
+  margin-bottom: 32px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.pot-left {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.pot-icon {
+  font-size: 2.2rem;
+  color: #bfcfff;
+  margin-bottom: 8px;
+}
+
+.pot-value {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 4px;
+}
+
+.pot-label {
+  font-size: 1.1rem;
+  color: #bfcfff;
+  opacity: 0.85;
+}
+
+.pot-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  margin-left: 32px;
+}
+
+.pot-update-label {
+  font-size: 1rem;
+  color: #7e8ca6;
+  margin-bottom: 2px;
+}
+
+.pot-update-date {
+  font-size: 1rem;
+  color: #bfcfff;
+}
+
+.convert-button {
+  padding: 0.5rem 1.5rem;
+  background: #2F363F;
+  color: #fff;
+  border-radius: 2rem;
+  font-weight: 700;
+  font-size: 1.08rem;
+  letter-spacing: 0.3px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(var(--primary-color-rgb), 0.10);
+  transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
+
+  &:hover {
+    background: goldenrod;
+    box-shadow: 0 4px 16px rgba(var(--primary-color-rgb), 0.18);
+    transform: translateY(-2px) scale(1.04);
+  }
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+@media (max-width: 900px) {
+  .metrics-grid {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .distribution-pot-card {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 24px 12px;
+  }
+
+  .pot-right {
+    align-items: flex-start;
+    margin-left: 0;
+    margin-top: 16px;
+  }
+}
+
+.empty-state {
+  padding: 60px 20px;
+  text-align: center;
+  background: #f8f9fa;
+  border-radius: 8px;
+  margin: 20px 0;
+
+  .empty-state-icon {
+    margin-bottom: 16px;
+  }
+
+  .empty-state-text {
+    font-size: 16px;
+    color: #6c757d;
+    font-weight: 500;
+  }
+}
+
+.recompensas-content {
+  position: relative;
+  padding: 40px 20px 40px 40px;
+  overflow-y: auto;
+}
+
+// .recompensas-container {
+//     max-width: 1280px;
+//     margin: 0 auto;
+//     padding: 2rem;
+// }
+
+// .recompensas-layout {
+//   display: flex;
+//   min-height: 100vh;
+//   background: #000914;
+// }
+
+// .recompensas-sidenav {
+//   width: 318px;
+//   min-width: 318px;
+//   background: #151c2c;
+//   box-shadow: 2px 0 8px rgba(0,0,0,0.08);
+//   padding: 0;
+//   z-index: 2;
+// }
+
+// .recompensas-main {
+//   flex: 1;
+//   max-width: 100vw;
+//   padding: 40px 40px 40px 40px;
+//   display: flex;
+//   flex-direction: column;
+//   gap: 32px;
+// }
+
+// @media (max-width: 900px) {
+//   .recompensas-layout {
+//     flex-direction: column;
+//   }
+//   .recompensas-sidenav {
+//     width: 100%;
+//     min-width: unset;
+//     box-shadow: none;
+//   }
+//   .recompensas-main {
+//     padding: 24px 8px;
+//   }
+// } 
+
+.right-menu-shadow {
+  min-width: 4rem;
+  margin-left: 20px;
+}
+
+.right-menu-container {
+  width: $side-right-menu-size;
+  transition: right $default-anim-time;
+  @include fullHeight;
+  box-sizing: border-box;
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end;
+  height: 100vh;
+  transition: width $default-anim-time;
+  
+  &.expanded {
+    width: 220px;
+    min-width: 220px;
+  }
+  &.collapsed {
+    width: 4rem;
+    min-width: 4rem;
+  }
+}
+
+.right-menu {
+  width: 100%;
+  height: 100vh;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-direction: column;
+  border-radius: 0 0 0 64px;
+  padding: 0;
+
+}
+
+//TODO: Colocar animação do toggle do right menu
+
+.right-menu-content {
+  width: 100%;
+  height: 100vh;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.menu-items {
+  display: flex;
+  flex-direction: column;
+  gap: size(2);
+  margin-top: size(4);
+  width: 100%;
+}
+
+.menu-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: size(2);
+  padding: size(2);
+  border-radius: 8px;
+  text-decoration: none;
+  color: inherit;
+  transition: background-color 0.5s, color 0.5s;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+  }
+
+  i {
+    font-size: 22px;
+    min-width: 22px;
+    text-align: center;
+  }
+
+  span {
+    white-space: nowrap;
+    overflow: hidden;
+    transition: opacity 0.5s, margin 0.5s;
+    opacity: 1;
+    margin-left: 12px;
+  }
+
+  .menu-tooltip {
+    display: none;
+    position: absolute;
+    left: 110%;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #222;
+    color: #fff;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 2000;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+    opacity: 0.95;
+    transition: opacity 0.2s, transform 0.2s;
+  }
+}
+
+.right-menu.collapsed .menu-item span {
+  opacity: 0;
+  margin-left: 0;
+  width: 0;
+  pointer-events: none;
+}
+
+.right-menu.collapsed .menu-item:hover .menu-tooltip {
+  display: block;
+}
+
+.right-menu-handler-container {
+  position: absolute;
+  left: -1.5rem;
+  top: 120px;
+  box-sizing: border-box;
+  width: size(3);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.right-menu-handler {
+  cursor: pointer;
+  box-sizing: border-box;
+  width: size(1);
+  height: size(5);
+  padding: 0;
+  border: none;
+  outline: none;
+  background: rgba(82, 84, 87, 0.5);
+  border-radius: 8px 0 0 8px;
+  box-shadow: 0 4px 4px rgba(0,0,0,0.25);
+  z-index: 100;
+
+  .icon-arrow_forward_ios {
+    color: $cor-seta-menu;
+    font-size: 24px;
+    opacity: 0;
+    transition: all $default-anim-time;
+    &.invert {
+      transform: rotate(180deg);
+    }
+  }
+
+  transition: width $default-anim-time;
+
+  &:hover {
+    width: size(3);
+
+    .icon-arrow_forward_ios {
+      opacity: 1;
+    }
+  }
+}
+
+.right-menu-tooltip {
+  position: absolute;
+  background: #222;
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 2000;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+  opacity: 0.95;
+  transition: opacity 0.2s, transform 0.2s;
+  transform: translateY(-50%);
+}

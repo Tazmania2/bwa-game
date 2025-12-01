@@ -1,0 +1,29 @@
+<div *ngIf="search" class="container" (click)="focusInput(input)">
+    <div class="flex flex-col flex-auto">
+        <label class="text-sm font-normal text-gray-400">{{label}}</label>
+        <input #input
+               type="text"
+               [class.border-red-500]="searchFailed"
+               [(ngModel)]="model"
+               [ngbTypeahead]="search"
+               [editable]="false"
+               [placeholder]="placeholder"
+               (selectItem)="selected.emit($event.item)"
+               (focus)="$focus.next($any($event).target.value)"
+               (blur)="blur($event)"
+               (click)="$event.stopPropagation()"
+               [resultFormatter]="formatter"
+               [inputFormatter]="formatter"
+               class="outline-none appearance-none font-inherit text-inherit font-semibold bg-transparent border-none p-0 m-0"
+        />
+    </div>
+    <div class="flex-none">
+        <small *ngIf="searching" class="text-sm text-gray-400">{{'LABEL_LOADING' | translate}}...</small>
+    </div>
+    <div class="flex-none flex items-center cursor-pointer" (click)="$event.stopPropagation(); model = null; input.value = ''; input.focus()">
+        <i class="icon-close"></i>
+    </div>
+    <div class="flex-none flex items-center cursor-pointer" (click)="$event.stopPropagation(); input.focus()">
+        <span class="arrow"></span>
+    </div>
+</div>

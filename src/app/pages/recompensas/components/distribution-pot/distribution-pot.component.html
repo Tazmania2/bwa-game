@@ -1,0 +1,21 @@
+<c4u-card class="distribution-pot">
+  <div class="last-update">
+    <p>{{ 'LABEL_LAST_UPDATE' | translate }}</p>
+    <p>{{ lastUpdate | date:'dd/MM/yyyy' }}</p>
+  </div>
+  
+  <div class="pot-content">
+    <div class="pot-icon">
+      <i class="ri-money-dollar-circle-line"></i>
+    </div>
+    <h2 class="pot-amount">R$ {{ amount | number:'1.0-0' }}</h2>
+    <p class="pot-label">{{ 'LABEL_DISTRIBUTION_POT' | translate }}</p>
+  </div>
+</c4u-card>
+
+<div class="alert-container">
+  <div class="alert-icon">
+    <i class="ri-alert-line"></i>
+  </div>
+  <p class="alert-text">{{ 'LABEL_DISTRIBUTION_POT_WARNING' | translate }}</p>
+</div> 

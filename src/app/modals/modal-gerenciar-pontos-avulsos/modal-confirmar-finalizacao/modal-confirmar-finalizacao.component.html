@@ -1,0 +1,32 @@
+<div class="modal-confirm">
+  <div class="modal-confirm-content">
+    <div class="modal-confirm-icon"><i class="ri-check-line"></i></div>
+    <div class="modal-confirm-text">
+      <h3>Confirmar Finalização</h3>
+      <p>Tem certeza que deseja finalizar esta atividade? Ela ficará aguardando aprovação.</p>
+      <small class="modal-confirm-descricao">
+        Opcional: Adicione um comentário sobre a finalização da atividade
+      </small>
+    </div>
+    
+    <form [formGroup]="formFinalizacao" (ngSubmit)="confirmar()">
+      <div class="form-group">
+        <textarea 
+          formControlName="comentario" 
+          placeholder="Adicione um comentário sobre a finalização (opcional)"
+          rows="3"
+          class="form-control">
+        </textarea>
+      </div>
+      
+      <div class="modal-confirm-footer">
+        <button type="button" class="btn-ghost" (click)="cancelar()">
+          <i class="icon-cancel"></i> Cancelar
+        </button>
+        <button type="submit" class="btn-success">
+          <i class="icon-check_circle"></i> Finalizar
+        </button>
+      </div>
+    </form>
+  </div>
+</div> 

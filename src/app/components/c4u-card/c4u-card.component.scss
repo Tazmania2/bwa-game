@@ -1,0 +1,30 @@
+@import "tools";
+@import "variables";
+
+:host {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: inline-block;
+  border-radius: size(2);
+  padding: size(3);
+  backdrop-filter: blur(25px);
+
+  @screen md {
+    backdrop-filter: blur(7.5px);
+  }
+
+  background: linear-gradient(to bottom right, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 100%);
+  box-sizing: border-box;
+}
+
+.content {
+  transition: filter $default-anim-time;
+  width: 100%;
+
+  &.fog {
+    filter: blur(20px);
+  }
+}
+
+h1 {
+  margin-bottom: size(3);
+}

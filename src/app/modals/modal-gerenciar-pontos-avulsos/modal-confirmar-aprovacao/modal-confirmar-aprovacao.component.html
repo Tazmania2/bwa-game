@@ -1,0 +1,31 @@
+<div class="modal-confirm">
+  <div class="modal-confirm-content">
+    <div class="modal-confirm-icon"><i class="ri-check-line"></i></div>
+    <div class="modal-confirm-text">
+      <h3>Confirmar Aprovação</h3>
+      <p>Tem certeza que está tudo certo para aprovar esta atividade?</p>
+    </div>
+    
+    <form [formGroup]="formAprovacao" (ngSubmit)="confirmar()">
+      <div class="form-group">
+        <label for="comentario" class="form-label">Comentário (opcional)</label>
+        <textarea 
+          id="comentario"
+          formControlName="comentario" 
+          placeholder="Adicione um comentário sobre a aprovação (opcional)"
+          rows="3"
+          class="form-control">
+        </textarea>
+      </div>
+      
+      <div class="modal-confirm-footer">
+        <button type="button" class="btn-ghost" (click)="cancelar()">
+          <i class="icon-cancel"></i> Cancelar
+        </button>
+        <button type="submit" class="btn-success">
+          <i class="icon-check_circle"></i> Aprovar
+        </button>
+      </div>
+    </form>
+  </div>
+</div> 

@@ -1,0 +1,211 @@
+@import "ng-select";
+@import "variables";
+@import "tools";
+@import "../fonts/custom/style";
+@import "tailwind";
+@reference "tailwindcss";
+
+html {
+  color: $texto-branco;
+  font-size: 16px;
+  letter-spacing: 0.02em;
+  background: $bg-color;
+  overflow: hidden;
+}
+
+@screen sm {
+  :root {
+    --screen-type: 'sm';
+  }
+}
+
+@screen md {
+  :root {
+    --screen-type: 'md';
+  }
+}
+
+@screen lg {
+  :root {
+    --screen-type: 'lg';
+  }
+}
+
+h1 {
+  margin: 0;
+  line-height: 24px;
+  font-size: 20px;
+  font-weight: 200;
+  letter-spacing: 0.05em;
+}
+
+@mixin snackbarStyles {
+  position: fixed !important;
+  top: 1rem !important;
+  left: inherit !important;
+  z-index: 9999;
+
+  .mdc-snackbar__surface {
+    position: absolute !important;
+    top: 0px !important;
+    right: 1rem !important;
+    font-weight: 600;
+  }
+}
+
+.snackbar-success {
+  @include snackbarStyles();
+
+  .mdc-snackbar__surface {
+    background-color: #00c100 !important;
+  }
+}
+
+.snackbar-error {
+  @include snackbarStyles();
+
+  .mdc-snackbar__surface {
+    background-color: #cc0300 !important;
+  }
+}
+
+.snackbar-alert {
+  @include snackbarStyles();
+
+  .mdc-snackbar__surface {
+    background-color: #cca700 !important;
+  }
+}
+
+small {
+  font-size: 14px;
+  line-height: 16.8px;
+  font-weight: 400;
+}
+
+strong {
+  font-size: 16px;
+  line-height: 19.2px;
+  font-weight: 700;
+}
+
+#toolTip {
+  max-width: 220px;
+  display: inline-block;
+  background: $background-escuro;
+  box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.5);
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  position: absolute;
+  padding: size(1) size(2);
+  @include disableSelection;
+  text-align: center;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity $default-anim-time;
+
+  &.active {
+    z-index: 9999;
+    opacity: 1;
+    right: 0;
+  }
+}
+
+a {
+  @include disableSelection;
+
+  &:hover {
+    text-decoration: underline;
+    cursor: pointer;
+  }
+}
+
+button.selection-btn {
+  @include disableSelection;
+  cursor: pointer;
+  appearance: none;
+  outline: none;
+  color: $texto-cinza;
+  background: transparent;
+  border: solid 1px #383838;
+  height: size(5);
+  padding: 12px size(2);
+  font-family: inherit;
+  font-size: 13px;
+  border-radius: size(1);
+  transition: color $default-anim-time * 3, box-shadow $default-anim-time * 3;
+  font-weight: 400;
+
+  i {
+    font-size: size(3);
+
+    .ri.ri-bard-fill {
+      color: orange;
+    }
+
+    .ri.ri-arrow-up-down-line {
+      color: aquamarine;
+    }
+
+    .ri.ri-coins-fill {
+      color: goldenrod;
+    }
+  }
+
+  &.active {
+    font-weight: 700;
+    color: $texto-branco;
+    box-shadow: 4px 4px 8px 0 #00000080, 4px 4px 8px 0 #ffffff1a inset;
+    background: linear-gradient(to bottom right,
+        rgba(255, 255, 255, 0.2) 0%,
+        rgba(255, 255, 255, 0) 100%);
+  }
+}
+
+.scroll-style {
+  &::-webkit-scrollbar {
+    position: absolute;
+
+    width: 10px;
+    height: 10px;
+  }
+
+  &::-webkit-scrollbar-track {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    position: absolute;
+
+    background: radial-gradient(50% 50% at 50% 50%, #9c9c9c 0%, #656565 100%);
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-corner {
+    position: absolute;
+
+    background: transparent;
+  }
+}
+
+.div-update-notes {
+  img {
+    max-width: 45em;
+    margin: auto;
+    display: block;
+    border-radius: 1em;
+  }
+}
+
+.wrong-answer {
+  color: #c56685;
+}
+
+ngb-typeahead-window {
+  max-height: 25em;
+  overflow-y: auto;
+  overflow-x: hidden;
+}

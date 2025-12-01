@@ -1,0 +1,41 @@
+<div 
+  class="c4u-checkbox"
+  [class.checked]="isChecked"
+  [class.disabled]="disabled"
+  [class.indeterminate]="indeterminate && !isChecked"
+  [class.small]="size === 'small'"
+  [class.medium]="size === 'medium'"
+  [class.large]="size === 'large'"
+  [attr.role]="'checkbox'"
+  [attr.aria-checked]="indeterminate ? 'mixed' : isChecked"
+  [attr.aria-disabled]="disabled"
+  [attr.tabindex]="disabled ? -1 : 0">
+  <div class="checkbox-box">
+    <svg 
+      *ngIf="isChecked && !indeterminate" 
+      class="check-icon" 
+      viewBox="0 0 16 16" 
+      fill="none" 
+      xmlns="http://www.w3.org/2000/svg">
+      <path 
+        d="M13.5 4L6 11.5L2.5 8" 
+        stroke="currentColor" 
+        stroke-width="2" 
+        stroke-linecap="round" 
+        stroke-linejoin="round"/>
+    </svg>
+    <svg 
+      *ngIf="indeterminate && !isChecked" 
+      class="indeterminate-icon" 
+      viewBox="0 0 16 16" 
+      fill="none" 
+      xmlns="http://www.w3.org/2000/svg">
+      <path 
+        d="M4 8H12" 
+        stroke="currentColor" 
+        stroke-width="2" 
+        stroke-linecap="round"/>
+    </svg>
+  </div>
+</div>
+

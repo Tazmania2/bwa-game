@@ -1,0 +1,28 @@
+.level {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.level-progress {
+  font-size: 18px;
+
+  b {
+    font-weight: 900;
+
+    &.gold {
+      background: linear-gradient(180deg, #956F0E 0%, #DBCAA0 50%, #956F0E 100%);
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    &.green {
+      color: #37CC42;
+    }
+  }
+}
+
+  
+i {
+  font-size: 20px;
+  color: #C56685;
+}

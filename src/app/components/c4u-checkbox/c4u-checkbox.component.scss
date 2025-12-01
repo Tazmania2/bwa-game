@@ -1,0 +1,135 @@
+@import "tools";
+@import "variables";
+
+.c4u-checkbox {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s ease;
+  position: relative;
+  
+  &:focus-visible {
+    outline: 2px solid rgba(255, 226, 132, 0.5);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+
+  &.small {
+    .checkbox-box {
+      width: 16px;
+      height: 16px;
+    }
+
+    .check-icon,
+    .indeterminate-icon {
+      width: 10px;
+      height: 10px;
+    }
+  }
+
+  &.medium {
+    .checkbox-box {
+      width: 20px;
+      height: 20px;
+    }
+
+    .check-icon,
+    .indeterminate-icon {
+      width: 12px;
+      height: 12px;
+    }
+  }
+
+  &.large {
+    .checkbox-box {
+      width: 24px;
+      height: 24px;
+    }
+
+    .check-icon,
+    .indeterminate-icon {
+      width: 14px;
+      height: 14px;
+    }
+  }
+}
+
+.checkbox-box {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(7.5px);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+
+  .c4u-checkbox:hover:not(.disabled) & {
+    border-color: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .c4u-checkbox.checked & {
+    background: linear-gradient(135deg, rgba(255, 226, 132, 0.2) 0%, rgba(255, 226, 132, 0.1) 100%);
+    border-color: #ffe284;
+    box-shadow: 0 0 8px rgba(255, 226, 132, 0.3);
+  }
+
+  .c4u-checkbox.indeterminate & {
+    background: rgba(255, 226, 132, 0.15);
+    border-color: rgba(255, 226, 132, 0.6);
+  }
+
+  .c4u-checkbox.disabled & {
+    opacity: 0.5;
+    cursor: not-allowed;
+    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.02);
+  }
+
+  .c4u-checkbox.disabled:hover & {
+    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.02);
+  }
+}
+
+.check-icon {
+  width: 12px;
+  height: 12px;
+  color: #ffe284;
+  stroke-width: 2.5;
+  animation: checkmark 0.2s ease-out;
+}
+
+.indeterminate-icon {
+  width: 12px;
+  height: 12px;
+  color: #ffe284;
+  stroke-width: 2.5;
+}
+
+@keyframes checkmark {
+  0% {
+    opacity: 0;
+    transform: scale(0.5) rotate(-12deg);
+  }
+  50% {
+    transform: scale(1.1) rotate(12deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+// Estado active para feedback tátil
+.c4u-checkbox:active:not(.disabled) .checkbox-box {
+  transform: scale(0.95);
+}
+

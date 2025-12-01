@@ -1,0 +1,207 @@
+<div full flexItem="1">
+  <aside #menu class="md:block menu-closed">
+    <div class="h-full w-full flex md:block">
+      <page-season class="flex-auto" (seasonData)="getSeasonData($event)" [collapse]="!menuOpen" [idConsulta]="idConsulta"
+                   [tipoConsulta]="tipoConsulta" [nomeConsulta]="nomeConsulta" [time]="time"
+                   [showTeamGoal]="showDashColaborador"
+                   [isCSLayout]="false"></page-season>
+      <div class="min-w-[80px] flex-auto md:hidden" (click)="toggleMenu()"></div>
+    </div>
+
+    <button class="menu-handler opacity-0 md:opacity-100" flex vAlign="center" hAlign="center" (click)="toggleMenu()">
+      <i class="icon-arrow_forward_ios" [ngClass]="{ invert: menuOpen }"></i>
+    </button>
+  </aside>
+
+  <main flex>
+    <div class="menu-shadow hidden md:block" #menuShadow flexItem="0"></div>
+
+    <div class="flex flex-col flex-1 relative w-full overflow-y-auto md:overflow-y-hidden scroll-style">
+      <div class="mobile-toolbar">
+        <img [src]="clientLogoUrl" alt="Logo Game4U" class="h-6">
+
+        <button class="mobile-menu-button" (click)="toggleMenu()">
+          <i class="ri-menu-line"></i>
+        </button>
+      </div>
+
+      <c4u-seletor-mes [seasonData]="seasonData" flexItem="0" class="md:mb-4 md:mt-10 mb-4"
+                       (onSelectedMonth)="mesSelecionado($event)"></c4u-seletor-mes>
+
+      <div class="flex flex-col md:flex-row gap-4 md:gap-10 w-full sub-content" *ngIf="showDashGestor">
+        <c4u-typeahead [service]="$servicoTime" nameField="name" label="{{ 'LABEL_SELECTED_TEAM' | translate }}"
+                       (selected)="selecionaTime($event)" flexItem="50%"></c4u-typeahead>
+
+        <c4u-typeahead [service]="$servicoColaborador" nameField="full_name"
+                       label="{{ 'LABEL_SELECTED_EMPLOYEE' | translate }}" (selected)="selecionaColaborador($event)"
+                       flexItem="50%"></c4u-typeahead>
+      </div>
+
+      <div flexItem="1" class="sub-content md:overflow-y-auto scroll-style">
+        <!-- Loading State -->
+        <div *ngIf="isLoadingCampaign"
+             class="flex flex-col items-center justify-center min-h-[60vh] px-4 sm:px-6 lg:px-8 text-center">
+          <div class="mb-6 sm:mb-8">
+            <div class="flex gap-2 sm:gap-3 justify-center">
+              <div
+                class="w-3 h-3 sm:w-4 sm:h-4 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full animate-bounce"
+                style="animation-delay: -0.32s;"></div>
+              <div
+                class="w-3 h-3 sm:w-4 sm:h-4 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full animate-bounce"
+                style="animation-delay: -0.16s;"></div>
+              <div
+                class="w-3 h-3 sm:w-4 sm:h-4 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full animate-bounce"></div>
+            </div>
+          </div>
+          <p class="text-sm sm:text-base lg:text-lg text-white/90 font-medium">Verificando campanha ativa...</p>
+        </div>
+
+        <!-- Empty State - Sem Campanha Ativa -->
+        <div *ngIf="!isLoadingCampaign && !hasActiveCampaign"
+             class="flex flex-col items-center justify-center min-h-[70vh] px-4 sm:px-6 lg:px-8 text-center py-8 sm:py-12">
+
+          <!-- Ícone da Campanha -->
+          <div class="mb-8 sm:mb-10 lg:mb-12">
+            <div class="empty-state-icon">
+              <div class="campaign-icon">
+                <div class="flag-pole"></div>
+                <div class="flag"></div>
+                <div class="base"></div>
+              </div>
+            </div>
+            
+            <h2 class="empty-state-title">Sem Campanha Ativa</h2>
+            
+            <p class="empty-state-message">
+              Não há uma campanha ativa no momento,<br>tente novamente mais tarde!
+            </p>
+            
+            <div class="empty-state-details">
+              <div class="detail-item">
+                <span class="detail-icon">📅</span>
+                <span>Nenhuma temporada em andamento</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-icon">🎯</span>
+                <span>Metas e objetivos pausados</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-icon">🏆</span>
+                <span>Rankings temporariamente indisponíveis</span>
+              </div>
+            </div>
+            
+            <button 
+              class="retry-button" 
+              (click)="retryCampaignCheck()"
+              [disabled]="isLoadingCampaign"
+            >
+              <span class="retry-icon">🔄</span>
+              Tentar Novamente
+            </button>
+          </div>
+        </div>
+
+        <!-- Empty State - Selecione um Time -->
+        <div *ngIf="showTeamSelectionState" class="empty-state no-campaign-state">
+          <div class="empty-state-content">
+            <div class="empty-state-icon">
+              <div class="arrow-icon">
+                <i class="">↖️</i>
+              </div>
+            </div>
+          </div>  
+            
+          <!-- Título -->
+          <h2
+            class="text-xl sm:text-2xl lg:text-3xl font-bold mb-4 sm:mb-6 lg:mb-8 bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent">
+            Selecione um Time
+          </h2>
+
+          <!-- Mensagem -->
+          <p
+            class="text-sm sm:text-base lg:text-lg text-white/90 mb-6 sm:mb-8 lg:mb-10 max-w-md mx-auto leading-relaxed">
+            Para visualizar as métricas e acompanhar o desempenho, escolha um time na lista acima.
+          </p>
+
+          <!-- Detalhes -->
+          <div class="w-full max-w-sm sm:max-w-md mb-8 sm:mb-10 lg:mb-12 space-y-3 sm:space-y-4">
+            <div
+              class="flex items-center gap-3 p-3 sm:p-4 bg-white/5 rounded-lg border-l-4 border-purple-400 backdrop-blur-sm">
+              <span class="text-lg sm:text-xl">👥</span>
+              <span class="text-xs sm:text-sm text-white/80">Visualize estatísticas do time selecionado</span>
+            </div>
+            <div
+              class="flex items-center gap-3 p-3 sm:p-4 bg-white/5 rounded-lg border-l-4 border-purple-400 backdrop-blur-sm">
+              <span class="text-lg sm:text-xl">📊</span>
+              <span class="text-xs sm:text-sm text-white/80">Acompanhe metas e objetivos em tempo real</span>
+            </div>
+            <div
+              class="flex items-center gap-3 p-3 sm:p-4 bg-white/5 rounded-lg border-l-4 border-purple-400 backdrop-blur-sm">
+              <span class="text-lg sm:text-xl">🎯</span>
+              <span class="text-xs sm:text-sm text-white/80">Gerencie atividades e atribuições</span>
+            </div>
+          </div>
+
+          <!-- Botão de Seleção -->
+          <button
+            (click)="focusTeamSelector()"
+            class="flex items-center justify-center gap-2 w-full max-w-xs sm:max-w-sm px-4 sm:px-6 py-3 sm:py-4 lg:py-5 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white text-sm sm:text-base font-semibold rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-purple-500/25">
+            <span class="text-base sm:text-lg">👥</span>
+            <span>Selecionar Time</span>
+          </button>
+
+        </div>
+
+        <!-- Dashboard Content - Com Campanha Ativa -->
+        <div flexItem="1" *ngIf="!isLoadingCampaign && hasActiveCampaign && idConsulta && dashReady">
+          <dashboard-colaborador *ngIf="showDashColaborador && idConsulta" [idUsuario]="idConsulta"
+                                 [mesAnterior]="mesAnterior">
+          </dashboard-colaborador>
+
+          <app-dashboard-gestor *ngIf="showDashGestor && isTeam" [idTime]="idConsulta" [nomeTime]="nomeConsulta"
+                                [mesAnterior]="mesAnterior" [isCSLayout]="false">
+          </app-dashboard-gestor>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="isVirtualStoreEnabled() || isLeaderboardsEnabled() || isCashDistributionEnabled()"
+         class="right-menu-shadow hidden md:block" flexItem="0"></div>
+  </main>
+
+  <div *ngIf="isVirtualStoreEnabled() || isLeaderboardsEnabled() || isCashDistributionEnabled()"
+       class="right-menu-container !hidden md:!flex" #rightMenu
+       [ngClass]="{ 'expanded': rightMenuOpen, 'collapsed': !rightMenuOpen }">
+    <c4u-card class="right-menu">
+      <div class="right-menu-content">
+        <div class="menu-items">
+          <a [href]="'/dashboard'" class="menu-item" [toolTip]="'Dashboard Inicial'" #menuItem>
+            <i class="ri-dashboard-line"></i>
+            <span *ngIf="rightMenuOpen">Dashboard</span>
+          </a>
+          <a *ngIf="isVirtualStoreEnabled()" [href]="'/rewards'" class="menu-item" [toolTip]="'Loja de Recompensas'">
+            <i class="ri-gift-line"></i>
+            <span *ngIf="rightMenuOpen">Recompensas</span>
+          </a>
+          <a *ngIf="isLeaderboardsEnabled()" href="/ranking" class="menu-item" [toolTip]="'Rankings'">
+            <i class="ri-trophy-line"></i>
+            <span *ngIf="rightMenuOpen">Rankings</span>
+          </a>
+          <a *ngIf="isCashDistributionEnabled()" href="/thermometer" class="menu-item"
+             [toolTip]="'Metas e Distribuição'">
+            <i class="ri-focus-2-line"></i>
+            <span *ngIf="rightMenuOpen">Metas e Distribuição</span>
+          </a>
+        </div>
+      </div>
+    </c4u-card>
+    <div class="right-menu-handler-container">
+      <button class="right-menu-handler" #rightMenuHandler flex vAlign="center" hAlign="center"
+              (click)="toggleRightMenu()">
+        <i class="icon-arrow_forward_ios" [ngClass]="{ invert: !rightMenuOpen }"></i>
+      </button>
+    </div>
+  </div>
+
+</div>

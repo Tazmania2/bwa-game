@@ -1,0 +1,26 @@
+@import "tools";
+@import "variables";
+
+:host {
+  @include fullSize;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  & > div {
+    width: fit-content;
+    padding: 40px;
+    border-radius: 16px;
+    border: solid 2px rgba(255, 255, 255, 0.1);
+  }
+}
+
+i {
+  font-size: 85px;
+}
+
+c4u-animacao-cid {
+  height: 269px;
+  width: 269px;
+}
+

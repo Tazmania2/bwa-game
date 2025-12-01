@@ -1,0 +1,117 @@
+@import "variables";
+@import "tools";
+
+:host {
+  position: relative;
+}
+
+@keyframes light {
+  79% {
+    opacity: 1;
+  }
+
+  80% {
+    opacity: 0;
+  }
+
+  81% {
+    opacity: 0;
+  }
+
+  82% {
+    opacity: 1;
+  }
+}
+
+$scount: 20;
+$cid_holo_top: 140px;
+$cid_holo_right: 90px;
+
+@keyframes surge {
+  0% {
+    transform: scale(0);
+    top: $cid_holo_top;
+    right: $cid_holo_right;
+  }
+
+  100% {
+    transform: scale(1);
+    top: size(2);
+    right: 0;
+  }
+}
+
+@for $i from 1 through $scount {
+  @keyframes surge#{$i} {
+    0% {
+      transform: scale(0);
+      top: $cid_holo_top;
+      right: $cid_holo_right;
+    }
+
+    100% {
+      transform: scale(calc(1 - (0.9 * $i) / $scount));
+      top: calc(($cid_holo_top - 16px) * $i / $scount + 16px);
+      right: calc($cid_holo_right * $i / $scount);
+    }
+  }
+
+  .b#{$i} {
+    @include disableSelection;
+    z-index: (10 + $scount) - $i !important;
+    animation: surge#{$i} 500ms !important;
+    animation-delay: 2000ms !important;
+    animation-fill-mode: forwards !important;
+    opacity: 0.15;
+    filter: blur(2px);
+  }
+}
+
+.unlocked-points {
+  z-index: 30;
+  animation: surge 500ms;
+  animation-delay: 2s;
+  animation-fill-mode: forwards;
+  position: absolute;
+  transform: scale(0);
+  top: size(2);
+  right: 0;
+
+  span {
+    background: linear-gradient(180deg, #69FDFF 0%, #00A3A5 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 0 3px #69FDFF;
+    animation: light 3s infinite alternate;
+  }
+
+  span:first-child {
+    font-weight: 900;
+    font-size: 32px;
+    line-height: 38.4px;
+  }
+
+  span:last-child {
+    font-weight: 700;
+  }
+}
+
+ng-lottie {
+  height: 250px;
+}
+
+.animacao-cid {
+  animation: float 4s ease-in-out infinite;
+}
+
+@keyframes float {
+  0% {
+    transform: translatey(0px);
+  }
+  50% {
+    transform: translatey(-20px);
+  }
+  100% {
+    transform: translatey(0px);
+  }
+}

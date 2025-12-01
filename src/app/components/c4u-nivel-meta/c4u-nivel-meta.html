@@ -1,0 +1,8 @@
+<c4u-painel-vidro full flex vAlign="center" hAlign="center">
+    <span class="level {{theme}}">{{value}}</span>
+    <ng-container *ngFor="let a of Array(6), let i = index">
+        <span class="star" *ngIf="showStar(i)"></span>
+    </ng-container>
+</c4u-painel-vidro>
+
+<div class="bright"></div>

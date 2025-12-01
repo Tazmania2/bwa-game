@@ -1,0 +1,233 @@
+@import '../../../styles/variables.scss';
+@import '../../../styles/mixins.scss';
+
+.process-accordion {
+  @include card;
+  padding: 0;
+  overflow: hidden;
+  
+  .accordion-header {
+    background: linear-gradient(135deg, $surface, lighten($surface, 3%));
+    padding: $spacing-lg;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid $border-color;
+    transition: all $transition-duration $transition-easing;
+    position: relative;
+    min-height: $min-touch-target;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 0;
+      height: 100%;
+      background: linear-gradient(90deg, $primary-electric-blue, $success-green);
+      transition: width $transition-duration $transition-easing;
+      opacity: 0.1;
+    }
+
+    &:hover {
+      background: linear-gradient(135deg, lighten($surface, 5%), lighten($surface, 8%));
+      
+      &::before {
+        width: 100%;
+      }
+      
+      .title {
+        color: $primary-electric-blue;
+      }
+    }
+    
+    &:focus {
+      @include focus-visible;
+    }
+    
+    &.expanded {
+      background: linear-gradient(135deg, $primary-electric-blue, darken($primary-electric-blue, 10%));
+      color: $text-primary;
+      
+      .title {
+        color: $text-primary;
+      }
+      
+      .icon {
+        color: $text-primary;
+      }
+    }
+
+    .title {
+      font-weight: $font-weight-semibold;
+      font-size: $font-size-body;
+      color: $text-primary;
+      transition: color $transition-duration $transition-easing;
+      margin: 0;
+    }
+
+    .icon {
+      width: 24px;
+      height: 24px;
+      color: $text-secondary;
+      transition: all $transition-duration $transition-easing;
+      
+      &.expanded {
+        transform: rotate(180deg);
+        color: $text-primary;
+      }
+    }
+  }
+
+  .accordion-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height $transition-duration $transition-easing;
+    background: $bg-secondary;
+    
+    &.expanded {
+      max-height: 1000px;
+      
+      .content-inner {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .content-inner {
+      padding: $spacing-lg;
+      opacity: 0;
+      transform: translateY(-10px);
+      transition: all $transition-duration $transition-easing #{$transition-duration * 0.5};
+    }
+  }
+
+  .process-step {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: $spacing-md;
+    padding: $spacing-md;
+    border-radius: $border-radius-sm;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid transparent;
+    transition: all $transition-duration $transition-easing;
+    position: relative;
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+    
+    &:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba($primary-electric-blue, 0.3);
+      transform: translateX(4px);
+      
+      @include reduced-motion {
+        transform: none;
+      }
+    }
+
+    .step-number {
+      background: linear-gradient(135deg, $primary-electric-blue, $primary-deep-blue);
+      color: $text-primary;
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: $font-weight-bold;
+      font-size: $font-size-small;
+      margin-right: $spacing-md;
+      flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba($primary-electric-blue, 0.3);
+      transition: all $transition-duration $transition-easing;
+      
+      &.completed {
+        background: linear-gradient(135deg, $success-green, darken($success-green, 10%));
+        box-shadow: 0 2px 8px rgba($success-green, 0.3);
+      }
+      
+      &.in-progress {
+        background: linear-gradient(135deg, $warning-orange, darken($warning-orange, 10%));
+        box-shadow: 0 2px 8px rgba($warning-orange, 0.3);
+        animation: pulse 2s ease-in-out infinite;
+      }
+      
+      &.pending {
+        background: linear-gradient(135deg, $text-secondary, darken($text-secondary, 10%));
+        box-shadow: 0 2px 8px rgba($text-secondary, 0.2);
+      }
+    }
+
+    .step-content {
+      flex: 1;
+      min-width: 0;
+
+      .step-title {
+        font-weight: $font-weight-semibold;
+        color: $text-primary;
+        margin-bottom: $spacing-xs;
+        font-size: $font-size-body;
+        line-height: 1.4;
+      }
+
+      .step-description {
+        color: $text-secondary;
+        font-size: $font-size-small;
+        line-height: 1.5;
+        margin: 0;
+      }
+    }
+
+    .step-status {
+      margin-left: $spacing-md;
+      padding: $spacing-xs $spacing-sm;
+      border-radius: $border-radius-xs;
+      font-size: $font-size-caption;
+      font-weight: $font-weight-medium;
+      white-space: nowrap;
+      
+      &.completed {
+        background-color: rgba($success-green, 0.2);
+        color: $success-green;
+        border: 1px solid rgba($success-green, 0.4);
+      }
+      
+      &.in-progress {
+        background-color: rgba($warning-orange, 0.2);
+        color: $warning-orange;
+        border: 1px solid rgba($warning-orange, 0.4);
+      }
+      
+      &.pending {
+        background-color: rgba($text-secondary, 0.2);
+        color: $text-secondary;
+        border: 1px solid rgba($text-secondary, 0.4);
+      }
+    }
+  }
+}
+
+// Accessibility
+.process-accordion {
+  .accordion-header {
+    @include focus-visible;
+  }
+}
+
+// Reduced motion
+@include reduced-motion {
+  .process-accordion {
+    .accordion-header,
+    .accordion-content,
+    .process-step {
+      transition: none;
+    }
+    
+    .step-number.in-progress {
+      animation: none;
+    }
+  }
+}

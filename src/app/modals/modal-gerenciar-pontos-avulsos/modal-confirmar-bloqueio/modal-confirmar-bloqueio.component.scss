@@ -1,0 +1,143 @@
+.modal-motivo {
+  background: #23242a;
+  color: #fff;
+  border-radius: 12px;
+  padding: 0;
+  min-width: 450px;
+  max-width: 550px;
+  box-shadow: 0 4px 32px rgba(0,0,0,0.4);
+  overflow: hidden;
+}
+
+.modal-motivo-header {
+  background: #ff9800;
+  padding: 20px 24px;
+  text-align: center;
+}
+
+.modal-motivo-icon {
+  font-size: 2.5rem;
+  margin-bottom: 8px;
+}
+
+.modal-motivo-titulo {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.modal-motivo-content {
+  padding: 24px;
+}
+
+.modal-motivo-texto {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.modal-motivo-texto h3 {
+  margin: 0 0 8px 0;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.modal-motivo-texto p {
+  margin: 0 0 8px 0;
+  font-size: 1rem;
+  color: #ccc;
+}
+
+.modal-motivo-descricao {
+  color: #888;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-control {
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid #444;
+  background: #2a2b31;
+  color: #fff;
+  padding: 12px;
+  font-size: 0.95rem;
+  resize: vertical;
+  min-height: 100px;
+  transition: border-color 0.2s ease;
+  box-sizing: border-box;
+  
+  &:focus {
+    outline: none;
+    border-color: #666;
+  }
+  
+  &.is-invalid {
+    border-color: #ff9800;
+  }
+  
+  &::placeholder {
+    color: #888;
+  }
+}
+
+.invalid-feedback {
+  color: #ff9800;
+  font-size: 0.85rem;
+  margin-top: 4px;
+  text-align: left;
+}
+
+.modal-motivo-footer {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+}
+
+.btn-ghost {
+  background: #333;
+  color: #fff;
+  border: 1px solid #555;
+  border-radius: 8px;
+  padding: 12px 24px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: #444;
+    border-color: #666;
+  }
+  
+  i {
+    margin-right: 8px;
+  }
+}
+
+.btn-warning {
+  background: #ff9800;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  
+  &:hover:not(:disabled) {
+    background: #f57c00;
+  }
+  
+  &:disabled {
+    background: #666;
+    cursor: not-allowed;
+  }
+  
+  i {
+    margin-right: 8px;
+  }
+}

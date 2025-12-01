@@ -1,0 +1,26 @@
+<div class="modal-confirm">
+  <div class="modal-confirm-content">
+    <div class="modal-confirm-icon"><i class="ri-refresh-line"></i></div>
+    <div class="modal-confirm-text">
+      <h3>Confirmar Restauração</h3>
+      <p>Tem certeza que deseja restaurar esta delivery?</p>
+    </div>
+    
+    <div class="delivery-info">
+      <strong>Delivery:</strong> {{ deliveryTitle || 'N/A' }}
+    </div>
+    
+    <div class="info-message">
+      <p><i class="ri-check-line"></i> A delivery será restaurada e movida de volta para a lista de pendentes.</p>
+    </div>
+    
+    <div class="modal-confirm-footer">
+      <button class="btn-ghost" (click)="cancelar()">
+        <i class="icon-cancel"></i> Cancelar
+      </button>
+      <button class="btn-primary" (click)="confirmar()">
+        <i class="icon-refresh"></i> Confirmar Restauração
+      </button>
+    </div>
+  </div>
+</div> 

@@ -1,0 +1,157 @@
+<div class="painel-filtros-acao">
+  <!-- Primeira Linha: Selecionar Todos | Busca | Filtros Avançados -->
+  <div class="linha-principal" [formGroup]="formFiltros">
+    <!-- Botão Selecionar Todos (esquerda) -->
+    <div class="selecao-info" *ngIf="mostrarAcoes">
+      <button 
+        type="button" 
+        class="btn-selecionar-todos"
+        (click)="onSelecionarTodos()"
+        [title]="itensSelecionados < totalItens ? 'Selecionar todos' : 'Desselecionar todos'">
+        <i class="icon-check_box" *ngIf="itensSelecionados === totalItens && totalItens > 0"></i>
+        <i class="icon-check_box_outline_blank" *ngIf="itensSelecionados < totalItens || totalItens === 0"></i>
+        <span>{{ itensSelecionados }} de {{ totalItens }} selecionado{{ itensSelecionados !== 1 ? 's' : '' }}</span>
+      </button>
+    </div>
+
+    <!-- Busca (centro) -->
+    <div class="filtro-item" *ngIf="mostrarFiltros">
+      <label>
+        <i class="icon-search"></i>
+        <input 
+          type="text" 
+          formControlName="busca" 
+          placeholder="Buscar por título, ID ou executor..."
+          class="input-busca" />
+      </label>
+    </div>
+
+    <!-- Botão Filtros Avançados (direita) -->
+    <div class="filtro-item" *ngIf="mostrarFiltros">
+      <!-- <button 
+        type="button" 
+        class="btn-toggle-avancados"
+        (click)="toggleFiltrosAvancados()">
+        <i class="icon-expand_more" *ngIf="!mostrarFiltrosAvancados"></i>
+        <i class="icon-expand_less" *ngIf="mostrarFiltrosAvancados"></i>
+        <span>Filtros avançados</span>
+      </button> -->
+    </div>
+  </div>
+
+  <!-- Segunda Linha: Filtros Avançados (quando expandido) -->
+  <div class="linha-secundaria" *ngIf="mostrarFiltros && mostrarFiltrosAvancados" [formGroup]="formFiltros">
+    <div class="filtros-avancados">
+      <!-- Grupo: Data de Criação -->
+      <div class="grupo-datas">
+        <div class="grupo-titulo">Data de Criação</div>
+        <div class="filtro-item-data">
+          <label>
+            <i class="icon-calendar_today"></i>
+            <span class="label-text">Início:</span>
+            <input 
+              type="date" 
+              formControlName="created_at_start" 
+              class="input-data" />
+          </label>
+        </div>
+        <div class="filtro-item-data">
+          <label>
+            <i class="icon-event"></i>
+            <span class="label-text">Fim:</span>
+            <input 
+              type="date" 
+              formControlName="created_at_end" 
+              class="input-data" />
+          </label>
+        </div>
+      </div>
+
+      <!-- Grupo: Data de Finalização -->
+      <div class="grupo-datas">
+        <div class="grupo-titulo">Data de Finalização</div>
+        <div class="filtro-item-data">
+          <label>
+            <i class="icon-calendar_today"></i>
+            <span class="label-text">Início:</span>
+            <input 
+              type="date" 
+              formControlName="finished_at_start" 
+              class="input-data" />
+          </label>
+        </div>
+        <div class="filtro-item-data">
+          <label>
+            <i class="icon-event"></i>
+            <span class="label-text">Fim:</span>
+            <input 
+              type="date" 
+              formControlName="finished_at_end" 
+              class="input-data" />
+          </label>
+        </div>
+      </div>
+
+      <!-- Botão Filtrar Data -->
+      <div class="filtro-item">
+        <button 
+          type="button" 
+          class="btn-filtrar-data"
+          [disabled]="!podeFiltrarData()"
+          (click)="onFiltrarData()">
+          <i class="icon-search"></i>
+          <span>Filtrar</span>
+        </button>
+      </div>
+      <!-- Botão Limpar Filtros -->
+      <div class="filtro-item" *ngIf="temFiltrosAtivos()">
+        <button 
+          type="button" 
+          class="btn-limpar-filtros"
+          (click)="onLimparFiltros()">
+          <i class="icon-clear"></i>
+          <span>Limpar filtros</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Segunda Linha: Botões de Ação (quando há seleção) -->
+  <div class="linha-secundaria" *ngIf="mostrarAcoes && itensSelecionados > 0">
+    <div class="acoes-lote">
+      <!-- Botões de Ação (Finalizar/Cancelar/Aprovar/etc) -->
+      <button
+        *ngFor="let acao of acoesDisponiveis"
+        type="button"
+        class="btn-acao-lote"
+        [ngClass]="'btn-acao-' + acao.tipo"
+        [disabled]="!acao.habilitado || !podeExecutarAcao()"
+        (click)="onAcaoLote(acao.tipo)"
+        [title]="acao.label">
+        <i *ngIf="acao.icon" class="{{ acao.icon }}"></i>
+        <span>{{ acao.label }}</span>
+      </button>
+
+      <!-- Seletor de Executor e Botão Alterar -->
+      <!-- <div class="alteracao-inline" [formGroup]="formAlteracao" *ngIf="executorsList && executorsList.length > 0">
+        <label>
+          <i class="icon-person"></i>
+          <select formControlName="executorAlteracao" class="select-alteracao-inline">
+            <option [ngValue]="null">Selecionar Executor</option>
+            <option *ngFor="let executor of executorsList" [ngValue]="executor.value">
+              {{ executor.label }}
+            </option>
+          </select>
+        </label>
+        <button
+          type="button"
+          class="btn-alterar-inline"
+          [disabled]="!podeAlterar()"
+          (click)="onAlterarItens()">
+          <i class="icon-edit"></i>
+          <span>Alterar</span>
+        </button>
+      </div> -->
+    </div>
+  </div>
+</div>

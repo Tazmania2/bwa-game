@@ -1,0 +1,187 @@
+<div class="detalhe-delivery-container" *ngIf="delivery">
+  <button class="back-btn" type="button" (click)="onVoltar()">&larr; Voltar</button>
+  
+  <div class="detalhe-delivery-content">
+    <!-- Header com status -->
+    <div [class]="'detalhe-' + cor + ' detalhe-delivery-status'">
+      {{ getStatusLabel(delivery?.status) }} desde
+      <ng-container *ngIf="delivery?.created_at; else noCreatedAtStatus">
+        {{ formatDate(delivery.created_at) }}
+      </ng-container>
+      <ng-template #noCreatedAtStatus>N/A</ng-template>
+    </div>
+
+    <!-- Título da delivery -->
+    <div class="detalhe-delivery-nome">
+      <ng-container *ngIf="delivery?.title || delivery?.name; else noTitleDetail">
+        {{ delivery?.title || delivery?.name }}
+      </ng-container>
+      <ng-template #noTitleDetail>
+        N/A
+      </ng-template>
+    </div>
+
+    <!-- ID da delivery -->
+    <div class="detalhe-delivery-id">
+      ID: {{ delivery?.id || 'N/A' }}
+    </div>
+
+    <!-- Informações detalhadas -->
+    <div class="detalhe-delivery-info">
+      <div class="info-item">
+        <strong>Status:</strong> 
+        <span [ngClass]="getStatusClass(delivery?.status)">
+          {{ getStatusLabel(delivery?.status) }}
+        </span>
+      </div>
+      
+      <div class="info-item">
+        <strong>Progresso:</strong> 
+        <div class="progress-container">
+          <div class="progress-bar">
+            <div class="progress-fill" [style.width.%]="getProgressoDelivery()"></div>
+          </div>
+          <span class="progress-text">{{ getProgressoDelivery() }}%</span>
+        </div>
+      </div>
+      
+      <div class="info-item">
+        <strong>Total de {{aliases?.actionAlias}}s:</strong> {{ tarefas.length }}
+      </div>
+      
+      <div class="info-item" *ngIf="delivery?.created_at">
+        <strong>Criado em:</strong> {{ formatDateTime(delivery.created_at) }}
+      </div>
+      
+      <div class="info-item" *ngIf="delivery?.updated_at">
+        <strong>Atualizado em:</strong> {{ formatDateTime(delivery.updated_at) }}
+      </div>
+    </div>
+
+    <!-- Estatísticas das tarefas -->
+    <div class="detalhe-delivery-estatisticas">
+      <h4>Estatísticas das {{aliases?.actionAlias}}s</h4>
+      <div class="estatisticas-grid">
+        <div class="estatistica-item">
+          <div class="estatistica-valor">{{ contarTarefasPorStatus('PENDING') }}</div>
+          <div class="estatistica-label">Pendentes</div>
+        </div>
+        <div class="estatistica-item">
+          <div class="estatistica-valor">{{ contarTarefasPorStatus('DOING') }}</div>
+          <div class="estatistica-label">Em Execução</div>
+        </div>
+        <div class="estatistica-item">
+          <div class="estatistica-valor">{{ contarTarefasPorStatus('DONE') }}</div>
+          <div class="estatistica-label">Finalizadas</div>
+        </div>
+        <div class="estatistica-item">
+          <div class="estatistica-valor">{{ contarTarefasPorStatus('DELIVERED') }}</div>
+          <div class="estatistica-label">Aprovadas</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lista de tarefas -->
+    <div class="detalhe-delivery-tarefas">
+      <div class="tarefas-header">
+        <h4>{{aliases?.actionAlias}}s do {{aliases?.deliveryAlias}}</h4>
+        <button class="btn-criar-tarefa" 
+                (click)="onCriarTarefa()" 
+                [disabled]="!podeCriarTarefa()">
+          <i class="icon-add"></i> Criar {{aliases?.actionAlias}}
+        </button>
+      </div>
+      
+      <div class="tarefas-lista" *ngIf="tarefas.length > 0">
+        <div class="tarefa-item" *ngFor="let tarefa of tarefas">
+          <div class="tarefa-info">
+            <div class="tarefa-titulo">
+              <ng-container *ngIf="tarefa.action_title; else noTarefaTitle">
+                {{ tarefa.action_title }}
+              </ng-container>
+              <ng-template #noTarefaTitle>
+                {{aliases?.actionAlias}} sem título
+              </ng-template>
+            </div>
+            
+            <div class="tarefa-detalhes">
+              <span class="tarefa-executor">
+                <i class="icon-person"></i>
+                {{ formatEmailToName(tarefa.user_email) }}
+              </span>
+              
+              <span class="tarefa-status" [ngClass]="getTarefaStatusClass(tarefa.status, tarefa)">
+                {{ getTarefaStatusLabel(tarefa.status, tarefa) }}
+              </span>
+              
+              <span class="tarefa-data" *ngIf="tarefa.created_at">
+                Criado em {{ formatDate(tarefa.created_at) }}
+              </span>
+              
+              <span class="tarefa-data" *ngIf="tarefa.finished_at">
+                Finalizado em {{ formatDate(tarefa.finished_at) }}
+              </span>
+            </div>
+          </div>
+          
+          <div class="tarefa-pontos" *ngIf="tarefa.points">
+            <span class="pontos-badge">{{ tarefa.points }} pts</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="tarefas-vazio" *ngIf="tarefas.length === 0">
+        <div class="empty-state">
+          <i class="icon-task"></i>
+          <p>Nenhuma {{aliases?.actionAlias}} encontrada</p>
+          <small>As {{aliases?.actionAlias}}s associadas a este {{aliases?.deliveryAlias}} aparecerão aqui</small>
+          <button class="btn-criar-primeira-tarefa" (click)="onCriarTarefa()">
+            <i class="icon-add"></i> Criar primeira {{aliases?.actionAlias}}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer com ações -->
+    <div class="detalhe-delivery-footer">
+      <div class="footer-actions-left">
+        <button class="btn-cancelar" 
+                (click)="onCancelar()" 
+                [disabled]="!podeCancelar()">
+          <i class="icon-cancel"></i> Cancelar {{aliases?.deliveryAlias}}
+        </button>
+      </div>
+      
+      <div class="footer-actions-right">
+        <!-- Botões específicos baseados no status -->
+        <ng-container [ngSwitch]="delivery?.status">
+          
+          <!-- Para deliveries incompletas -->
+          <button *ngSwitchCase="'INCOMPLETE'" 
+                  class="btn-completar" 
+                  (click)="onCompletar()" 
+                  [disabled]="!podeCompletar()">
+            <i class="icon-check_circle"></i> Completar {{aliases?.deliveryAlias}}
+          </button>
+          
+          <!-- Para deliveries entregues -->
+          <button *ngSwitchCase="'DELIVERED'" 
+                  class="btn-desfazer" 
+                  (click)="onDesfazer()" 
+                  [disabled]="!podeDesfazer()">
+            <i class="icon-undo"></i> Desfazer Entrega
+          </button>
+          
+          <!-- Para deliveries canceladas -->
+          <button *ngSwitchCase="'CANCELLED'" 
+                  class="btn-restaurar" 
+                  (click)="onRestaurar()" 
+                  [disabled]="!podeRestaurar()">
+            <i class="icon-restore"></i> Restaurar {{aliases?.deliveryAlias}}
+          </button>
+          
+        </ng-container>
+      </div>
+    </div>
+  </div>
+</div> 

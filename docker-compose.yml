@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  game4u-front:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: game4u-front
+    ports:
+      - "80:80"
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - game4u-network
+    volumes:
+      - nginx-logs:/var/log/nginx
+    labels:
+      - "com.docker.compose.service=game4u-front"
+      - "com.docker.compose.version=1.0.0"
+
+networks:
+  game4u-network:
+    driver: bridge
+    name: game4u-network
+
+volumes:
+  nginx-logs:
+    driver: local
+    name: game4u-nginx-logs

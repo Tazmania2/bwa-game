@@ -1,0 +1,71 @@
+@import "variables";
+@import "tools";
+
+:host {
+  overflow: hidden;
+}
+
+.line {
+  display: block;
+  border-bottom: solid 1px $inativo;
+}
+
+i {
+  font-size: 24px;
+  color: $texto-branco;
+  transition: transform $default-anim-time;
+
+  &.open {
+    transform: rotate(180deg);
+  }
+}
+
+.item-title {
+  @include disableSelection;
+  cursor: pointer;
+
+  .title {
+    white-space: nowrap;
+    font-weight: 700;
+    font-size: 14px;
+    color: $texto-cinza;
+    text-transform: uppercase;
+  }
+
+}
+
+.content {
+  position: relative;
+  animation: fadeIn;
+  animation-duration: $default-anim-time * 3;
+  width: 100%;
+}
+
+// Accessibility improvements
+.item-title {
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+  padding: 0;
+  
+  &:focus-visible {
+    outline: 2px solid #00d4ff;
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  
+  &:hover {
+    .title {
+      color: lighten($texto-cinza, 10%);
+    }
+  }
+}
+
+// High contrast mode support
+@media (prefers-contrast: high) {
+  .item-title {
+    border: 1px solid currentColor;
+    padding: 0.5rem;
+  }
+}

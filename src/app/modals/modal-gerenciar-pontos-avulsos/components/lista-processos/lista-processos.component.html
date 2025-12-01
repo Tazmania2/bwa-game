@@ -1,0 +1,90 @@
+<div *ngIf="loading" class="loading-container">
+  <div class="loading-spinner">Carregando {{aliases?.deliveryAlias}}s...</div>
+</div>
+
+<div *ngIf="!loading" class="table-container">
+  <div class="table-header" [style.border-left-color]="configuracao.corBorda">
+    <h3>{{ configuracao.titulo }}</h3>
+    <small class="table-subtitle">{{ configuracao.subtitulo }}</small>
+  </div>
+  
+  <table class="table" *ngIf="processos.length > 0">
+    <thead class="tableHeader">
+      <tr>
+        <th>ID</th>
+        <th>Título</th>
+        <th>Status</th>
+        <th>Progresso</th>
+        <th>Tarefas</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody class="tableBody">
+      <tr *ngFor="let processo of processos" 
+          (click)="onProcessoClick(processo)" 
+          style="cursor:pointer">
+        <td>
+          <span (click)="$event.stopPropagation()" 
+                [title]="'ID: ' + (processo.id || 'n/a')">
+            {{ processo.id || 'n/a' }}
+          </span>
+        </td>
+        <td>
+          <ng-container *ngIf="processo.title || processo.name; else noTitle">
+            {{ (processo.title || processo.name) | slice:0:35 }}{{ (processo.title || processo.name).length > 35 ? '...' : '' }}
+          </ng-container>
+          <ng-template #noTitle>
+            N/A
+          </ng-template>
+        </td>
+        <td [ngClass]="getStatusClass(processo.status)">
+          {{ getStatusLabel(processo.status) }}
+        </td>
+        <td>
+          <div class="progress-container">
+            <div class="progress-bar">
+              <div class="progress-fill" [style.width.%]="getProgressoProcesso(processo)"></div>
+            </div>
+            <span class="progress-text">{{ getProgressoProcesso(processo) }}%</span>
+          </div>
+        </td>
+        <td>
+          <div class="tarefas-info">
+            <span class="tarefa-count">
+              {{ processo.user_action?.length || 0 }} tarefas
+            </span>
+            <div class="tarefas-status" *ngIf="processo.user_action?.length > 0">
+              <span class="status-item pending" *ngIf="contarTarefasPorStatus(processo, 'PENDING') > 0">
+                {{ contarTarefasPorStatus(processo, 'PENDING') }} pendentes
+              </span>
+              <span class="status-item doing" *ngIf="contarTarefasPorStatus(processo, 'DOING') > 0">
+                {{ contarTarefasPorStatus(processo, 'DOING') }} em execução
+              </span>
+              <span class="status-item done" *ngIf="contarTarefasPorStatus(processo, 'DONE') > 0">
+                {{ contarTarefasPorStatus(processo, 'DONE') }} finalizadas
+              </span>
+            </div>
+          </div>
+        </td>
+        <td>
+          <div class="actions" (click)="$event.stopPropagation()">
+            <button class="btn-criar-tarefa" 
+                    *ngIf="podeCriarTarefa(processo)"
+                    (click)="onCriarTarefa(processo, $event)"
+                    title="Criar nova tarefa">
+              <i class="icon-add"></i>
+            </button>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  
+  <div *ngIf="processos.length === 0" class="sem-resultados">
+    <div class="empty-state">
+      <i [class]="configuracao.iconeVazio"></i>
+      <p>{{ configuracao.mensagemVazio }}</p>
+      <small>{{ configuracao.subtituloVazio }}</small>
+    </div>
+  </div>
+</div> 

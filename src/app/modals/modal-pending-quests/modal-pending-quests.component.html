@@ -1,0 +1,88 @@
+<c4u-modal [modalTitle]="modalData.title" *ngIf="data">
+    <c4u-botao-selecao [items]="typeButtons" [(selection)]="modalData.typeSelected"
+                       (selectionChange)="selectType($event)"
+                       *ngIf="typeButtons && typeButtons.length > 1"></c4u-botao-selecao>
+
+    <c4u-tabbar [items]="tabsByType" [marginTop]="40" [(selected)]="modalData.tabSelected"
+                (selectedChange)="selectTab($event)"></c4u-tabbar>
+
+    <div flex gap="40px 56px" wrap="wrap" [marginTop]="40" flexItem="0" minHeight="fit-content">
+        <c4u-painel-vidro full flex vAlign="center" hAlign="center">
+            <div>{{ titleByTab | translate }}</div>
+        </c4u-painel-vidro>
+    </div>
+    <div flex scroll class="modal-content" [marginTop]="20" flexItem="1">
+        <div *ngIf="!dataByTab" flexItem="1">
+            <div *enableShimmer="[!dataByTab, {height: 50, width: 'calc(100% - 28px)', borderRadius: 16}]"></div>
+        </div>
+
+        <div *ngIf="dataByTab" flex direction="column" [style.width.%]="100" overflow="auto">
+          <table class="table">
+            <thead class="tableHeader">
+                <tr>
+                  <th>ID</th> 
+                  <th>Título</th>
+                  <th>Status</th>
+                  <th *ngIf="modalData.typeSelected == 0">Executor</th>
+                  <th *ngIf="modalData.typeSelected == 0 && hasAdminRole()">Pontos</th>
+                  <th>Data</th>
+                </tr>     
+              </thead>
+              <tbody  class="tableBody" >
+                                                 <tr *ngFor="let dt of dataByTab.sections?.[0]?.details || []">
+                  <td>
+                    <a
+                       [class.link-style]="getRedirectUrl(modalData.typeSelected === 0, dt)"
+                       [class.disabled-link]="!getRedirectUrl(modalData.typeSelected === 0, dt)"
+                       [title]="getRedirectUrl(modalData.typeSelected === 0, dt) ? (modalData.typeSelected === 0 ? (dt.integration_id || dt.delivery_id) : dt.id) : 'URL não configurada'"
+                       (click)="handleLinkClick($event, dt, modalData.typeSelected === 0)"
+                    >{{ (modalData.typeSelected === 0 ? (dt.integration_id || dt.delivery_id || 'n/a') : dt.id) | slice:0:12 }}{{ (modalData.typeSelected === 0 ? (dt.integration_id || dt.delivery_id || 'n/a') : dt.id)?.length > 12 ? '...' : '' }}</a>
+                  </td>
+                  <td>{{ (modalData.typeSelected == 0 ? dt.action_title : dt.title) | slice:0:35 }}{{ (modalData.typeSelected == 0 ? dt.action_title : dt.title)?.length > 35 ? '...' : '' }}</td>
+                  <td [ngClass]="{
+                    'statusPending': dt.status == 'PENDING',
+                    'statusDoing': dt.status == 'DOING',
+                    'statusIncomplete': dt.status == 'INCOMPLETE',
+                    'statusDone': dt.status == 'DONE',
+                    'statusDelivered': dt.status == 'DELIVERED',
+                    'statusLost': dt.status == 'LOST',
+                    'statusCancelled': dt.status == 'CANCELLED',
+                  }">
+                    {{ (
+                      dt.status == 'PENDING' ? 'Pendente' 
+                      : dt.status == 'DOING' ? 'Em progresso' 
+                      : dt.status == 'INCOMPLETE' ? 'Incompleto' 
+                      : dt.status == 'DONE' ? 'Bloqueado' 
+                      : dt.status == 'DELIVERED' ? 'Desbloqueado' 
+                      : dt.status == 'LOST' ? 'Perdido' 
+                      : dt.status == 'CANCELLED' ? 'Cancelado' 
+                      : ''
+                      ) }}
+                  </td>
+                  <td *ngIf="modalData.typeSelected == 0">{{ formatEmailToName(dt.user_email) }}</td>
+                  <td *ngIf="modalData.typeSelected == 0 && hasAdminRole()">{{ dt.points }}</td>
+                  <!-- <p flexItem="15" class="modal-text">Criado dia {{ dt.created_at | date: 'dd/MM/yyyy' }}</p> -->
+                  <td>
+                    {{ this.currentTab?.tabBarItem?.name === 'Finalizadas' || this.currentTab?.tabBarItem?.name === 'Atividades finalizadas' || this.currentTab?.tabBarItem?.name === 'Processos finalizados'
+                      ? ('Finalizado dia ' + (dt.finished_at ? (dt.finished_at | date: 'dd/MM/yyyy') : '')) 
+                      : ('Criado dia ' + (dt.created_at ? (dt.created_at | date: 'dd/MM/yyyy') : '')) 
+                      }}
+                    </td>
+                </tr>
+            </tbody>
+          </table>
+            <div *ngIf="!dataByTab.sections?.[0]?.details?.length"
+                 class="sem-resultados">{{ "LABEL_NO_ITEMS" | translate }}
+            </div>
+
+            <span class="button-modal" flexItem="1" flex hAlign="center">
+              <button type="button" class="selection-btn active" (click)="nextPage()" *ngIf="dataByTab?.hasNext">
+                {{ "LABEL_LOAD_MORE_DATA" | translate }}
+              </button>
+              <div *ngIf="showLoading">
+                <c4u-spinner></c4u-spinner>
+              </div>
+            </span>
+        </div>
+    </div>
+</c4u-modal>

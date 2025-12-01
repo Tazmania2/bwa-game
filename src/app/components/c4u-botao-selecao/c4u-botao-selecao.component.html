@@ -1,0 +1,31 @@
+<div class="container" >
+    <!-- Botões alinhados à esquerda -->
+    <div flex [gap]="8">
+        <ng-container *ngFor="let item of items, let i = index; trackBy: trackByIndex">
+            <button type="button" 
+                    flex [gap]="4" vAlign="center"
+                    [ngClass]="{active: i == selection}" 
+                    (click)="enable(i)" 
+                    class="selection-btn"
+                    *ngIf="!item.alignRight">
+                <i *ngIf="item.icon" class="{{item.icon}}"></i>
+                <span [innerText]="item.text"></span>
+            </button>
+        </ng-container>
+    </div>
+    
+    <!-- Botões alinhados à direita -->
+    <div flex [gap]="8">
+        <ng-container *ngFor="let item of items, let i = index; trackBy: trackByIndex">
+            <button type="button" 
+                    flex [gap]="4" vAlign="center"
+                    [ngClass]="{active: i == selection}" 
+                    (click)="enable(i)" 
+                    class="create-btn"
+                    *ngIf="item.alignRight">
+                <i *ngIf="item.icon" class="{{item.icon}}"></i>
+                <span [innerText]="item.text"></span>
+            </button>
+        </ng-container>
+    </div>
+</div>

@@ -1,0 +1,29 @@
+<div flex [gap]="16">
+  <span flexItem="0" alignSelf="center">
+    <c4u-nivel-meta [value]="level" [stars]="stars" [theme]="theme"></c4u-nivel-meta>
+  </span>
+  <div flex direction="column" [gap]="4" flexItem="auto">
+    <div flex>
+      <span flexItem="auto" class="level">{{title}}</span>
+      <span flexItem="0" class="level-progress"><b class="{{theme}}">{{level}}</b>/{{max}}</span>
+    </div>
+
+    <span>{{subtitle}}</span>
+    <c4u-barra-progresso
+      [percent]="percent"
+      [theme]="theme"
+      toolTip="{{ tooltipPercent || percent }}%"
+      *ngIf="!isAnimatedBar"
+    ></c4u-barra-progresso>
+    <animated-progress-bar
+      [percent]="percent"
+      [theme]="theme"
+      *ngIf="isAnimatedBar"
+      toolTip="{{ tooltipPercent || percent }}%"
+    ></animated-progress-bar>
+    <div flex gap="0.25rem" alignSelf="center">
+      <span>{{ description }}</span>
+      <i [class]="icon"></i>
+    </div>
+  </div>
+</div>

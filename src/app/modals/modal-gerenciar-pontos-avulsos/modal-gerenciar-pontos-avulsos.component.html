@@ -1,0 +1,2193 @@
+<c4u-modal [modalTitle]="'Gerenciar Realizações Avulsas'" *ngIf="data">
+  <!-- Overlay bloqueante durante o processamento -->
+  <div *ngIf="isLoadingBlocking" class="blocking-overlay" (click)="$event.stopPropagation()" (mousedown)="$event.preventDefault()" (keydown)="$event.preventDefault()">
+    <div class="loading-content-blocking">
+      <c4u-spinner></c4u-spinner>
+      <p class="loading-text-blocking">Processando requisições...</p>
+      <p class="loading-subtext-blocking">Por favor, aguarde. Não feche esta página.</p>
+    </div>
+  </div>
+  
+  <div class="flex flex-col gap-4 overflow-hidden">
+    <!-- Toggle de visualização para jogadores (apenas se tiverem time) -->
+    <div *ngIf="isPlayer && canViewTeamData" class="view-mode-toggle">
+      <div class="toggle-container">
+        <label class="toggle-label">
+          <span [class.active]="viewMode === 'personal'">Meus Dados</span>
+          <button 
+            type="button" 
+            class="toggle-switch" 
+            [class.active]="viewMode === 'team'"
+            (click)="toggleViewMode()"
+            [disabled]="isLoadingBlocking">
+            <span class="toggle-slider"></span>
+          </button>
+          <span [class.active]="viewMode === 'team'">Dados do Time</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Botões de seleção de tipo -->
+    <c4u-botao-selecao [items]="typeButtons" [(selection)]="selectedType" (selectionChange)="onTypeChange($event)">
+    </c4u-botao-selecao>
+
+    <!-- Abas dinâmicas baseadas no tipo selecionado -->
+    <ul class="tabs overflow-x-auto" *ngIf="selectedType !== 2">
+      <!-- Abas para Processos (selectedType = 0) -->
+      <li *ngIf="selectedType === 0" [class.active]="aba === 'processos-pendentes'"
+          (click)="trocarAba('processos-pendentes')">
+        <i class="icon-notifications_paused"></i> Pendentes
+      </li>
+      <li *ngIf="selectedType === 0" [class.active]="aba === 'incompletos'" (click)="trocarAba('incompletos')">
+        <i class="icon-rule"></i> Incompletos
+      </li>
+      <li *ngIf="selectedType === 0" [class.active]="aba === 'entregues'" (click)="trocarAba('entregues')">
+        <i class="icon-new_releases"></i> Entregues
+      </li>
+      <li *ngIf="selectedType === 0" [class.active]="aba === 'processos-cancelados'"
+          (click)="trocarAba('processos-cancelados')">
+        <i class="icon-stop"></i> Cancelados
+      </li>
+
+      <!-- Abas para Tarefas (selectedType = 1) -->
+      <li *ngIf="selectedType === 1" [class.active]="aba === 'pendentes'" (click)="trocarAba('pendentes')">
+        <i class="icon-notifications_paused"></i> Pendentes
+      </li>
+      <li *ngIf="selectedType === 1" [class.active]="aba === 'finalizados'" (click)="trocarAba('finalizados')">
+        <i class="icon-rule"></i> Aguardando Aprovação
+      </li>
+      <li *ngIf="selectedType === 1" [class.active]="aba === 'aprovados'" (click)="trocarAba('aprovados')">
+        <i class="icon-new_releases"></i> Aprovados
+      </li>
+      <li *ngIf="selectedType === 1" [class.active]="aba === 'cancelados'" (click)="trocarAba('cancelados')">
+        <i class="icon-stop"></i> Cancelados
+      </li>
+    </ul>
+
+  <div class="tab-content">
+    <!-- Aba Atribuir -->
+    <form *ngIf="aba === 'atribuir'" [formGroup]="formAtribuir" (ngSubmit)="atribuirAtividade()" style="margin-top: 2rem;">
+      <!-- Botão Voltar (apenas quando há cache) -->
+      <div *ngIf="temEstadoCache()" class="voltar-container">
+        <button type="button" class="back-btn" (click)="voltarParaEstadoAnterior()" [disabled]="processandoAtribuicao">
+          &larr; Voltar
+        </button>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label>Título do(a) {{aliases?.deliveryAlias}} *</label>
+          <input type="text" formControlName="delivery_title" placeholder="Ex: Sprint 1" />
+        </div>
+        <!-- <div class="form-group">
+          <label>ID do(a) {{aliases?.deliveryAlias}} *</label>
+          <input type="text" formControlName="delivery_id" placeholder="Ex: sprint_1" readonly />
+          <small class="helper-text">Gerado automaticamente a partir do título</small>
+        </div> -->
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>{{aliases?.actionAlias}}</label>
+          <select formControlName="atividade" [disabled]="loadingAtividades">
+            <option [ngValue]="null">
+              {{ loadingAtividades ? 'Carregando ' + aliases?.actionAlias + '...' : 'Selecione uma ' + aliases?.actionAlias }}
+            </option>
+            <option *ngFor="let atividade of atividades" [ngValue]="atividade.id">
+              {{ atividade.name }}
+            </option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Executor</label>
+          <div *ngIf="deveMostrarSelectExecutores">
+            <select formControlName="jogador" [disabled]="loadingJogadores || processandoAtribuicao">
+              <option [ngValue]="null">
+                {{ loadingJogadores ? 'Carregando executores...' : 'Selecione um executor' }}
+              </option>
+              <option [ngValue]="'UNASSIGNED'">Não atribuído (Unassigned)</option>
+              <option *ngFor="let jogador of jogadores" [ngValue]="getJogadorId(jogador)">
+                {{ getJogadorNome(jogador) }} ({{ jogador.email }})
+              </option>
+            </select>
+            <small class="helper-text" *ngIf="!loadingJogadores && isPlayer">
+              <i class="icon-info"></i> Seu nome está pré-selecionado, mas você pode alterar para outro membro do time.
+            </small>
+          </div>
+          <div *ngIf="!deveMostrarSelectExecutores">
+            <input type="text" [value]="userName" readonly class="readonly-input" />
+            <small class="helper-text">Atividade será atribuída ao colaborador atual</small>
+          </div>
+        </div>
+      </div>
+      
+      <div class="form-row" *ngIf="!isPlayer">
+              <div class="form-group">
+        <label>Status</label>
+        <select formControlName="status" class="status-select">
+          <option *ngFor="let status of statusList" [ngValue]="status.value" [ngClass]="getStatusClass(status.value)">
+            {{ status.label }}
+          </option>
+        </select>
+      </div>
+      <div class="form-row" *ngIf="isPlayer">
+        <div class="form-group">
+          <small class="helper-text" style="color: #6b7280; font-style: italic;">
+            <i class="icon-info"></i> Status será automaticamente definido como "Pendente"
+          </small>
+        </div>
+      </div>
+        <div class="form-group" *ngIf="formAtribuir.get('status')?.value === 'DONE' && !isPlayer">
+          <label>Data de Finalização</label>
+          <input type="datetime-local" formControlName="dataFinalizacao" />
+        </div>
+      </div>
+    
+      <div class="form-row">
+        <div class="form-group" style="max-width: 300px;">
+          <label>Quantidade de {{ aliases?.actionAlias }}</label>
+          <input 
+            type="number" 
+            formControlName="quantidade" 
+            class="status-select"
+            min="1"
+            style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+          <small class="helper-text" style="color: #6b7280; font-style: italic;">
+            <i class="icon-info"></i> Quantas vezes esta {{ aliases?.actionAlias }} deve ser realizada?
+          </small>
+        </div>
+      </div>
+      
+      <button type="submit" [disabled]="formAtribuir.invalid || processandoAtribuicao">
+        {{ processandoAtribuicao ? 'Processando...' : 'Atribuir ' + aliases?.actionAlias }}
+      </button>
+    </form>
+
+      <!-- Placeholders para as outras abas -->
+      <div *ngIf="aba === 'pendentes'">
+        <ng-container *ngIf="!mostrarDetalhe; else detalhePendente">
+          <div *ngIf="loadingAtividadesPendentes" class="loading-container">
+            <div class="loading-spinner">Carregando {{ aliases?.actionAlias }}s...</div>
+          </div>
+
+          <div *ngIf="!loadingAtividadesPendentes" class="table-container">
+            <div class="table-header" style="border-left: 4px solid #ef4444;">
+              <h3>{{ aliases?.actionAlias }} Pendentes e em Execução</h3>
+              <small class="table-subtitle">Veja aqui todas as tarefas que ainda não foram finalizadas ou estão em
+                andamento nesta temporada.</small>
+            </div>
+
+            <c4u-painel-filtros-acao
+              [totalItens]="atividadesPendentes.length"
+              [itensSelecionados]="getItensSelecionados().length"
+              [mostrarFiltros]="true"
+              [mostrarAcoes]="true"
+              [acoesDisponiveis]="getAcoesDisponiveis('pendentes')"
+              [executorsList]="getExecutorsList()"
+              [fetchAllPagesCallback]="buscarTodasPaginasAbaAtual.bind(this)"
+              (filtrosChange)="onFiltrosChange($event)"
+              (acaoLote)="onAcaoLote($event)"
+              (selecionarTodos)="onSelecionarTodos($event)"
+              (limparFiltros)="onLimparFiltros()"
+              (alterarItens)="onAlterarItens($event)">
+            </c4u-painel-filtros-acao>
+
+            <table class="table">
+              <thead class="tableHeader">
+              <tr>
+                <th>
+                  <c4u-checkbox
+                    [value]="itensSelecionadosIds.size === atividadesPendentes.length && atividadesPendentes.length > 0"
+                    [indeterminate]="itensSelecionadosIds.size > 0 && itensSelecionadosIds.size < atividadesPendentes.length"
+                    (click)="toggleSelecionarTodosPendentesManual(); $event.stopPropagation()"
+                    style="display: inline-block;">
+                  </c4u-checkbox>
+                </th>
+                <th>ID</th>
+                <th>Título</th>
+                <th>Status</th>
+                <th>Executor</th>
+                <th>Data de criação</th>
+              </tr>
+              </thead>
+              <tbody class="tableBody">
+              <tr *ngFor="let atividade of atividadesPendentes" 
+                  (click)="abrirDetalheAtividade(atividade)"
+                  style="cursor:pointer"
+                  [class.selected]="isItemSelecionado(atividade)">
+                <td (click)="$event.stopPropagation()">
+                  <c4u-checkbox
+                    [value]="isItemSelecionado(atividade)"
+                    (click)="toggleSelecionarItem(atividade); $event.stopPropagation(); $event.preventDefault()"
+                    style="display: inline-block; cursor: pointer;">
+                  </c4u-checkbox>
+                </td>
+                <td>
+                  <span (click)="$event.stopPropagation()"
+                        [title]="'ID: ' + (atividade.integration_id || atividade.delivery_id || 'n/a')">
+                    {{ ((atividade.integration_id || atividade.delivery_id || 'n/a') | slice:0:9) }}{{ ((atividade.integration_id || atividade.delivery_id) ?? '').length > 9 ? '...' : '' }}
+                  </span>
+                </td>
+                <td>
+                  <ng-container *ngIf="atividade.action_title; else noTitle">
+                    {{ atividade.action_title }}
+                  </ng-container>
+                  <ng-template #noTitle>
+                    N/A
+                  </ng-template>
+                </td>
+                <td [ngClass]="getStatusClass(atividade.status || '', atividade)">
+                  {{ getStatusLabel(atividade.status || '', atividade) }}
+                </td>
+                <td>{{ formatEmailToName(atividade.user_email || '') }}</td>
+                <td>
+                  {{ (atividade.created_at || '') | date: 'dd/MM/yyyy' }}
+                </td>
+              </tr>
+              </tbody>
+            </table>
+
+            <div *ngIf="atividadesPendentes.length === 0 && !loadingAtividadesPendentes" class="sem-resultados">
+              <div class="empty-state">
+                <i class="icon-check_circle"></i>
+                <p>Nenhuma {{ aliases?.actionAlias }} pendente encontrada</p>
+                <small>As {{ aliases?.actionAlias }} pendentes e em execução aparecerão aqui</small>
+              </div>
+            </div>
+
+            <!-- Paginação -->
+            <div *ngIf="deveMostrarPaginacaoPendentes" class="pagination-container">
+              <div class="pagination-info">
+                <span>Mostrando {{ (paginacaoPendentes!.page - 1) * paginacaoPendentes!.limit + 1 }} a {{ Math.min(paginacaoPendentes!.page * paginacaoPendentes!.limit, paginacaoPendentes!.total) }} de {{ paginacaoPendentes!.total }} resultados</span>
+              </div>
+              <div class="pagination-controls">
+                <button 
+                  class="pagination-btn" 
+                  [disabled]="!temPaginaAnterior('pendentes')"
+                  (click)="irParaPaginaPendentes(paginacaoPendentes!.page - 1)">
+                  <i class="ri-arrow-left-s-line"></i> Anterior
+                </button>
+                <div class="pagination-pages">
+                  <button
+                    *ngFor="let page of getPageNumbers(paginacaoPendentes)"
+                    class="pagination-page-btn"
+                    [class.active]="page === paginacaoPendentes!.page"
+                    (click)="irParaPaginaPendentes(page)"
+                    [disabled]="page === paginacaoPendentes!.page">
+                    {{ page }}
+                  </button>
+                </div>
+                <button 
+                  class="pagination-btn" 
+                  [disabled]="!temProximaPagina('pendentes')"
+                  (click)="irParaPaginaPendentes(paginacaoPendentes!.page + 1)">
+                  Próxima <i class="ri-arrow-right-s-line"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+
+        <ng-template #detalhePendente>
+          <div class="detalhe-atividade-container">
+            <button class="back-btn" type="button" (click)="fecharDetalhe()">&larr; Voltar</button>
+            <div class="detalhe-atividade-content">
+              <div
+                class="{{getStatusLabel(atividadeSelecionada?.status) === 'Pendente' ? 'detalhe-vermelho' : 'detalhe-amarelo'}} detalhe-atividade-status">
+                {{ getStatusLabel(atividadeSelecionada?.status) }} desde
+                <ng-container *ngIf="atividadeSelecionada?.created_at; else noCreatedAtStatus">
+                  {{ atividadeSelecionada.created_at | date:'dd/MM/yyyy' }}
+                </ng-container>
+                <ng-template #noCreatedAtStatus>N/A</ng-template>
+              </div>
+              <div class="detalhe-atividade-nome">
+                <ng-container *ngIf="atividadeSelecionada?.action_title; else noTitleDetail">
+                  {{ atividadeSelecionada.action_title }}
+                </ng-container>
+                <ng-template #noTitleDetail>
+                  N/A
+                </ng-template>
+              </div>
+              <div class="detalhe-atividade-executor">
+                <div *ngIf="isAdminOrGerente && isTeamContext" style="display: flex; align-items: center; gap: 0.75rem;">
+                  <select 
+                    [(ngModel)]="novoExecutorSelecionado" 
+                    [disabled]="atualizandoExecutor || loadingJogadores || atividadeSelecionada?.status !== 'PENDING'"
+                    style="flex: 1; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 4px; background-color: #1f2937; color: white;">
+                    <option [ngValue]="null">
+                      {{ loadingJogadores ? 'Carregando executores...' : 'Selecione um executor' }}
+                    </option>
+                    <option [ngValue]="'UNASSIGNED'">Não atribuído (Unassigned)</option>
+                    <option *ngFor="let jogador of jogadores" [ngValue]="jogador.id || jogador._id || jogador.email">
+                      {{ jogador.name || jogador.full_name || jogador.email }} ({{ jogador.email }})
+                    </option>
+                  </select>
+                  <button 
+                    *ngIf="novoExecutorSelecionado && novoExecutorSelecionado !== null && !atualizandoExecutor"
+                    [disabled]="atividadeSelecionada?.status !== 'PENDING'"
+                    (click)="atualizarExecutor()"
+                    style="padding: 0.5rem 1rem; background-color: #6366f1; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.875rem; opacity: 1;"
+                    [style.opacity]="atividadeSelecionada?.status !== 'PENDING' ? '0.5' : '1'"
+                    [style.cursor]="atividadeSelecionada?.status !== 'PENDING' ? 'not-allowed' : 'pointer'">
+                    Atualizar
+                  </button>
+                  <span *ngIf="atualizandoExecutor" style="color: #6b7280; font-size: 0.875rem;">
+                    <i class="icon-spinner"></i> Atualizando...
+                  </span>
+                  <small *ngIf="atividadeSelecionada?.status !== 'PENDING'" style="color: #9ca3af; font-size: 0.75rem; font-style: italic;">
+                    Apenas tarefas com status "Pendente" podem ter o executor alterado
+                  </small>
+                </div>
+                <div *ngIf="!isAdminOrGerente || !isTeamContext">
+                  {{ formatEmailToName(atividadeSelecionada?.user_email) }}
+                </div>
+              </div>
+              <div class="detalhe-atividade-info">
+                <div class="info-item">
+                  <strong>{{ aliases?.deliveryAlias }}:</strong>
+                  <ng-container
+                    *ngIf="atividadeSelecionada?.integration_id || atividadeSelecionada?.delivery_id; else noTaskId">
+                    {{ atividadeSelecionada?.delivery_title }}
+                  </ng-container>
+                  <ng-template #noTaskId>N/A</ng-template>
+                </div>
+                <div class="info-item" *ngIf="atividadeSelecionada?.points">
+                  <strong>Pontos:</strong> {{ atividadeSelecionada?.points }}
+                </div>
+                <div class="info-item">
+                  <strong>Status:</strong> {{ getStatusLabel(atividadeSelecionada?.status) }}
+                </div>
+                <div class="info-item">
+                  <strong>Criado em:</strong>
+                  <ng-container *ngIf="atividadeSelecionada?.created_at; else noCreatedAt">
+                    {{ atividadeSelecionada.created_at | date:'dd/MM/yyyy HH:mm' }}
+                  </ng-container>
+                  <span>por {{ atividadeSelecionada.created_by || "Sistema" }}</span>
+                  <ng-template #noCreatedAt>N/A</ng-template>
+                </div>
+                <div class="info-item" *ngIf="atividadeSelecionada?.finished_at">
+                  <strong>Finalizado em:</strong>
+                  <ng-container *ngIf="atividadeSelecionada.finished_at; else noFinishedAt">
+                    {{ atividadeSelecionada.finished_at | date:'dd/MM/yyyy HH:mm' }}
+                  </ng-container>
+                  <span>por {{ atividadeSelecionada.finished_by || "Sistema" }}</span>
+                  <ng-template #noFinishedAt>N/A</ng-template>
+                </div>
+              </div>
+
+              <!-- Seção de Comentários -->
+              <div class="detalhe-atividade-comentarios">
+                <div class="comentarios-header">
+                  <h4>Comentários</h4>
+                  <small>Histórico de comentários da {{ aliases?.actionAlias }}</small>
+                </div>
+
+                <div class="comentarios-lista"
+                     *ngIf="atividadeSelecionada?.comments && atividadeSelecionada.comments.length > 0">
+                  <div class="comentario-item" *ngFor="let comentario of atividadeSelecionada.comments">
+                    <div class="comentario-header">
+                      <span class="comentario-autor">{{ formatEmailToName(comentario.created_by) }}</span>
+                      <span class="comentario-data">{{ comentario.created_at | date:'dd/MM/yyyy HH:mm' }}</span>
+                      <span class="comentario-tipo" [ngClass]="'tipo-' + comentario.type">{{ comentario.type }}</span>
+                    </div>
+                    <div class="comentario-mensagem">
+                      {{ comentario.message }}
+                    </div>
+                  </div>
+                </div>
+
+                <div class="comentarios-vazio"
+                     *ngIf="!atividadeSelecionada?.comments || atividadeSelecionada.comments.length === 0">
+                  <div class="empty-state">
+                    <i class="icon-chat"></i>
+                    <p>Nenhum comentário encontrado</p>
+                    <small>Os comentários aparecerão aqui quando houver interações</small>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Seção de Evidências -->
+              <div class="detalhe-atividade-evidencias">
+                <div class="evidencias-header">
+                  <h4>Evidências</h4>
+                  <small>Anexe arquivos que comprovem a execução da {{ aliases?.actionAlias }}</small>
+                </div>
+
+                <!-- Anexos existentes -->
+                <div class="anexos-existentes" *ngIf="!loadingAnexos && anexosExistentes.length > 0">
+                  <h5>Anexos existentes</h5>
+                  <div class="anexos-lista">
+                    <div class="anexo-item" *ngFor="let anexo of anexosExistentes">
+                      <div class="anexo-info">
+                        <i class="icon-file"></i>
+                        <span class="anexo-nome">{{ anexo.original_name || anexo.filename || 'arquivo' }}</span>
+                        <span class="anexo-tamanho">{{ formatFileSize(anexo.size) }}</span>
+                        <span class="anexo-data">{{ anexo.created_at | date:'dd/MM/yyyy HH:mm' }}</span>
+                      </div>
+                      <button class="btn-download" (click)="fazerDownloadAnexo(anexo)"
+                              [title]="getDownloadTooltip(anexo)"
+                              [disabled]="downloadingAnexos.has(anexo.id)">
+                        <i *ngIf="!downloadingAnexos.has(anexo.id)" class="ri-download-line"></i>
+                        <span>Baixar</span>
+                        <i *ngIf="downloadingAnexos.has(anexo.id)" class="icon-spinner"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Loading de anexos -->
+                <div class="anexos-loading" *ngIf="loadingAnexos">
+                  <div class="loading-spinner">Carregando anexos...</div>
+                </div>
+
+                <!-- Upload de novos anexos -->
+                <div class="evidencias-lista" *ngIf="arquivosSelecionados.length > 0">
+                  <h5>Novos anexos para upload</h5>
+                  <div class="evidencia-item" *ngFor="let arquivo of arquivosSelecionados; let i = index">
+                    <div class="evidencia-info">
+                      <i class="icon-file"></i>
+                      <span class="evidencia-nome">{{ arquivo.name }}</span>
+                      <span class="evidencia-tamanho">{{ formatFileSize(arquivo.size) }}</span>
+                    </div>
+                    <button class="btn-remover" (click)="removerArquivo(i)">
+                      <i class="icon-delete"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="evidencias-upload-area">
+                  <div class="upload-zone" (click)="fileInput.click()" (dragover)="onDragOver($event)"
+                       (drop)="onDrop($event)">
+                    <i class="icon-upload"></i>
+                    <p>Clique ou arraste arquivos aqui</p>
+                    <small>Formatos aceitos: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG, MP4</small>
+                    <input #fileInput type="file" multiple (change)="onFileSelected($event)" style="display: none;"
+                           accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.mp4,.avi,.mov"
+                           title="Formatos aceitos: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG, MP4">
+                  </div>
+                </div>
+
+                <div class="evidencias-actions">
+                  <div class="actions-buttons">
+                    <button class="btn-upload" (click)="fazerUploadAnexos()"
+                            [disabled]="arquivosSelecionados.length === 0">
+                      <i class="icon-upload"></i> Enviar Anexos
+                    </button>
+                    <button class="btn-limpar" (click)="removerTodosArquivos()"
+                            [disabled]="arquivosSelecionados.length === 0">
+                      <i class="icon-delete"></i> Limpar Todos
+                    </button>
+                  </div>
+                  <small *ngIf="arquivosSelecionados.length >= 5" class="upload-limit">
+                    Máximo 5 arquivos permitidos
+                  </small>
+                </div>
+              </div>
+              <div class="detalhe-atividade-footer">
+                <div class="footer-actions-left">
+                  <button class="btn-cancelar" (click)="cancelarAtividade()" [disabled]="!podeCancelar()">
+                    <i class="icon-cancel"></i><i class="ri-forbid-line"></i> Cancelar {{ aliases?.actionAlias }}
+                  </button>
+                </div>
+                <div class="footer-actions-right">
+                  <button class="btn-finalizar" (click)="finalizarAtividade()">
+                    <i class="icon-check_circle"></i><i class="ri-check-line"></i> Finalizar {{ aliases?.actionAlias }}
+                  </button>
+
+                </div>
+              </div>
+            </div>
+          </div>
+        </ng-template>
+      </div>
+
+      <div *ngIf="aba === 'finalizados'">
+        <ng-container *ngIf="!mostrarDetalhe; else detalheAprovado">
+          <div *ngIf="loadingAtividadesFinalizadas" class="loading-container">
+            <div class="loading-spinner">Carregando {{ aliases?.actionAlias }}s finalizados(as)...</div>
+          </div>
+
+          <div *ngIf="!loadingAtividadesFinalizadas" class="table-container">
+            <div class="table-header" style="border-left: 4px solid #10b981;">
+              <h3>{{ aliases?.actionAlias }}s finalizados(as) aguardando aprovação</h3>
+              <small class="table-subtitle">Estas tarefas já foram concluídas, mas aguardam aprovação para que os pontos
+                sejam liberados.</small>
+            </div>
+
+            <c4u-painel-filtros-acao
+              [totalItens]="atividadesFinalizadas.length"
+              [itensSelecionados]="getItensSelecionados().length"
+              [mostrarFiltros]="true"
+              [mostrarAcoes]="true"
+              [acoesDisponiveis]="getAcoesDisponiveis('finalizadas')"
+              [executorsList]="getExecutorsList()"
+              [fetchAllPagesCallback]="buscarTodasPaginasAbaAtual.bind(this)"
+              (filtrosChange)="onFiltrosChange($event)"
+              (acaoLote)="onAcaoLote($event)"
+              (selecionarTodos)="onSelecionarTodos($event)"
+              (limparFiltros)="onLimparFiltros()"
+              (alterarItens)="onAlterarItens($event)">
+            </c4u-painel-filtros-acao>
+
+            <table class="table">
+              <thead class="tableHeader">
+              <tr>
+                <th>
+                  <c4u-checkbox
+                    [value]="itensSelecionadosIds.size === atividadesFinalizadas.length && atividadesFinalizadas.length > 0"
+                    [indeterminate]="itensSelecionadosIds.size > 0 && itensSelecionadosIds.size < atividadesFinalizadas.length"
+                    (click)="toggleSelecionarTodosFinalizadasManual(); $event.stopPropagation()"
+                    style="display: inline-block;">
+                  </c4u-checkbox>
+                </th>
+                <th>ID</th>
+                <th>Título</th>
+                <th>Status</th>
+                <th>Executor</th>
+                <th>Data Finalização</th>
+              </tr>
+              </thead>
+              <tbody class="tableBody">
+              <tr *ngFor="let atividade of atividadesFinalizadas" 
+                  (click)="abrirDetalheAtividade(atividade)"
+                  style="cursor:pointer"
+                  [class.selected]="isItemSelecionado(atividade)">
+                <td (click)="$event.stopPropagation()">
+                  <c4u-checkbox
+                    [value]="isItemSelecionado(atividade)"
+                    (click)="toggleSelecionarItem(atividade); $event.stopPropagation(); $event.preventDefault()"
+                    style="display: inline-block; cursor: pointer;">
+                  </c4u-checkbox>
+                </td>
+                <td>
+                  <span (click)="$event.stopPropagation()"
+                        [title]="'ID: ' + (atividade.integration_id || atividade.delivery_id || 'n/a')">
+                    {{ ((atividade.integration_id || atividade.delivery_id || 'n/a') | slice:0:9) }}{{ ((atividade.integration_id || atividade.delivery_id) ?? '').length > 9 ? '...' : '' }}
+                  </span>
+                </td>
+                <td>
+                  <ng-container *ngIf="atividade.action_title; else noTitleFinalizada">
+                    {{ atividade.action_title }}
+                  </ng-container>
+                  <ng-template #noTitleFinalizada>
+                    N/A
+                  </ng-template>
+                </td>
+                <td [ngClass]="getStatusClass(atividade.status || '', atividade)">
+                  {{ getStatusLabel(atividade.status || '', atividade) }}
+                </td>
+                <td>{{ formatEmailToName(atividade.user_email || '') }}</td>
+                <td>
+                  {{ (atividade.finished_at || atividade.created_at || '') | date: 'dd/MM/yyyy' }}
+                </td>
+              </tr>
+              </tbody>
+            </table>
+
+            <div *ngIf="atividadesFinalizadas.length === 0 && !loadingAtividadesFinalizadas" class="sem-resultados">
+              <div class="empty-state">
+                <i class="icon-check_circle"></i>
+                <p>Não há {{ aliases?.actionAlias }}s finalizados(as) aguardando aprovação</p>
+                <small>As {{ aliases?.actionAlias }}s finalizados(as) aguardando aprovação aparecerão aqui</small>
+              </div>
+            </div>
+
+            <!-- Paginação -->
+            <div *ngIf="paginacaoFinalizadas && paginacaoFinalizadas.totalPages > 1 && !loadingAtividadesFinalizadas" class="pagination-container">
+              <div class="pagination-info">
+                <span>Mostrando {{ (paginacaoFinalizadas!.page - 1) * paginacaoFinalizadas!.limit + 1 }} a {{ Math.min(paginacaoFinalizadas!.page * paginacaoFinalizadas!.limit, paginacaoFinalizadas!.total) }} de {{ paginacaoFinalizadas!.total }} resultados</span>
+              </div>
+              <div class="pagination-controls">
+                <button 
+                  class="pagination-btn" 
+                  [disabled]="!temPaginaAnterior('finalizadas')"
+                  (click)="irParaPaginaFinalizadas(paginacaoFinalizadas!.page - 1)">
+                  <i class="ri-arrow-left-s-line"></i> Anterior
+                </button>
+                <div class="pagination-pages">
+                  <button
+                    *ngFor="let page of getPageNumbers(paginacaoFinalizadas)"
+                    class="pagination-page-btn"
+                    [class.active]="page === paginacaoFinalizadas!.page"
+                    (click)="irParaPaginaFinalizadas(page)"
+                    [disabled]="page === paginacaoFinalizadas!.page">
+                    {{ page }}
+                  </button>
+                </div>
+                <button 
+                  class="pagination-btn" 
+                  [disabled]="!temProximaPagina('finalizadas')"
+                  (click)="irParaPaginaFinalizadas(paginacaoFinalizadas!.page + 1)">
+                  Próxima <i class="ri-arrow-right-s-line"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+
+        <ng-template #detalheAprovado>
+          <div class="detalhe-atividade-container">
+            <button class="back-btn" type="button" (click)="fecharDetalhe()">&larr; Voltar</button>
+            <div class="detalhe-atividade-content">
+              <div class="detalhe-verde detalhe-atividade-status">
+                {{ getStatusLabel(atividadeSelecionada?.status) }} desde
+                <ng-container *ngIf="atividadeSelecionada?.finished_at; else noFinishedAtStatus">
+                  {{ (atividadeSelecionada?.finished_at) | date:'dd/MM/yyyy' }}
+                </ng-container>
+                <ng-template #noFinishedAtStatus>N/A</ng-template>
+              </div>
+              <div class="detalhe-atividade-nome">
+                <ng-container *ngIf="atividadeSelecionada?.action_title; else noTitleDetailFinalizada">
+                  {{ atividadeSelecionada.action_title }}
+                </ng-container>
+                <ng-template #noTitleDetailFinalizada>
+                  N/A
+                </ng-template>
+              </div>
+              <div class="detalhe-atividade-executor">
+                <div *ngIf="isAdminOrGerente && isTeamContext" style="display: flex; align-items: center; gap: 0.75rem;">
+                  <select 
+                    [(ngModel)]="novoExecutorSelecionado" 
+                    [disabled]="atualizandoExecutor || loadingJogadores || atividadeSelecionada?.status !== 'PENDING'"
+                    style="flex: 1; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 4px; background-color: #1f2937; color: white;">
+                    <option [ngValue]="null">
+                      {{ loadingJogadores ? 'Carregando executores...' : 'Selecione um executor' }}
+                    </option>
+                    <option [ngValue]="'UNASSIGNED'">Não atribuído (Unassigned)</option>
+                    <option *ngFor="let jogador of jogadores" [ngValue]="jogador.id || jogador._id || jogador.email">
+                      {{ jogador.name || jogador.full_name || jogador.email }} ({{ jogador.email }})
+                    </option>
+                  </select>
+                  <button 
+                    *ngIf="novoExecutorSelecionado && novoExecutorSelecionado !== null && !atualizandoExecutor"
+                    [disabled]="atividadeSelecionada?.status !== 'PENDING'"
+                    (click)="atualizarExecutor()"
+                    style="padding: 0.5rem 1rem; background-color: #6366f1; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.875rem; opacity: 1;"
+                    [style.opacity]="atividadeSelecionada?.status !== 'PENDING' ? '0.5' : '1'"
+                    [style.cursor]="atividadeSelecionada?.status !== 'PENDING' ? 'not-allowed' : 'pointer'">
+                    Atualizar
+                  </button>
+                  <span *ngIf="atualizandoExecutor" style="color: #6b7280; font-size: 0.875rem;">
+                    <i class="icon-spinner"></i> Atualizando...
+                  </span>
+                  <small *ngIf="atividadeSelecionada?.status !== 'PENDING'" style="color: #9ca3af; font-size: 0.75rem; font-style: italic;">
+                    Apenas tarefas com status "Pendente" podem ter o executor alterado
+                  </small>
+                </div>
+                <div *ngIf="!isAdminOrGerente || !isTeamContext">
+                  {{ formatEmailToName(atividadeSelecionada?.user_email) }}
+                </div>
+              </div>
+              <div class="detalhe-atividade-info">
+                <div class="info-item">
+                  <strong>ID:</strong>
+                  <ng-container
+                    *ngIf="atividadeSelecionada?.integration_id || atividadeSelecionada?.delivery_id; else noTaskIdFinalizada">
+                    {{ atividadeSelecionada?.integration_id || atividadeSelecionada?.delivery_id }}
+                  </ng-container>
+                  <ng-template #noTaskIdFinalizada>N/A</ng-template>
+                </div>
+                <div class="info-item" *ngIf="atividadeSelecionada?.points">
+                  <strong>Pontos:</strong> {{ atividadeSelecionada?.points }}
+                </div>
+                <div class="info-item">
+                  <strong>Status:</strong> {{ getStatusLabel(atividadeSelecionada?.status) }}
+                </div>
+                <div class="info-item">
+                  <strong>Criado em:</strong>
+                  <ng-container *ngIf="atividadeSelecionada?.created_at; else noCreatedAtFinalizada">
+                    {{ atividadeSelecionada.created_at | date:'dd/MM/yyyy HH:mm' }}
+                  </ng-container>
+                  <span>por {{ atividadeSelecionada.created_by || "Sistema" }}</span>
+                  <ng-template #noCreatedAtFinalizada>N/A</ng-template>
+                </div>
+                <div class="info-item" *ngIf="atividadeSelecionada?.finished_at">
+                  <strong>Finalizado em:</strong>
+                  <ng-container *ngIf="atividadeSelecionada.finished_at; else noFinishedAtFinalizada">
+                    {{ atividadeSelecionada.finished_at | date:'dd/MM/yyyy HH:mm' }}
+                  </ng-container>
+                  <span>por {{ atividadeSelecionada.finished_by || "Sistema" }}</span>
+                  <ng-template #noFinishedAtFinalizada>N/A</ng-template>
+                </div>
+              </div>
+
+              <!-- Seção de Comentários -->
+              <div class="detalhe-atividade-comentarios">
+                <div class="comentarios-header">
+                  <h4>Comentários</h4>
+                  <small>Histórico de comentários da {{ aliases?.actionAlias }}</small>
+                </div>
+
+                <div class="comentarios-lista"
+                     *ngIf="atividadeSelecionada?.comments && atividadeSelecionada.comments.length > 0">
+                  <div class="comentario-item" *ngFor="let comentario of atividadeSelecionada.comments">
+                    <div class="comentario-header">
+                      <span class="comentario-autor">{{ formatEmailToName(comentario.created_by) }}</span>
+                      <span class="comentario-data">{{ comentario.created_at | date:'dd/MM/yyyy HH:mm' }}</span>
+                      <span class="comentario-tipo" [ngClass]="'tipo-' + comentario.type">{{ comentario.type }}</span>
+                    </div>
+                    <div class="comentario-mensagem">
+                      {{ comentario.message }}
+                    </div>
+                  </div>
+                </div>
+
+                <div class="comentarios-vazio"
+                     *ngIf="!atividadeSelecionada?.comments || atividadeSelecionada.comments.length === 0">
+                  <div class="empty-state">
+                    <i class="icon-chat"></i>
+                    <p>Nenhum comentário encontrado</p>
+                    <small>Os comentários aparecerão aqui quando houver interações</small>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Seção de Anexos -->
+              <div class="detalhe-atividade-evidencias">
+                <div class="evidencias-header">
+                  <h4>Anexos</h4>
+                  <small>Arquivos anexados à {{ aliases?.actionAlias }}</small>
+                </div>
+
+                <!-- Anexos existentes -->
+                <div class="anexos-existentes" *ngIf="!loadingAnexos && anexosExistentes.length > 0">
+                  <h5>Anexos existentes</h5>
+                  <div class="anexos-lista">
+                    <div class="anexo-item" *ngFor="let anexo of anexosExistentes">
+                      <div class="anexo-info">
+                        <i class="icon-file"></i>
+                        <span class="anexo-nome">{{ anexo.original_name || anexo.filename || 'arquivo' }}</span>
+                        <span class="anexo-tamanho">{{ formatFileSize(anexo.size) }}</span>
+                        <span class="anexo-data">{{ anexo.created_at | date:'dd/MM/yyyy HH:mm' }}</span>
+                      </div>
+                      <button class="btn-download" (click)="fazerDownloadAnexo(anexo)"
+                              [title]="getDownloadTooltip(anexo)"
+                              [disabled]="downloadingAnexos.has(anexo.id)">
+                        <i *ngIf="!downloadingAnexos.has(anexo.id)" class="ri-download-line"></i>
+                        <span>Baixar</span>
+                        <i *ngIf="downloadingAnexos.has(anexo.id)" class="icon-spinner"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Loading de anexos -->
+                <div class="anexos-loading" *ngIf="loadingAnexos">
+                  <div class="loading-spinner">Carregando anexos...</div>
+                </div>
+
+                <!-- Estado vazio de anexos -->
+                <div class="anexos-vazio" *ngIf="!loadingAnexos && anexosExistentes.length === 0">
+                  <div class="empty-state">
+                    <i class="icon-file"></i>
+                    <p>Nenhum anexo encontrado</p>
+                    <small>Os anexos aparecerão aqui quando houver arquivos anexados</small>
+                  </div>
+                </div>
+              </div>
+
+              <div class="detalhe-atividade-footer">
+                <div class="footer-actions-left">
+                  <button class="btn-cancelar" (click)="cancelarAtividade()" [disabled]="!podeCancelar()">
+                    <i class="icon-cancel"></i><i class="ri-forbid-line"></i> Cancelar {{ aliases?.actionAlias }}
+                  </button>
+                </div>
+                <div class="footer-actions-right" *ngIf="isAdminOrGerente">
+                  <button class="btn-reprovar" (click)="reprovarAtividade()" [disabled]="!podeReprovar()">
+                    <i class="icon-cancel"></i><i class="ri-close-line"></i> Reprovar
+                  </button>
+                  <button class="btn-aprovar" (click)="aprovarAtividade()" [disabled]="!podeAprovar()">
+                    <i class="icon-check_circle"></i><i class="ri-check-line"></i> Aprovar
+                  </button>
+                </div>
+
+              </div>
+
+            </div>
+          </div>
+        </ng-template>
+      </div>
+
+      <div *ngIf="aba === 'aprovados'">
+        <ng-container *ngIf="!mostrarDetalhe; else detalheAprovadoAprovados">
+          <div *ngIf="loadingAtividadesAprovadas" class="loading-container">
+            <div class="loading-spinner">Carregando {{ aliases?.actionAlias }}s aprovados(as)...</div>
+          </div>
+
+          <div *ngIf="!loadingAtividadesAprovadas" class="table-container">
+            <div class="table-header" style="border-left: 4px solid #6366f1;">
+              <h3>{{ aliases?.actionAlias }}s aprovados(as) cujos pontos foram desbloqueados</h3>
+              <small class="table-subtitle">Tarefas já aprovadas e com pontos liberados para o executor nesta
+                temporada.</small>
+            </div>
+
+            <c4u-painel-filtros-acao
+              [totalItens]="atividadesAprovadas.length"
+              [itensSelecionados]="getItensSelecionados().length"
+              [mostrarFiltros]="true"
+              [mostrarAcoes]="true"
+              [acoesDisponiveis]="getAcoesDisponiveis('aprovadas')"
+              [executorsList]="getExecutorsList()"
+              [fetchAllPagesCallback]="buscarTodasPaginasAbaAtual.bind(this)"
+              (filtrosChange)="onFiltrosChange($event)"
+              (acaoLote)="onAcaoLote($event)"
+              (selecionarTodos)="onSelecionarTodos($event)"
+              (limparFiltros)="onLimparFiltros()"
+              (alterarItens)="onAlterarItens($event)">
+            </c4u-painel-filtros-acao>
+
+            <table class="table">
+              <thead class="tableHeader">
+              <tr>
+                <th>
+                  <c4u-checkbox
+                    [value]="itensSelecionadosIds.size === atividadesAprovadas.length && atividadesAprovadas.length > 0"
+                    [indeterminate]="itensSelecionadosIds.size > 0 && itensSelecionadosIds.size < atividadesAprovadas.length"
+                    (click)="toggleSelecionarTodosAprovadasManual(); $event.stopPropagation()"
+                    style="display: inline-block;">
+                  </c4u-checkbox>
+                </th>
+                <th>ID</th>
+                <th>Título</th>
+                <th>Status</th>
+                <th>Executor</th>
+                <th>Data Finalização</th>
+              </tr>
+              </thead>
+              <tbody class="tableBody">
+              <tr *ngFor="let atividade of atividadesAprovadas" 
+                  (click)="abrirDetalheAtividade(atividade)"
+                  style="cursor:pointer"
+                  [class.selected]="isItemSelecionado(atividade)">
+                <td (click)="$event.stopPropagation()">
+                  <c4u-checkbox
+                    [value]="isItemSelecionado(atividade)"
+                    (click)="toggleSelecionarItem(atividade); $event.stopPropagation(); $event.preventDefault()"
+                    style="display: inline-block; cursor: pointer;">
+                  </c4u-checkbox>
+                </td>
+                <td>
+                  <span (click)="$event.stopPropagation()"
+                        [title]="'ID: ' + (atividade.integration_id || atividade.delivery_id || 'n/a')">
+                    {{ ((atividade.integration_id || atividade.delivery_id || 'n/a') | slice:0:20) }}{{ ((atividade.integration_id || atividade.delivery_id) ?? '').length > 20 ? '...' : '' }}
+                  </span>
+                </td>
+                <td>
+                  <ng-container *ngIf="atividade.action_title; else noTitleFinalizada">
+                    {{ atividade.action_title }}
+                  </ng-container>
+                  <ng-template #noTitleFinalizada>
+                    N/A
+                  </ng-template>
+                </td>
+                <td [ngClass]="getStatusClass(atividade.status || '', atividade)">
+                  {{ getStatusLabel(atividade.status || '', atividade) }}
+                </td>
+                <td>{{ formatEmailToName(atividade.user_email || '') }}</td>
+                <td>
+                  Finalizado dia {{ (atividade.finished_at || atividade.created_at || '') | date: 'dd/MM/yyyy' }}
+                </td>
+              </tr>
+              </tbody>
+            </table>
+
+            <div *ngIf="atividadesAprovadas.length === 0 && !loadingAtividadesAprovadas" class="sem-resultados">
+              <div class="empty-state">
+                <i class="icon-check_circle"></i>
+                <p>Não há {{ aliases?.actionAlias }}s aprovados(as)</p>
+                <small>As {{ aliases?.actionAlias }}s aprovados(as) aparecerão aqui</small>
+              </div>
+            </div>
+
+            <!-- Paginação -->
+            <div *ngIf="deveMostrarPaginacaoAprovadas" class="pagination-container">
+              <div class="pagination-info">
+                <span>Mostrando {{ (paginacaoAprovadas!.page - 1) * paginacaoAprovadas!.limit + 1 }} a {{ Math.min(paginacaoAprovadas!.page * paginacaoAprovadas!.limit, paginacaoAprovadas!.total) }} de {{ paginacaoAprovadas!.total }} resultados</span>
+              </div>
+              <div class="pagination-controls">
+                <button 
+                  class="pagination-btn" 
+                  [disabled]="!temPaginaAnterior('aprovadas')"
+                  (click)="irParaPaginaAprovadas(paginacaoAprovadas!.page - 1)">
+                  <i class="ri-arrow-left-s-line"></i> Anterior
+                </button>
+                <div class="pagination-pages">
+                  <button
+                    *ngFor="let page of getPageNumbers(paginacaoAprovadas)"
+                    class="pagination-page-btn"
+                    [class.active]="page === paginacaoAprovadas!.page"
+                    (click)="irParaPaginaAprovadas(page)"
+                    [disabled]="page === paginacaoAprovadas!.page">
+                    {{ page }}
+                  </button>
+                </div>
+                <button 
+                  class="pagination-btn" 
+                  [disabled]="!temProximaPagina('aprovadas')"
+                  (click)="irParaPaginaAprovadas(paginacaoAprovadas!.page + 1)">
+                  Próxima <i class="ri-arrow-right-s-line"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+
+        <ng-template #detalheAprovadoAprovados>
+          <div class="detalhe-atividade-container">
+            <button class="back-btn" type="button" (click)="fecharDetalhe()">&larr; Voltar</button>
+            <div class="detalhe-atividade-content">
+              <div class="detalhe-azul detalhe-atividade-status">
+                {{ getStatusLabel(atividadeSelecionada?.status) }} em
+                <!-- // TO DO: Puxar a data de finalização da delivery -->
+                <!-- <ng-container *ngIf="atividadeSelecionada?.finished_at; else noFinishedAtStatus">
+                  {{ (atividadeSelecionada?.finished_at) | date:'dd/MM/yyyy' }}
+                </ng-container> -->
+                <ng-template #noFinishedAtStatus>N/A</ng-template>
+              </div>
+              <div class="detalhe-atividade-nome">
+                <ng-container *ngIf="atividadeSelecionada?.action_title; else noTitleDetailFinalizada">
+                  {{ atividadeSelecionada.action_title }}
+                </ng-container>
+                <ng-template #noTitleDetailFinalizada>
+                  N/A
+                </ng-template>
+              </div>
+              <div class="detalhe-atividade-executor">
+                <div *ngIf="isAdminOrGerente && isTeamContext" style="display: flex; align-items: center; gap: 0.75rem;">
+                  <select 
+                    [(ngModel)]="novoExecutorSelecionado" 
+                    [disabled]="atualizandoExecutor || loadingJogadores || atividadeSelecionada?.status !== 'PENDING'"
+                    style="flex: 1; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 4px; background-color: #1f2937; color: white;">
+                    <option [ngValue]="null">
+                      {{ loadingJogadores ? 'Carregando executores...' : 'Selecione um executor' }}
+                    </option>
+                    <option [ngValue]="'UNASSIGNED'">Não atribuído (Unassigned)</option>
+                    <option *ngFor="let jogador of jogadores" [ngValue]="jogador.id || jogador._id || jogador.email">
+                      {{ jogador.name || jogador.full_name || jogador.email }} ({{ jogador.email }})
+                    </option>
+                  </select>
+                  <button 
+                    *ngIf="novoExecutorSelecionado && novoExecutorSelecionado !== null && !atualizandoExecutor"
+                    [disabled]="atividadeSelecionada?.status !== 'PENDING'"
+                    (click)="atualizarExecutor()"
+                    style="padding: 0.5rem 1rem; background-color: #6366f1; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.875rem; opacity: 1;"
+                    [style.opacity]="atividadeSelecionada?.status !== 'PENDING' ? '0.5' : '1'"
+                    [style.cursor]="atividadeSelecionada?.status !== 'PENDING' ? 'not-allowed' : 'pointer'">
+                    Atualizar
+                  </button>
+                  <span *ngIf="atualizandoExecutor" style="color: #6b7280; font-size: 0.875rem;">
+                    <i class="icon-spinner"></i> Atualizando...
+                  </span>
+                  <small *ngIf="atividadeSelecionada?.status !== 'PENDING'" style="color: #9ca3af; font-size: 0.75rem; font-style: italic;">
+                    Apenas tarefas com status "Pendente" podem ter o executor alterado
+                  </small>
+                </div>
+                <div *ngIf="!isAdminOrGerente || !isTeamContext">
+                  {{ formatEmailToName(atividadeSelecionada?.user_email) }}
+                </div>
+              </div>
+              <div class="detalhe-atividade-info">
+                <div class="info-item">
+                  <strong>ID:</strong>
+                  <ng-container
+                    *ngIf="atividadeSelecionada?.integration_id || atividadeSelecionada?.delivery_id; else noTaskIdFinalizada">
+                    {{ atividadeSelecionada?.integration_id || atividadeSelecionada?.delivery_id }}
+                  </ng-container>
+                  <ng-template #noTaskIdFinalizada>N/A</ng-template>
+                </div>
+                <div class="info-item" *ngIf="atividadeSelecionada?.points">
+                  <strong>Pontos:</strong> {{ atividadeSelecionada?.points }}
+                </div>
+                <div class="info-item">
+                  <strong>Status:</strong> {{ getStatusLabel(atividadeSelecionada?.status) }}
+                </div>
+                <div class="info-item">
+                  <strong>Criado em:</strong>
+                  <ng-container *ngIf="atividadeSelecionada?.created_at; else noCreatedAtFinalizada">
+                    {{ atividadeSelecionada.created_at | date:'dd/MM/yyyy HH:mm' }}
+                  </ng-container>
+                  <span>por {{ atividadeSelecionada.created_by || "Sistema" }}</span>
+                  <ng-template #noCreatedAtFinalizada>N/A</ng-template>
+                </div>
+                <div class="info-item" *ngIf="atividadeSelecionada?.finished_at">
+                  <strong>Finalizado em:</strong>
+                  <ng-container *ngIf="atividadeSelecionada.finished_at; else noFinishedAtFinalizada">
+                    {{ atividadeSelecionada.finished_at | date:'dd/MM/yyyy HH:mm' }}
+                  </ng-container>
+                  <span>por {{ atividadeSelecionada.finished_by || "Sistema" }}</span>
+                  <ng-template #noFinishedAtFinalizada>N/A</ng-template>
+                </div>
+              </div>
+
+              <!-- Seção de Comentários -->
+              <div class="detalhe-atividade-comentarios">
+                <div class="comentarios-header">
+                  <h4>Comentários</h4>
+                  <small>Histórico de comentários da {{ aliases?.actionAlias }}</small>
+                </div>
+
+                <div class="comentarios-lista"
+                     *ngIf="atividadeSelecionada?.comments && atividadeSelecionada.comments.length > 0">
+                  <div class="comentario-item" *ngFor="let comentario of atividadeSelecionada.comments">
+                    <div class="comentario-header">
+                      <span class="comentario-autor">{{ formatEmailToName(comentario.created_by) }}</span>
+                      <span class="comentario-data">{{ comentario.created_at | date:'dd/MM/yyyy HH:mm' }}</span>
+                      <span class="comentario-tipo" [ngClass]="'tipo-' + comentario.type">{{ comentario.type }}</span>
+                    </div>
+                    <div class="comentario-mensagem">
+                      {{ comentario.message }}
+                    </div>
+                  </div>
+                </div>
+
+                <div class="comentarios-vazio"
+                     *ngIf="!atividadeSelecionada?.comments || atividadeSelecionada.comments.length === 0">
+                  <div class="empty-state">
+                    <i class="icon-chat"></i>
+                    <p>Nenhum comentário encontrado</p>
+                    <small>Os comentários aparecerão aqui quando houver interações</small>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Seção de Anexos -->
+              <div class="detalhe-atividade-evidencias">
+                <div class="evidencias-header">
+                  <h4>Anexos</h4>
+                  <small>Arquivos anexados à {{ aliases?.actionAlias }}</small>
+                </div>
+
+                <!-- Anexos existentes -->
+                <div class="anexos-existentes" *ngIf="!loadingAnexos && anexosExistentes.length > 0">
+                  <h5>Anexos existentes</h5>
+                  <div class="anexos-lista">
+                    <div class="anexo-item" *ngFor="let anexo of anexosExistentes">
+                      <div class="anexo-info">
+                        <i class="icon-file"></i>
+                        <span class="anexo-nome">{{ anexo.original_name || anexo.filename || 'arquivo' }}</span>
+                        <span class="anexo-tamanho">{{ formatFileSize(anexo.size) }}</span>
+                        <span class="anexo-data">{{ anexo.created_at | date:'dd/MM/yyyy HH:mm' }}</span>
+                      </div>
+                      <button class="btn-download" (click)="fazerDownloadAnexo(anexo)"
+                              [title]="getDownloadTooltip(anexo)"
+                              [disabled]="downloadingAnexos.has(anexo.id)">
+                        <i *ngIf="!downloadingAnexos.has(anexo.id)" class="ri-download-line"></i>
+                        <span>Baixar</span>
+                        <i *ngIf="downloadingAnexos.has(anexo.id)" class="icon-spinner"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Loading de anexos -->
+                <div class="anexos-loading" *ngIf="loadingAnexos">
+                  <div class="loading-spinner">Carregando anexos...</div>
+                </div>
+
+                <!-- Estado vazio de anexos -->
+                <div class="anexos-vazio" *ngIf="!loadingAnexos && anexosExistentes.length === 0">
+                  <div class="empty-state">
+                    <i class="icon-file"></i>
+                    <p>Nenhum anexo encontrado</p>
+                    <small>Os anexos aparecerão aqui quando houver arquivos anexados</small>
+                  </div>
+                </div>
+              </div>
+
+              <div class="detalhe-atividade-footer">
+                <div class="footer-actions-left">
+                  <button class="btn-cancelar" (click)="cancelarAtividade()" [disabled]="!podeCancelar()">
+                    <i class="icon-cancel"></i><i class="ri-forbid-line"></i> Cancelar {{ aliases?.actionAlias }}
+                  </button>
+                </div>
+                <div class="footer-actions-right">
+                  <button *ngIf="atividadeSelecionada?.status === 'DONE'" class="btn-reprovar"
+                          (click)="reprovarAtividade()" [disabled]="!podeReprovar()">
+                    <i class="icon-cancel"></i><i class="ri-close-line"></i> Reprovar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </ng-template>
+      </div>
+
+      <div *ngIf="aba === 'cancelados'">
+        <ng-container *ngIf="!mostrarDetalhe; else detalheCancelada">
+          <div *ngIf="loadingAtividadesCanceladas" class="loading-container">
+            <div class="loading-spinner">Carregando {{ aliases?.actionAlias }}s cancelados(as)...</div>
+          </div>
+
+          <div *ngIf="!loadingAtividadesCanceladas" class="table-container">
+            <div class="table-header" style="border-left: 4px solid #9ca3af">
+              <h3>{{ aliases?.actionAlias }}s Cancelados(as)</h3>
+              <small class="table-subtitle">Tarefas que foram canceladas e não contarão pontos para o executor.</small>
+            </div>
+
+            <c4u-painel-filtros-acao
+              [totalItens]="atividadesCanceladas.length"
+              [itensSelecionados]="getItensSelecionados().length"
+              [mostrarFiltros]="true"
+              [mostrarAcoes]="true"
+              [acoesDisponiveis]="getAcoesDisponiveis('canceladas')"
+              [executorsList]="getExecutorsList()"
+              [fetchAllPagesCallback]="buscarTodasPaginasAbaAtual.bind(this)"
+              (filtrosChange)="onFiltrosChange($event)"
+              (acaoLote)="onAcaoLote($event)"
+              (selecionarTodos)="onSelecionarTodos($event)"
+              (limparFiltros)="onLimparFiltros()"
+              (alterarItens)="onAlterarItens($event)">
+            </c4u-painel-filtros-acao>
+
+            <table class="table">
+              <thead class="tableHeader">
+              <tr>
+                <th>
+                  <c4u-checkbox
+                    [value]="itensSelecionadosIds.size === atividadesCanceladas.length && atividadesCanceladas.length > 0"
+                    [indeterminate]="itensSelecionadosIds.size > 0 && itensSelecionadosIds.size < atividadesCanceladas.length"
+                    (click)="toggleSelecionarTodosCanceladasManual(); $event.stopPropagation()"
+                    style="display: inline-block;">
+                  </c4u-checkbox>
+                </th>
+                <th>ID</th>
+                <th>Título</th>
+                <th>Status</th>
+                <th>Executor</th>
+                <th>Data Cancelamento</th>
+              </tr>
+              </thead>
+              <tbody class="tableBody">
+              <tr *ngFor="let atividade of atividadesCanceladas" 
+                  (click)="abrirDetalheAtividade(atividade)"
+                  style="cursor:pointer"
+                  [class.selected]="isItemSelecionado(atividade)">
+                <td (click)="$event.stopPropagation()">
+                  <c4u-checkbox
+                    [value]="isItemSelecionado(atividade)"
+                    (click)="toggleSelecionarItem(atividade); $event.stopPropagation(); $event.preventDefault()"
+                    style="display: inline-block; cursor: pointer;">
+                  </c4u-checkbox>
+                </td>
+                <td>
+                  <span (click)="$event.stopPropagation()"
+                        [title]="'ID: ' + (atividade.integration_id || atividade.delivery_id || 'n/a')">
+                    {{ ((atividade.integration_id || atividade.delivery_id || 'n/a') | slice:0:9) }}{{ ((atividade.integration_id || atividade.delivery_id) ?? '').length > 9 ? '...' : '' }}
+                  </span>
+                </td>
+                <td>
+                  <ng-container *ngIf="atividade.action_title; else noTitleCancelada">
+                    {{ atividade.action_title }}
+                  </ng-container>
+                  <ng-template #noTitleCancelada>
+                    N/A
+                  </ng-template>
+                </td>
+                <td [ngClass]="'statusCancelled'">
+                  <!-- {{ getStatusLabel(atividade.status || '', atividade) }} -->
+                  Cancelado
+                </td>
+                <td>{{ formatEmailToName(atividade.user_email || '') }}</td>
+                <td>
+                  Cancelado dia {{ (atividade.finished_at || atividade.created_at || '') | date: 'dd/MM/yyyy' }}
+                </td>
+              </tr>
+              </tbody>
+            </table>
+
+            <div *ngIf="atividadesCanceladas.length === 0 && !loadingAtividadesCanceladas" class="sem-resultados">
+              <div class="empty-state">
+                <i class="icon-cancel"></i>
+                <p>Nenhuma {{ aliases?.actionAlias }} cancelada encontrada</p>
+                <small>As {{ aliases?.actionAlias }} canceladas aparecerão aqui</small>
+              </div>
+            </div>
+
+            <!-- Paginação -->
+            <div *ngIf="deveMostrarPaginacaoCanceladas" class="pagination-container">
+              <div class="pagination-info">
+                <span>Mostrando {{ (paginacaoCanceladas!.page - 1) * paginacaoCanceladas!.limit + 1 }} a {{ Math.min(paginacaoCanceladas!.page * paginacaoCanceladas!.limit, paginacaoCanceladas!.total) }} de {{ paginacaoCanceladas!.total }} resultados</span>
+              </div>
+              <div class="pagination-controls">
+                <button 
+                  class="pagination-btn" 
+                  [disabled]="!temPaginaAnterior('canceladas')"
+                  (click)="irParaPaginaCanceladas(paginacaoCanceladas!.page - 1)">
+                  <i class="ri-arrow-left-s-line"></i> Anterior
+                </button>
+                <div class="pagination-pages">
+                  <button
+                    *ngFor="let page of getPageNumbers(paginacaoCanceladas)"
+                    class="pagination-page-btn"
+                    [class.active]="page === paginacaoCanceladas!.page"
+                    (click)="irParaPaginaCanceladas(page)"
+                    [disabled]="page === paginacaoCanceladas!.page">
+                    {{ page }}
+                  </button>
+                </div>
+                <button 
+                  class="pagination-btn" 
+                  [disabled]="!temProximaPagina('canceladas')"
+                  (click)="irParaPaginaCanceladas(paginacaoCanceladas!.page + 1)">
+                  Próxima <i class="ri-arrow-right-s-line"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+
+        <ng-template #detalheCancelada>
+          <div class="detalhe-atividade-container">
+            <button class="back-btn" type="button" (click)="fecharDetalhe()">&larr; Voltar</button>
+            <div class="detalhe-atividade-content">
+              <div class="detalhe-cinza detalhe-atividade-status">
+                {{ getStatusLabel(atividadeSelecionada?.status) }} em
+                <!-- // TO DO: Puxar a data de cancelamento da delivery -->
+                <!-- <ng-container *ngIf="atividadeSelecionada?.finished_at; else noCanceledAtStatus">
+                  {{ (atividadeSelecionada?.finished_at) | date:'dd/MM/yyyy' }}
+                </ng-container> -->
+                <ng-template #noCanceledAtStatus>N/A</ng-template>
+              </div>
+              <div class="detalhe-atividade-nome">
+                <ng-container *ngIf="atividadeSelecionada?.action_title; else noTitleDetailCancelada">
+                  {{ atividadeSelecionada.action_title }}
+                </ng-container>
+                <ng-template #noTitleDetailCancelada>
+                  N/A
+                </ng-template>
+              </div>
+              <div class="detalhe-atividade-executor">
+                <div *ngIf="isAdminOrGerente && isTeamContext" style="display: flex; align-items: center; gap: 0.75rem;">
+                  <select 
+                    [(ngModel)]="novoExecutorSelecionado" 
+                    [disabled]="atualizandoExecutor || loadingJogadores || atividadeSelecionada?.status !== 'PENDING'"
+                    style="flex: 1; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 4px; background-color: #1f2937; color: white;">
+                    <option [ngValue]="null">
+                      {{ loadingJogadores ? 'Carregando executores...' : 'Selecione um executor' }}
+                    </option>
+                    <option [ngValue]="'UNASSIGNED'">Não atribuído (Unassigned)</option>
+                    <option *ngFor="let jogador of jogadores" [ngValue]="jogador.id || jogador._id || jogador.email">
+                      {{ jogador.name || jogador.full_name || jogador.email }} ({{ jogador.email }})
+                    </option>
+                  </select>
+                  <button 
+                    *ngIf="novoExecutorSelecionado && novoExecutorSelecionado !== null && !atualizandoExecutor"
+                    [disabled]="atividadeSelecionada?.status !== 'PENDING'"
+                    (click)="atualizarExecutor()"
+                    style="padding: 0.5rem 1rem; background-color: #6366f1; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.875rem; opacity: 1;"
+                    [style.opacity]="atividadeSelecionada?.status !== 'PENDING' ? '0.5' : '1'"
+                    [style.cursor]="atividadeSelecionada?.status !== 'PENDING' ? 'not-allowed' : 'pointer'">
+                    Atualizar
+                  </button>
+                  <span *ngIf="atualizandoExecutor" style="color: #6b7280; font-size: 0.875rem;">
+                    <i class="icon-spinner"></i> Atualizando...
+                  </span>
+                  <small *ngIf="atividadeSelecionada?.status !== 'PENDING'" style="color: #9ca3af; font-size: 0.75rem; font-style: italic;">
+                    Apenas tarefas com status "Pendente" podem ter o executor alterado
+                  </small>
+                </div>
+                <div *ngIf="!isAdminOrGerente || !isTeamContext">
+                  {{ formatEmailToName(atividadeSelecionada?.user_email) }}
+                </div>
+              </div>
+              <div class="detalhe-atividade-info">
+                <div class="info-item">
+                  <strong>ID:</strong>
+                  <ng-container
+                    *ngIf="atividadeSelecionada?.integration_id || atividadeSelecionada?.delivery_id; else noTaskIdCancelada">
+                    {{ atividadeSelecionada?.integration_id || atividadeSelecionada?.delivery_id }}
+                  </ng-container>
+                  <ng-template #noTaskIdCancelada>N/A</ng-template>
+                </div>
+                <div class="info-item" *ngIf="atividadeSelecionada?.points">
+                  <strong>Pontos:</strong> {{ atividadeSelecionada?.points }}
+                </div>
+                <div class="info-item">
+                  <strong>Status:</strong> {{ getStatusLabel(atividadeSelecionada?.status) }}
+                </div>
+                <div class="info-item">
+                  <strong>Criado em:</strong>
+                  <ng-container *ngIf="atividadeSelecionada?.created_at; else noCreatedAtCancelada">
+                    {{ atividadeSelecionada.created_at | date:'dd/MM/yyyy HH:mm' }}
+                  </ng-container>
+                  <span>por {{ atividadeSelecionada.created_by || "Sistema" }}</span>
+                  <ng-template #noCreatedAtCancelada>N/A</ng-template>
+                </div>
+                <div class="info-item" *ngIf="atividadeSelecionada?.finished_at">
+                  <strong>Cancelado em:</strong>
+                  <ng-container *ngIf="atividadeSelecionada.finished_at; else noFinishedAtCancelada">
+                    {{ atividadeSelecionada.finished_at | date:'dd/MM/yyyy HH:mm' }}
+                  </ng-container>
+                  <span>por {{ atividadeSelecionada.finished_by || "Sistema" }}</span>
+                  <ng-template #noFinishedAtCancelada>N/A</ng-template>
+                </div>
+
+                <!-- Seção de Comentários -->
+                <div class="detalhe-atividade-comentarios">
+                  <div class="comentarios-header">
+                    <h4>Comentários</h4>
+                    <small>Histórico de comentários da {{ aliases?.actionAlias }}</small>
+                  </div>
+
+                  <div class="comentarios-lista"
+                       *ngIf="atividadeSelecionada?.comments && atividadeSelecionada.comments.length > 0">
+                    <div class="comentario-item" *ngFor="let comentario of atividadeSelecionada.comments">
+                      <div class="comentario-header">
+                        <span class="comentario-autor">{{ formatEmailToName(comentario.created_by) }}</span>
+                        <span class="comentario-data">{{ comentario.created_at | date:'dd/MM/yyyy HH:mm' }}</span>
+                        <span class="comentario-tipo" [ngClass]="'tipo-' + comentario.type">{{ comentario.type }}</span>
+                      </div>
+                      <div class="comentario-mensagem">
+                        {{ comentario.message }}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="comentarios-vazio"
+                       *ngIf="!atividadeSelecionada?.comments || atividadeSelecionada.comments.length === 0">
+                    <div class="empty-state">
+                      <i class="icon-chat"></i>
+                      <p>Nenhum comentário encontrado</p>
+                      <small>Os comentários aparecerão aqui quando houver interações</small>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="detalhe-atividade-footer">
+
+                </div>
+              </div>
+            </div>
+          </div>
+        </ng-template>
+      </div>
+
+      <!-- Aba Processos Pendentes -->
+      <div *ngIf="aba === 'processos-pendentes'">
+        <ng-container *ngIf="!mostrarDetalheDelivery; else detalheDeliveryPendente">
+          <div *ngIf="loadingProcessosPendentes" class="loading-container">
+            <div class="loading-spinner">Carregando processos pendentes...</div>
+          </div>
+
+          <div *ngIf="!loadingProcessosPendentes" class="table-container">
+            <div class="table-header" style="border-left: 4px solid #ef4444 ;">
+              <h3>Processos Pendentes</h3>
+              <small class="table-subtitle">Processos que ainda não foram concluídos ou estão aguardando ações nesta
+                temporada.</small>
+            </div>
+
+            <c4u-painel-filtros-acao
+              [totalItens]="processosPendentes.length"
+              [itensSelecionados]="0"
+              [mostrarFiltros]="true"
+              [mostrarAcoes]="false"
+              [acoesDisponiveis]="[]"
+              (filtrosChange)="onFiltrosProcessosChange($event)"
+              (limparFiltros)="onLimparFiltrosProcessos()">
+            </c4u-painel-filtros-acao>
+
+            <table class="table">
+              <thead class="tableHeader">
+              <tr>
+                <!-- <th>
+                  <input 
+                    type="checkbox" 
+                    [checked]="itensSelecionadosIds.size === processosPendentes.length && processosPendentes.length > 0"
+                    [indeterminate]="itensSelecionadosIds.size > 0 && itensSelecionadosIds.size < processosPendentes.length"
+                    (change)="toggleSelecionarTodosProcessosPendentes($event)"
+                    (click)="$event.stopPropagation()">
+                </th> -->
+                <th style="width: 10%;">ID</th>
+                <th style="width: 50%;">Título</th>
+                <th style="width: 10%;">Status</th>
+                <!-- <th>Executor</th> -->
+                <th style="width: 10%;">Data</th>
+              </tr>
+              </thead>
+              <tbody class="tableBody">
+              <tr *ngFor="let processo of processosPendentes" 
+                  (click)="abrirDetalheDelivery(processo)"
+                  style="cursor:pointer"
+                  [class.selected]="isItemSelecionado(processo)">
+                <!-- <td (click)="$event.stopPropagation()">
+                  <input 
+                    type="checkbox" 
+                    [checked]="isItemSelecionado(processo)"
+                    (change)="toggleSelecionarItem(processo)"
+                    (click)="$event.stopPropagation()">
+                </td> -->
+                <td>{{ ((processo.id || 'N/A') | slice:0:9) }}{{ processo.id?.length > 9 ? '...' : '' }}</td>
+                <td>{{ processo.title || processo.name || 'N/A' }}</td>
+                <td [ngClass]="getStatusClass(processo.status, processo)">
+                  {{ getStatusLabel(processo.status, processo) }}
+                </td>
+                <!-- <td>{{ formatEmailToName(processo.user_email) }}</td> -->
+                <td>{{ (processo.created_at || processo.updated_at) | date: 'dd/MM/yyyy' }}</td>
+              </tr>
+              </tbody>
+            </table>
+
+            <div *ngIf="processosPendentes.length === 0" class="sem-resultados">
+              <div class="empty-state">
+                <i class="icon-clock"></i>
+                <p>Nenhum processo pendente encontrado</p>
+                <small>Os processos pendentes aparecerão aqui</small>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+
+        <ng-template #detalheDeliveryPendente>
+          <div class="detalhe-delivery-container">
+            <button class="back-btn" type="button" (click)="fecharDetalheDelivery()">&larr; Voltar</button>
+            <div class="detalhe-delivery-content">
+              <div class="detalhe-vermelho detalhe-delivery-status">
+                {{ getStatusLabel(deliverySelecionada?.status, deliverySelecionada) }} desde
+                <ng-container *ngIf="deliverySelecionada?.created_at; else noCreatedAtDelivery">
+                  {{ deliverySelecionada.created_at | date:'dd/MM/yyyy' }}
+                </ng-container>
+                <ng-template #noCreatedAtDelivery>N/A</ng-template>
+              </div>
+              <div class="detalhe-delivery-nome">
+                <ng-container *ngIf="deliverySelecionada?.title || deliverySelecionada?.name; else noTitleDelivery">
+                  {{ deliverySelecionada.title || deliverySelecionada.name }}
+                </ng-container>
+                <ng-template #noTitleDelivery>
+                  N/A
+                </ng-template>
+              </div>
+              <div class="detalhe-delivery-executor">
+                {{ formatEmailToName(deliverySelecionada?.user_email) }}
+              </div>
+
+              <div class="detalhe-delivery-info">
+                <div class="info-item">
+                  <strong>ID:</strong> {{ deliverySelecionada?.id || 'N/A' }}
+                </div>
+                <div class="info-item">
+                  <strong>Status:</strong> {{ getStatusLabel(deliverySelecionada?.status, deliverySelecionada) }}
+                </div>
+                <div class="info-item">
+                  <strong>Criado em:</strong>
+                  <ng-container *ngIf="deliverySelecionada?.created_at; else noCreatedAtDeliveryInfo">
+                    {{ deliverySelecionada.created_at | date:'dd/MM/yyyy HH:mm' }}
+                  </ng-container>
+                  <ng-template #noCreatedAtDeliveryInfo>N/A</ng-template>
+                </div>
+                <div class="info-item" *ngIf="deliverySelecionada?.updated_at">
+                  <strong>Atualizado em:</strong>
+                  {{ deliverySelecionada.updated_at | date:'dd/MM/yyyy HH:mm' }}
+                </div>
+              </div>
+
+              <!-- Lista de Tarefas -->
+              <div class="detalhe-delivery-tarefas">
+                <div class="tarefas-header">
+                  <h4>Lista de Atividades</h4>
+                  <small>Tarefas associadas a esta delivery</small>
+                </div>
+
+                <!-- Botões de ação em lote para tarefas (separados dos botões de processo) -->
+                <div class="tarefas-acoes-lote" *ngIf="deliverySelecionada?.user_action && deliverySelecionada.user_action.length > 0 && isAdminOrGerente" style="margin-bottom: 1rem; padding: 0.75rem; background-color: #2a2b32; border-radius: 6px; display: flex; align-items: center; gap: 0.75rem;">
+                  <span style="font-size: 0.875rem; color: #6b7280; margin-right: auto;">
+                    <strong>{{ tarefasSelecionadasDetalhe.size }}</strong> tarefa(s) selecionada(s)
+                  </span>
+                  <button 
+                    class="btn-aprovar-tarefas-lote" 
+                    (click)="aprovarTarefasDetalheLote()"
+                    [disabled]="!podeAprovarTarefasDetalhe() || isLoadingBlocking"
+                    style="padding: 0.5rem 1rem; background-color: #10b981; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.875rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="icon-check_circle"></i>
+                    Aprovar Tarefas Selecionadas
+                  </button>
+                  <button 
+                    class="btn-cancelar-tarefas-lote" 
+                    (click)="cancelarTarefasDetalheLote()"
+                    [disabled]="!podeCancelarTarefasDetalhe() || isLoadingBlocking"
+                    style="padding: 0.5rem 1rem; background-color: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.875rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="icon-cancel"></i>
+                    Cancelar Tarefas Selecionadas
+                  </button>
+                </div>
+
+                <table class="table tarefas-table">
+                  <thead class="tableHeader">
+                  <tr>
+                    <th style="width: 5%;" *ngIf="isAdminOrGerente">
+                      <c4u-checkbox
+                        [value]="tarefasSelecionadasDetalhe.size === (deliverySelecionada?.user_action?.length || 0) && (deliverySelecionada?.user_action?.length || 0) > 0"
+                        [indeterminate]="tarefasSelecionadasDetalhe.size > 0 && tarefasSelecionadasDetalhe.size < (deliverySelecionada?.user_action?.length || 0)"
+                        (click)="toggleSelecionarTodasTarefasDetalhe($event)"
+                        style="display: inline-block;">
+                      </c4u-checkbox>
+                    </th>
+                    <th style="width: 10%;">ID</th>
+                    <th style="width: 45%;">Título</th>
+                    <th style="width: 10%;">Status</th>
+                    <th style="width: 10%;">Executor</th>
+                    <th style="width: 10%;">Data</th>
+                  </tr>
+                  </thead>
+                  <tbody class="tableBody">
+                  <tr *ngFor="let tarefa of deliverySelecionada?.user_action || []" 
+                      (click)="onTarefaClick(tarefa)"
+                      style="cursor:pointer"
+                      [class.selected]="isTarefaSelecionadaDetalhe(tarefa)">
+                    <td *ngIf="isAdminOrGerente" (click)="$event.stopPropagation(); $event.preventDefault()" style="position: relative; z-index: 10;">
+                      <c4u-checkbox
+                        [value]="isTarefaSelecionadaDetalhe(tarefa)"
+                        (click)="toggleSelecionarTarefaDetalhe(tarefa, $event)"
+                        style="display: inline-block; cursor: pointer; pointer-events: auto;">
+                      </c4u-checkbox>
+                    </td>
+                    <td>{{ ((tarefa.integration_id || tarefa.id || 'N/A') | slice:0:9) }}{{ ((tarefa.integration_id || tarefa.id) ?? '').length > 9 ? '...' : '' }}</td>
+                    <td>{{ tarefa.action_title || 'N/A' }}</td>
+                    <td [ngClass]="getStatusClass(tarefa.status, tarefa)">
+                      {{ getStatusLabel(tarefa.status, tarefa) }}
+                    </td>
+                    <td>{{ formatEmailToName(tarefa.user_email) }}</td>
+                    <td>{{ (tarefa.created_at || tarefa.updated_at) | date: 'dd/MM/yyyy' }}</td>
+                  </tr>
+                  </tbody>
+                </table>
+
+                <div *ngIf="!deliverySelecionada?.user_action || deliverySelecionada?.user_action.length === 0"
+                     class="sem-tarefas">
+                  <div class="empty-state">
+                    <i class="icon-task"></i>
+                    <p>Nenhuma tarefa encontrada</p>
+                    <small>As tarefas associadas aparecerão aqui</small>
+                  </div>
+                </div>
+
+                <button class="btn-criar-tarefa" (click)="criarTarefa()">
+                  <i class="icon-add"></i> Criar {{ aliases?.actionAlias }}
+                </button>
+              </div>
+
+              <div class="detalhe-delivery-footer">
+                <div class="footer-actions-left">
+                  <button class="btn-cancelar" (click)="cancelarDelivery()">
+                    <i class="icon-cancel"></i> Cancelar {{ aliases?.deliveryAlias }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </ng-template>
+      </div>
+
+      <!-- Aba Incompleto (Processos) -->
+      <div *ngIf="aba === 'incompletos'">
+        <ng-container *ngIf="!mostrarDetalheDelivery; else detalheDeliveryIncompleto">
+          <div *ngIf="loadingProcessosIncompletos" class="loading-container">
+            <div class="loading-spinner">Carregando processos incompletos...</div>
+          </div>
+
+          <div *ngIf="!loadingProcessosIncompletos" class="table-container">
+            <div class="table-header" style="border-left: 4px solid #fbbf24  ;">
+              <h3>Processos Incompletos</h3>
+              <small class="table-subtitle">Processos que foram iniciados, mas não foram finalizados corretamente ou
+                estão
+                com pendências.</small>
+            </div>
+
+            <c4u-painel-filtros-acao
+              [totalItens]="processosIncompletos.length"
+              [itensSelecionados]="0"
+              [mostrarFiltros]="true"
+              [mostrarAcoes]="false"
+              [acoesDisponiveis]="[]"
+              (filtrosChange)="onFiltrosProcessosChange($event)"
+              (limparFiltros)="onLimparFiltrosProcessos()">
+            </c4u-painel-filtros-acao>
+
+            <table class="table">
+              <thead class="tableHeader">
+              <tr>
+                <th style="width: 10%;">ID</th>
+                <th style="width: 50%;">Título</th>
+                <th style="width: 10%;">Status</th>
+                <!-- <th>Executor</th> -->
+                <th style="width: 10%;">Data</th>
+              </tr>
+              </thead>
+              <tbody class="tableBody">
+              <tr *ngFor="let processo of processosIncompletos" (click)="abrirDetalheDelivery(processo)"
+                  style="cursor:pointer">
+                <td>{{ ((processo.id || 'N/A') | slice:0:9) }}{{ processo.id?.length > 9 ? '...' : '' }}</td>
+                <td>{{ processo.title || processo.name || 'N/A' }}</td>
+                <td [ngClass]="getStatusClass(processo.status, processo)">
+                  {{ getStatusLabel(processo.status, processo) }}
+                </td>
+                <!-- <td>{{ formatEmailToName(processo.user_email) }}</td> -->
+                <td>{{ (processo.created_at || processo.updated_at) | date: 'dd/MM/yyyy' }}</td>
+              </tr>
+              </tbody>
+            </table>
+
+            <div *ngIf="processosIncompletos.length === 0" class="sem-resultados">
+              <div class="empty-state">
+                <i class="icon-info"></i>
+                <p>Nenhum processo incompleto encontrado</p>
+                <small>Os processos incompletos aparecerão aqui</small>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+
+        <ng-template #detalheDeliveryIncompleto>
+          <div class="detalhe-delivery-container">
+            <button class="back-btn" type="button" (click)="fecharDetalheDelivery()">&larr; Voltar</button>
+            <div class="detalhe-delivery-content">
+              <div class="detalhe-amarelo detalhe-delivery-status">
+                {{ getStatusLabel(deliverySelecionada?.status, deliverySelecionada) }} desde
+                <ng-container *ngIf="deliverySelecionada?.created_at; else noCreatedAtDeliveryIncompleto">
+                  {{ deliverySelecionada.created_at | date:'dd/MM/yyyy' }}
+                </ng-container>
+                <ng-template #noCreatedAtDeliveryIncompleto>N/A</ng-template>
+              </div>
+              <div class="detalhe-delivery-nome">
+                <ng-container
+                  *ngIf="deliverySelecionada?.title || deliverySelecionada?.name; else noTitleDeliveryIncompleto">
+                  {{ deliverySelecionada.title || deliverySelecionada.name }}
+                </ng-container>
+                <ng-template #noTitleDeliveryIncompleto>
+                  N/A
+                </ng-template>
+              </div>
+              <div class="detalhe-delivery-executor">
+                {{ formatEmailToName(deliverySelecionada?.user_email) }}
+              </div>
+
+              <div class="detalhe-delivery-info">
+                <div class="info-item">
+                  <strong>ID:</strong> {{ deliverySelecionada?.id || 'N/A' }}
+                </div>
+                <div class="info-item">
+                  <strong>Status:</strong> {{ getStatusLabel(deliverySelecionada?.status, deliverySelecionada) }}
+                </div>
+                <div class="info-item">
+                  <strong>Criado em:</strong>
+                  <ng-container *ngIf="deliverySelecionada?.created_at; else noCreatedAtDeliveryInfoIncompleto">
+                    {{ deliverySelecionada.created_at | date:'dd/MM/yyyy HH:mm' }}
+                  </ng-container>
+                  <ng-template #noCreatedAtDeliveryInfoIncompleto>N/A</ng-template>
+                </div>
+                <div class="info-item" *ngIf="deliverySelecionada?.updated_at">
+                  <strong>Atualizado em:</strong>
+                  {{ deliverySelecionada.updated_at | date:'dd/MM/yyyy HH:mm' }}
+                </div>
+              </div>
+
+              <!-- Lista de Tarefas -->
+              <div class="detalhe-delivery-tarefas">
+                <div class="tarefas-header">
+                  <h4>Lista de Atividades</h4>
+                  <small>Tarefas associadas a esta delivery</small>
+                </div>
+
+                <!-- Botões de ação em lote para tarefas (separados dos botões de processo) -->
+                <div class="tarefas-acoes-lote" *ngIf="deliverySelecionada?.user_action && deliverySelecionada.user_action.length > 0 && isAdminOrGerente" style="margin-bottom: 1rem; padding: 0.75rem; background-color: #2a2b32; border-radius: 6px; display: flex; align-items: center; gap: 0.75rem;">
+                  <span style="font-size: 0.875rem; color: #6b7280; margin-right: auto;">
+                    <strong>{{ tarefasSelecionadasDetalhe.size }}</strong> tarefa(s) selecionada(s)
+                  </span>
+                  <button 
+                    class="btn-aprovar-tarefas-lote" 
+                    (click)="aprovarTarefasDetalheLote()"
+                    [disabled]="!podeAprovarTarefasDetalhe() || isLoadingBlocking"
+                    style="padding: 0.5rem 1rem; background-color: #10b981; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.875rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="icon-check_circle"></i>
+                    Aprovar Tarefas Selecionadas
+                  </button>
+                  <button 
+                    class="btn-cancelar-tarefas-lote" 
+                    (click)="cancelarTarefasDetalheLote()"
+                    [disabled]="!podeCancelarTarefasDetalhe() || isLoadingBlocking"
+                    style="padding: 0.5rem 1rem; background-color: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.875rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="icon-cancel"></i>
+                    Cancelar Tarefas Selecionadas
+                  </button>
+                </div>
+
+                <table class="table tarefas-table">
+                  <thead class="tableHeader">
+                  <tr>
+                    <th style="width: 5%;" *ngIf="isAdminOrGerente">
+                      <c4u-checkbox
+                        [value]="tarefasSelecionadasDetalhe.size === (deliverySelecionada?.user_action?.length || 0) && (deliverySelecionada?.user_action?.length || 0) > 0"
+                        [indeterminate]="tarefasSelecionadasDetalhe.size > 0 && tarefasSelecionadasDetalhe.size < (deliverySelecionada?.user_action?.length || 0)"
+                        (click)="toggleSelecionarTodasTarefasDetalhe($event)"
+                        style="display: inline-block;">
+                      </c4u-checkbox>
+                    </th>
+                    <th style="width: 10%;">ID</th>
+                    <th style="width: 45%;">Título</th>
+                    <th style="width: 10%;">Status</th>
+                    <th style="width: 10%;">Executor</th>
+                    <th style="width: 10%;">Data</th>
+                  </tr>
+                  </thead>
+                  <tbody class="tableBody">
+                  <tr *ngFor="let tarefa of deliverySelecionada?.user_action || []" 
+                      (click)="onTarefaClick(tarefa)"
+                      style="cursor:pointer"
+                      [class.selected]="isTarefaSelecionadaDetalhe(tarefa)">
+                    <td *ngIf="isAdminOrGerente" (click)="$event.stopPropagation(); $event.preventDefault()" style="position: relative; z-index: 10;">
+                      <c4u-checkbox
+                        [value]="isTarefaSelecionadaDetalhe(tarefa)"
+                        (click)="toggleSelecionarTarefaDetalhe(tarefa, $event)"
+                        style="display: inline-block; cursor: pointer; pointer-events: auto;">
+                      </c4u-checkbox>
+                    </td>
+                    <td>{{ ((tarefa.integration_id || tarefa.id || 'N/A') | slice:0:9) }}{{ ((tarefa.integration_id || tarefa.id) ?? '').length > 9 ? '...' : '' }}</td>
+                    <td>{{ tarefa.action_title || 'N/A' }}</td>
+                    <td [ngClass]="getStatusClass(tarefa.status, tarefa)">
+                      {{ getStatusLabel(tarefa.status, tarefa) }}
+                    </td>
+                    <td>{{ formatEmailToName(tarefa.user_email) }}</td>
+                    <td>{{ (tarefa.created_at || tarefa.updated_at) | date: 'dd/MM/yyyy' }}</td>
+                  </tr>
+                  </tbody>
+                </table>
+
+                <div *ngIf="!deliverySelecionada?.user_action || deliverySelecionada?.user_action.length === 0"
+                     class="sem-tarefas">
+                  <div class="empty-state">
+                    <i class="icon-task"></i>
+                    <p>Nenhuma tarefa encontrada</p>
+                    <small>As tarefas associadas aparecerão aqui</small>
+                  </div>
+                </div>
+
+                <button class="btn-criar-tarefa" (click)="criarTarefa()">
+                  <i class="icon-add"></i> Criar {{ aliases?.actionAlias }}
+                </button>
+              </div>
+
+              <div class="detalhe-delivery-footer">
+                <div class="footer-actions-left">
+                  <button class="btn-cancelar" (click)="cancelarDelivery()">
+                    <i class="icon-cancel"></i> Cancelar {{ aliases?.deliveryAlias }}
+                  </button>
+                </div>
+                <div class="footer-actions-right">
+                  <button class="btn-aprovar" (click)="completarDelivery()">
+                    <i class="icon-check_circle"></i> Completar {{ aliases?.deliveryAlias }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </ng-template>
+      </div>
+
+      <!-- Aba Entregue (Processos) -->
+      <div *ngIf="aba === 'entregues'">
+        <ng-container *ngIf="!mostrarDetalheDelivery; else detalheDeliveryEntregue">
+          <div *ngIf="loadingProcessosEntregues" class="loading-container">
+            <div class="loading-spinner">Carregando processos entregues...</div>
+          </div>
+
+          <div *ngIf="!loadingProcessosEntregues" class="table-container">
+            <div class="table-header" style="border-left: 4px solid #6366f1;">
+              <h3>Processos Entregues</h3>
+              <small class="table-subtitle">Processos que foram concluídos e entregues com sucesso nesta
+                temporada.</small>
+            </div>
+
+            <c4u-painel-filtros-acao
+              [totalItens]="processosEntregues.length"
+              [itensSelecionados]="0"
+              [mostrarFiltros]="true"
+              [mostrarAcoes]="false"
+              [acoesDisponiveis]="[]"
+              (filtrosChange)="onFiltrosProcessosChange($event)"
+              (limparFiltros)="onLimparFiltrosProcessos()">
+            </c4u-painel-filtros-acao>
+
+            <table class="table">
+              <thead class="tableHeader">
+              <tr>
+                <th style="width: 10%;">ID</th>
+                <th>Título</th>
+                <th>Status</th>
+                <!-- <th>Executor</th> -->
+                <th>Data</th>
+              </tr>
+              </thead>
+              <tbody class="tableBody">
+              <tr *ngFor="let processo of processosEntregues" (click)="abrirDetalheDelivery(processo)"
+                  style="cursor:pointer">
+                <td>{{ ((processo.id || 'N/A') | slice:0:9) }}{{ processo.id?.length > 9 ? '...' : '' }}</td>
+                <td>{{ processo.title || processo.name || 'N/A' }}</td>
+                <td [ngClass]="getStatusClass(processo.status, processo)">
+                  {{ getStatusLabel(processo.status, processo) }}
+                </td>
+                <!-- <td>{{ formatEmailToName(processo.user_email) }}</td> -->
+                <td>{{ (processo.created_at || processo.updated_at) | date: 'dd/MM/yyyy' }}</td>
+              </tr>
+              </tbody>
+            </table>
+
+            <div *ngIf="processosEntregues.length === 0" class="sem-resultados">
+              <div class="empty-state">
+                <i class="icon-check_circle"></i>
+                <p>Nenhum processo entregue encontrado</p>
+                <small>Os processos entregues aparecerão aqui</small>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+
+        <ng-template #detalheDeliveryEntregue>
+          <div class="detalhe-delivery-container">
+            <button class="back-btn" type="button" (click)="fecharDetalheDelivery()">&larr; Voltar</button>
+            <div class="detalhe-delivery-content">
+              <div class="detalhe-azul detalhe-delivery-status">
+                {{ getStatusLabel(deliverySelecionada?.status, deliverySelecionada) }} desde
+                <ng-container *ngIf="deliverySelecionada?.created_at; else noCreatedAtDeliveryEntregue">
+                  {{ deliverySelecionada.created_at | date:'dd/MM/yyyy' }}
+                </ng-container>
+                <ng-template #noCreatedAtDeliveryEntregue>N/A</ng-template>
+              </div>
+              <div class="detalhe-delivery-nome">
+                <ng-container
+                  *ngIf="deliverySelecionada?.title || deliverySelecionada?.name; else noTitleDeliveryEntregue">
+                  {{ deliverySelecionada.title || deliverySelecionada.name }}
+                </ng-container>
+                <ng-template #noTitleDeliveryEntregue>
+                  N/A
+                </ng-template>
+              </div>
+              <div class="detalhe-delivery-executor">
+                {{ formatEmailToName(deliverySelecionada?.user_email) }}
+              </div>
+
+              <div class="detalhe-delivery-info">
+                <div class="info-item">
+                  <strong>ID:</strong> {{ deliverySelecionada?.id || 'N/A' }}
+                </div>
+                <div class="info-item">
+                  <strong>Status:</strong> {{ getStatusLabel(deliverySelecionada?.status, deliverySelecionada) }}
+                </div>
+                <div class="info-item">
+                  <strong>Criado em:</strong>
+                  <ng-container *ngIf="deliverySelecionada?.created_at; else noCreatedAtDeliveryInfoEntregue">
+                    {{ deliverySelecionada.created_at | date:'dd/MM/yyyy HH:mm' }}
+                  </ng-container>
+                  <ng-template #noCreatedAtDeliveryInfoEntregue>N/A</ng-template>
+                </div>
+                <div class="info-item" *ngIf="deliverySelecionada?.updated_at">
+                  <strong>Atualizado em:</strong>
+                  {{ deliverySelecionada.updated_at | date:'dd/MM/yyyy HH:mm' }}
+                </div>
+              </div>
+
+              <!-- Lista de Tarefas -->
+              <div class="detalhe-delivery-tarefas">
+                <div class="tarefas-header">
+                  <h4>Lista de Atividades</h4>
+                  <small>Tarefas associadas a esta delivery</small>
+                </div>
+
+                <!-- Botões de ação em lote para tarefas (separados dos botões de processo) -->
+                <div class="tarefas-acoes-lote" *ngIf="deliverySelecionada?.user_action && deliverySelecionada.user_action.length > 0 && isAdminOrGerente" style="margin-bottom: 1rem; padding: 0.75rem; background-color: #2a2b32; border-radius: 6px; display: flex; align-items: center; gap: 0.75rem;">
+                  <span style="font-size: 0.875rem; color: #6b7280; margin-right: auto;">
+                    <strong>{{ tarefasSelecionadasDetalhe.size }}</strong> tarefa(s) selecionada(s)
+                  </span>
+                  <button 
+                    class="btn-aprovar-tarefas-lote" 
+                    (click)="aprovarTarefasDetalheLote()"
+                    [disabled]="!podeAprovarTarefasDetalhe() || isLoadingBlocking"
+                    style="padding: 0.5rem 1rem; background-color: #10b981; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.875rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="icon-check_circle"></i>
+                    Aprovar Tarefas Selecionadas
+                  </button>
+                  <button 
+                    class="btn-cancelar-tarefas-lote" 
+                    (click)="cancelarTarefasDetalheLote()"
+                    [disabled]="!podeCancelarTarefasDetalhe() || isLoadingBlocking"
+                    style="padding: 0.5rem 1rem; background-color: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.875rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="icon-cancel"></i>
+                    Cancelar Tarefas Selecionadas
+                  </button>
+                </div>
+
+                <table class="table tarefas-table">
+                  <thead class="tableHeader">
+                  <tr>
+                    <th style="width: 5%;" *ngIf="isAdminOrGerente">
+                      <c4u-checkbox
+                        [value]="tarefasSelecionadasDetalhe.size === (deliverySelecionada?.user_action?.length || 0) && (deliverySelecionada?.user_action?.length || 0) > 0"
+                        [indeterminate]="tarefasSelecionadasDetalhe.size > 0 && tarefasSelecionadasDetalhe.size < (deliverySelecionada?.user_action?.length || 0)"
+                        (click)="toggleSelecionarTodasTarefasDetalhe($event)"
+                        style="display: inline-block;">
+                      </c4u-checkbox>
+                    </th>
+                    <th style="width: 10%;">ID</th>
+                    <th style="width: 45%;">Título</th>
+                    <th style="width: 10%;">Status</th>
+                    <th style="width: 10%;">Executor</th>
+                    <th style="width: 10%;">Data</th>
+                  </tr>
+                  </thead>
+                  <tbody class="tableBody">
+                  <tr *ngFor="let tarefa of deliverySelecionada?.user_action || []" 
+                      (click)="onTarefaClick(tarefa)"
+                      style="cursor:pointer"
+                      [class.selected]="isTarefaSelecionadaDetalhe(tarefa)">
+                    <td *ngIf="isAdminOrGerente" (click)="$event.stopPropagation(); $event.preventDefault()" style="position: relative; z-index: 10;">
+                      <c4u-checkbox
+                        [value]="isTarefaSelecionadaDetalhe(tarefa)"
+                        (click)="toggleSelecionarTarefaDetalhe(tarefa, $event)"
+                        style="display: inline-block; cursor: pointer; pointer-events: auto;">
+                      </c4u-checkbox>
+                    </td>
+                    <td>{{ ((tarefa.integration_id || tarefa.id || 'N/A') | slice:0:9) }}{{ ((tarefa.integration_id || tarefa.id) ?? '').length > 9 ? '...' : '' }}</td>
+                    <td>{{ tarefa.action_title || 'N/A' }}</td>
+                    <td [ngClass]="getStatusClass(tarefa.status, tarefa)">
+                      {{ getStatusLabel(tarefa.status, tarefa) }}
+                    </td>
+                    <td>{{ formatEmailToName(tarefa.user_email) }}</td>
+                    <td>{{ (tarefa.created_at || tarefa.updated_at) | date: 'dd/MM/yyyy' }}</td>
+                  </tr>
+                  </tbody>
+                </table>
+
+                <div *ngIf="!deliverySelecionada?.user_action || deliverySelecionada?.user_action.length === 0"
+                     class="sem-tarefas">
+                  <div class="empty-state">
+                    <i class="icon-task"></i>
+                    <p>Nenhuma tarefa encontrada</p>
+                    <small>As tarefas associadas aparecerão aqui</small>
+                  </div>
+                </div>
+
+                <button class="btn-criar-tarefa" (click)="criarTarefa()">
+                  <i class="icon-add"></i> Criar {{ aliases?.actionAlias }}
+                </button>
+              </div>
+
+              <div class="detalhe-delivery-footer">
+                <div class="footer-actions-left">
+                  <button class="btn-cancelar" (click)="cancelarDelivery()">
+                    <i class="icon-cancel"></i> Cancelar {{ aliases?.deliveryAlias }}
+                  </button>
+                </div>
+                <div class="footer-actions-right">
+                  <button class="btn-reprovar" (click)="desfazerDelivery()">
+                    <i class="icon-undo"></i> Desfazer {{ aliases?.deliveryAlias }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </ng-template>
+      </div>
+
+      <!-- Aba Cancelados (Processos) -->
+      <div *ngIf="aba === 'processos-cancelados'">
+        <ng-container *ngIf="!mostrarDetalheDelivery; else detalheDeliveryCancelado">
+          <div *ngIf="loadingProcessosCancelados" class="loading-container">
+            <div class="loading-spinner">Carregando processos cancelados...</div>
+          </div>
+
+          <div *ngIf="!loadingProcessosCancelados" class="table-container">
+            <div class="table-header" style="border-left: 4px solid #9ca3af;">
+              <h3>Processos Cancelados</h3>
+              <small class="table-subtitle">Processos que foram cancelados e não serão considerados para
+                pontuação.</small>
+            </div>
+
+            <c4u-painel-filtros-acao
+              [totalItens]="processosCancelados.length"
+              [itensSelecionados]="0"
+              [mostrarFiltros]="true"
+              [mostrarAcoes]="false"
+              [acoesDisponiveis]="[]"
+              (filtrosChange)="onFiltrosProcessosChange($event)"
+              (limparFiltros)="onLimparFiltrosProcessos()">
+            </c4u-painel-filtros-acao>
+
+            <table class="table">
+              <thead class="tableHeader">
+              <tr>
+                <th style="width: 10%;">ID</th>
+                <th style="width: 50%;">Título</th>
+                <th style="width: 10%;">Status</th>
+                <!-- <th>Executor</th> -->
+                <th style="width: 10%;">Data</th>
+              </tr>
+              </thead>
+              <tbody class="tableBody">
+              <tr *ngFor="let processo of processosCancelados" (click)="abrirDetalheDelivery(processo)"
+                  style="cursor:pointer">
+                <td>{{ ((processo.id || 'N/A') | slice:0:9) }}{{ processo.id?.length > 9 ? '...' : '' }}</td>
+                <td>{{ processo.title || processo.name || 'N/A' }}</td>
+                <td [ngClass]="getStatusClass(processo.status, processo)">
+                  {{ getStatusLabel(processo.status, processo) }}
+                </td>
+                <!-- <td>{{ formatEmailToName(processo.user_email) }}</td> -->
+                <td>{{ (processo.created_at || processo.updated_at) | date: 'dd/MM/yyyy' }}</td>
+              </tr>
+              </tbody>
+            </table>
+
+            <div *ngIf="processosCancelados.length === 0" class="sem-resultados">
+              <div class="empty-state">
+                <i class="icon-cancel"></i>
+                <p>Nenhum processo cancelado encontrado</p>
+                <small>Os processos cancelados aparecerão aqui</small>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+
+        <ng-template #detalheDeliveryCancelado>
+          <div class="detalhe-delivery-container">
+            <button class="back-btn" type="button" (click)="fecharDetalheDelivery()">&larr; Voltar</button>
+            <div class="detalhe-delivery-content">
+              <div class="detalhe-cinza detalhe-delivery-status">
+                {{ getStatusLabel(deliverySelecionada?.status, deliverySelecionada) }} desde
+                <ng-container *ngIf="deliverySelecionada?.created_at; else noCreatedAtDeliveryCancelado">
+                  {{ deliverySelecionada.created_at | date:'dd/MM/yyyy' }}
+                </ng-container>
+                <ng-template #noCreatedAtDeliveryCancelado>N/A</ng-template>
+              </div>
+              <div class="detalhe-delivery-nome">
+                <ng-container
+                  *ngIf="deliverySelecionada?.title || deliverySelecionada?.name; else noTitleDeliveryCancelado">
+                  {{ deliverySelecionada.title || deliverySelecionada.name }}
+                </ng-container>
+                <ng-template #noTitleDeliveryCancelado>
+                  N/A
+                </ng-template>
+              </div>
+              <div class="detalhe-delivery-executor">
+                {{ formatEmailToName(deliverySelecionada?.user_email) }}
+              </div>
+
+              <div class="detalhe-delivery-info">
+                <div class="info-item">
+                  <strong>ID:</strong> {{ deliverySelecionada?.id || 'N/A' }}
+                </div>
+                <div class="info-item">
+                  <strong>Status:</strong> {{ getStatusLabel(deliverySelecionada?.status, deliverySelecionada) }}
+                </div>
+                <div class="info-item">
+                  <strong>Criado em:</strong>
+                  <ng-container *ngIf="deliverySelecionada?.created_at; else noCreatedAtDeliveryInfoCancelado">
+                    {{ deliverySelecionada.created_at | date:'dd/MM/yyyy HH:mm' }}
+                  </ng-container>
+                  <ng-template #noCreatedAtDeliveryInfoCancelado>N/A</ng-template>
+                </div>
+                <div class="info-item" *ngIf="deliverySelecionada?.updated_at">
+                  <strong>Atualizado em:</strong>
+                  {{ deliverySelecionada.updated_at | date:'dd/MM/yyyy HH:mm' }}
+                </div>
+              </div>
+
+              <!-- Lista de Tarefas -->
+              <div class="detalhe-delivery-tarefas">
+                <div class="tarefas-header">
+                  <h4>Lista de Atividades</h4>
+                  <small>Tarefas associadas a esta delivery</small>
+                </div>
+
+                <!-- Botões de ação em lote para tarefas (separados dos botões de processo) -->
+                <div class="tarefas-acoes-lote" *ngIf="deliverySelecionada?.user_action && deliverySelecionada.user_action.length > 0 && isAdminOrGerente" style="margin-bottom: 1rem; padding: 0.75rem; background-color: #2a2b32; border-radius: 6px; display: flex; align-items: center; gap: 0.75rem;">
+                  <span style="font-size: 0.875rem; color: #6b7280; margin-right: auto;">
+                    <strong>{{ tarefasSelecionadasDetalhe.size }}</strong> tarefa(s) selecionada(s)
+                  </span>
+                  <button 
+                    class="btn-aprovar-tarefas-lote" 
+                    (click)="aprovarTarefasDetalheLote()"
+                    [disabled]="!podeAprovarTarefasDetalhe() || isLoadingBlocking"
+                    style="padding: 0.5rem 1rem; background-color: #10b981; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.875rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="icon-check_circle"></i>
+                    Aprovar Tarefas Selecionadas
+                  </button>
+                  <button 
+                    class="btn-cancelar-tarefas-lote" 
+                    (click)="cancelarTarefasDetalheLote()"
+                    [disabled]="!podeCancelarTarefasDetalhe() || isLoadingBlocking"
+                    style="padding: 0.5rem 1rem; background-color: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.875rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="icon-cancel"></i>
+                    Cancelar Tarefas Selecionadas
+                  </button>
+                </div>
+
+                <table class="table tarefas-table">
+                  <thead class="tableHeader">
+                  <tr>
+                    <th style="width: 5%;" *ngIf="isAdminOrGerente">
+                      <c4u-checkbox
+                        [value]="tarefasSelecionadasDetalhe.size === (deliverySelecionada?.user_action?.length || 0) && (deliverySelecionada?.user_action?.length || 0) > 0"
+                        [indeterminate]="tarefasSelecionadasDetalhe.size > 0 && tarefasSelecionadasDetalhe.size < (deliverySelecionada?.user_action?.length || 0)"
+                        (click)="toggleSelecionarTodasTarefasDetalhe($event)"
+                        style="display: inline-block;">
+                      </c4u-checkbox>
+                    </th>
+                    <th style="width: 10%;">ID</th>
+                    <th style="width: 40%;">Título</th>
+                    <th style="width: 10%;">Status</th>
+                    <th style="width: 10%;">Cancelado?</th>
+                    <th style="width: 10%;">Executor</th>
+                    <th style="width: 10%;">Data</th>
+                  </tr>
+                  </thead>
+                  <tbody class="tableBody">
+                  <tr *ngFor="let tarefa of deliverySelecionada?.user_action || []" 
+                      (click)="onTarefaClick(tarefa)"
+                      style="cursor:pointer"
+                      [class.selected]="isTarefaSelecionadaDetalhe(tarefa)">
+                    <td *ngIf="isAdminOrGerente" (click)="$event.stopPropagation(); $event.preventDefault()" style="position: relative; z-index: 10;">
+                      <c4u-checkbox
+                        [value]="isTarefaSelecionadaDetalhe(tarefa)"
+                        (click)="toggleSelecionarTarefaDetalhe(tarefa, $event)"
+                        style="display: inline-block; cursor: pointer; pointer-events: auto;">
+                      </c4u-checkbox>
+                    </td>
+                    <td>{{ ((tarefa.integration_id || tarefa.id || 'N/A') | slice:0:9) }}{{ ((tarefa.integration_id || tarefa.id) ?? '').length > 9 ? '...' : '' }}</td>
+                    <td>{{ tarefa.action_title || 'N/A' }}</td>
+                    <td [ngClass]="getStatusClass(tarefa.status, tarefa)">
+                      {{ getStatusLabel(tarefa.status, tarefa) }}
+                    </td>
+                    <td>
+                      {{ tarefa.dismissed === true ? 'Sim' : 'Não' }}
+                    </td>
+                    <td>{{ formatEmailToName(tarefa.user_email) }}</td>
+                    <td>{{ (tarefa.created_at || tarefa.updated_at) | date: 'dd/MM/yyyy' }}</td>
+                  </tr>
+                  </tbody>
+                </table>
+
+                <div *ngIf="!deliverySelecionada?.user_action || deliverySelecionada?.user_action.length === 0"
+                     class="sem-tarefas">
+                  <div class="empty-state">
+                    <i class="icon-task"></i>
+                    <p>Nenhuma tarefa encontrada</p>
+                    <small>As tarefas associadas aparecerão aqui</small>
+                  </div>
+                </div>
+
+                <button class="btn-criar-tarefa" (click)="criarTarefa()">
+                  <i class="icon-add"></i> Criar {{ aliases?.actionAlias }}
+                </button>
+              </div>
+
+              <div class="detalhe-delivery-footer">
+                <div class="footer-actions-left">
+                  <button class="btn-aprovar" (click)="restaurarDelivery()">
+                    <i class="icon-restore"></i> RESTAURAR DELIVERY
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </ng-template>
+      </div>
+    </div>
+  </div>
+</c4u-modal>

@@ -1,0 +1,26 @@
+<button 
+  type="button"
+  flex 
+  [gap]="8" 
+  vAlign="center" 
+  class="item-title" 
+  (click)="toggleAccordion()"
+  (keydown.enter)="toggleAccordion()"
+  (keydown.space)="toggleAccordion(); $event.preventDefault()"
+  [attr.aria-expanded]="open"
+  [attr.aria-controls]="'accordion-panel-' + accordionId"
+  [attr.id]="'accordion-header-' + accordionId"
+  [attr.aria-label]="(open ? 'Recolher' : 'Expandir') + ' ' + itemTitle">
+    <span class="title" flexItem="0">{{itemTitle}}</span>
+    <span class="line" flexItem="1" aria-hidden="true"></span>
+    <i class="icon-expand_more" [ngClass]="{open: open}" flexItem="0" aria-hidden="true"></i>
+</button>
+
+<div 
+  *ngIf="open" 
+  class="content"
+  role="region"
+  [attr.id]="'accordion-panel-' + accordionId"
+  [attr.aria-labelledby]="'accordion-header-' + accordionId">
+    <ng-content></ng-content>
+</div>

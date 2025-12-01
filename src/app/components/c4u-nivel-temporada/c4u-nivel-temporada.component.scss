@@ -1,0 +1,59 @@
+@import "tools";
+
+.container {
+  @include flexCenter;
+}
+
+.level {
+  position: absolute;
+  font-size: 32px;
+  font-weight: 900;
+}
+
+.outer {
+  background: #CAA25F;
+  mask-image: url("/assets/images/level_ring.svg");
+  mask-size: 100%;
+  @include square(106px);
+  @include flexCenter;
+  position: relative;
+  transform: rotate(45deg);
+
+  &:after {
+    background: linear-gradient(0deg, rgba(0, 0, 0, 0) 0%, #441200 50%, rgba(0, 0, 0, 0) 100%);
+    width: inherit;
+    height: 48px;
+    position: absolute;
+    left: 0;
+    top: -48px;
+    content: '';
+
+    animation: bright infinite 5s;
+  }
+}
+
+.iconify {
+  .outer {
+    @include square(32px);
+
+    &:after {
+      height: 18px;
+    }
+  }
+
+  .level {
+    font-size: 14px;
+    font-weight: 700;
+  }
+}
+
+@keyframes bright {
+  0% {
+    top: -48px;
+  }
+
+  100% {
+    top: 100%;
+  }
+}
+

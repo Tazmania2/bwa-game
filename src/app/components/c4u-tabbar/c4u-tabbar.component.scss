@@ -1,0 +1,53 @@
+@import "variables";
+@import "tools";
+@import "tailwind";
+@reference "tailwindcss";
+
+.tab-item {
+  cursor: pointer;
+  border-bottom: solid 1px $inativo;
+  transition: border-color $default-anim-time;
+
+  .tab-title {
+    font-weight: 400;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    @include disableSelection;
+  }
+
+  & > div {
+    opacity: 0.5;
+    transition: opacity $default-anim-time;
+  }
+
+  &.active {
+    border-color: $texto-branco;
+
+    .tab-title {
+      font-weight: 700;
+    }
+
+    & > div {
+      opacity: 1;
+    }
+  }
+
+}
+
+i {
+  font-size: 20px;
+}
+
+:host {
+  display: flex;
+  height: 36px;
+  position: relative;
+  gap: 8px;
+  overflow-x: auto;
+
+  @screen md {
+    @apply gap-0;
+    overflow-x: hidden;
+  }
+}

@@ -1,0 +1,7 @@
+<ul class="tabs" *ngIf="selectedType !== 2">
+  <li *ngFor="let tab of availableTabs" 
+      [class.active]="isActive(tab.id)" 
+      (click)="onAbaClick(tab.id)">
+    <i [class]="tab.icon"></i> {{ tab.label }}
+  </li>
+</ul> 

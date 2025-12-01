@@ -1,0 +1,264 @@
+@import '../../../styles/variables.scss';
+@import '../../../styles/mixins.scss';
+
+.company-table-container {
+  width: 100%;
+  overflow: hidden;
+
+  .table-responsive {
+    max-height: 600px;
+    overflow-y: auto;
+    overflow-x: auto;
+    
+    &::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    
+    &::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: $border-radius-xs;
+    }
+    
+    &::-webkit-scrollbar-thumb {
+      background: $border-color;
+      border-radius: $border-radius-xs;
+      
+      &:hover {
+        background: lighten($border-color, 10%);
+      }
+    }
+
+    // Virtual scrolling specific styles
+    &.virtual-scroll-wrapper {
+      .virtual-scroll-viewport {
+        height: 600px;
+        width: 100%;
+        
+        ::ng-deep .cdk-virtual-scroll-content-wrapper {
+          width: 100%;
+        }
+      }
+    }
+  }
+
+  .company-table {
+    width: 100%;
+    margin-bottom: 0;
+    background: transparent;
+    color: $text-primary;
+
+    thead {
+      position: sticky;
+      top: 0;
+      background: linear-gradient(135deg, $surface, lighten($surface, 3%));
+      backdrop-filter: blur(10px);
+      z-index: 10;
+
+      th {
+        padding: $spacing-md;
+        font-weight: $font-weight-semibold;
+        font-size: $font-size-small;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border-bottom: 2px solid $border-color;
+        white-space: nowrap;
+        color: $text-secondary;
+        transition: color $transition-duration $transition-easing;
+        
+        &:hover {
+          color: $text-primary;
+        }
+      }
+    }
+
+    tbody {
+      tr.company-row {
+        cursor: pointer;
+        transition: all $transition-duration $transition-easing;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        position: relative;
+        
+        &::before {
+          content: '';
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 0;
+          height: 100%;
+          background: linear-gradient(90deg, rgba($primary-electric-blue, 0.1), transparent);
+          transition: width $transition-duration $transition-easing;
+        }
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.05);
+          transform: translateX(4px);
+          
+          &::before {
+            width: 100%;
+          }
+          
+          @include reduced-motion {
+            transform: none;
+          }
+        }
+
+        &:focus {
+          @include focus-visible;
+        }
+
+        td {
+          padding: $spacing-md;
+          vertical-align: middle;
+          font-size: $font-size-small;
+
+          &.company-name {
+            font-weight: $font-weight-medium;
+            max-width: 250px;
+            @include text-truncate;
+          }
+
+          &.company-cnpj {
+            color: $text-secondary;
+            font-size: $font-size-small;
+          }
+        }
+      }
+    }
+  }
+
+  .health-indicator {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: $spacing-xs $spacing-sm;
+    border-radius: $border-radius;
+    font-weight: $font-weight-semibold;
+    font-size: $font-size-caption;
+    min-width: 60px;
+    transition: all $transition-duration $transition-easing;
+
+    &.health-success {
+      background: rgba($success-green, 0.2);
+      color: $success-green;
+      border: 1px solid rgba($success-green, 0.3);
+      
+      &:hover {
+        background: rgba($success-green, 0.3);
+      }
+    }
+
+    &.health-warning {
+      background: rgba($warning-orange, 0.2);
+      color: $warning-orange;
+      border: 1px solid rgba($warning-orange, 0.3);
+      
+      &:hover {
+        background: rgba($warning-orange, 0.3);
+      }
+    }
+
+    &.health-danger {
+      background: rgba($error-red, 0.2);
+      color: $error-red;
+      border: 1px solid rgba($error-red, 0.3);
+      
+      &:hover {
+        background: rgba($error-red, 0.3);
+      }
+    }
+  }
+
+  .kpi-score {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: $spacing-xs $spacing-sm;
+    border-radius: $border-radius-sm;
+    font-weight: $font-weight-medium;
+    font-size: $font-size-small;
+    min-width: 70px;
+    transition: all $transition-duration $transition-easing;
+
+    &.kpi-success {
+      color: $success-green;
+      
+      &:hover {
+        background: rgba($success-green, 0.1);
+      }
+    }
+
+    &.kpi-warning {
+      color: $warning-orange;
+      
+      &:hover {
+        background: rgba($warning-orange, 0.1);
+      }
+    }
+
+    &.kpi-danger {
+      color: $error-red;
+      
+      &:hover {
+        background: rgba($error-red, 0.1);
+      }
+    }
+  }
+
+  .empty-state {
+    padding: $spacing-xxl;
+    text-align: center;
+    color: $text-secondary;
+    font-size: $font-size-body;
+    
+    .empty-icon {
+      font-size: 3rem;
+      margin-bottom: $spacing-md;
+      opacity: 0.5;
+    }
+    
+    .empty-text {
+      margin: 0;
+    }
+  }
+}
+
+// Responsive adjustments
+@include mobile-only {
+  .company-table-container {
+    .table-responsive {
+      max-height: 400px;
+    }
+
+    .company-table {
+      font-size: $font-size-small;
+
+      thead th,
+      tbody td {
+        padding: $spacing-sm;
+      }
+
+      .company-name {
+        max-width: 150px;
+      }
+    }
+  }
+}
+
+// Accessibility
+.company-row {
+  @include focus-visible;
+}
+
+// Reduced motion
+@include reduced-motion {
+  .company-row {
+    &:hover {
+      transform: none;
+    }
+    
+    &::before {
+      transition: none;
+    }
+  }
+}

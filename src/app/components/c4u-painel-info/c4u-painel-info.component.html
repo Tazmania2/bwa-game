@@ -1,0 +1,17 @@
+<c4u-painel-vidro flex direction="column">
+  <span class="title">{{title}}</span>
+
+  <div  flex wrap="wrap" gap="24px 0">
+    <div flex direction="column" *ngFor="let item of info" flexItem="25%" vAlign="center"
+    [hover]="item.action != undefined" (click)="doAction(item)">
+      <div flex vAlign="center" [gap]="4" [toolTip]="item.toolTip" [direction]="'row'">
+        <span class="value"><span>{{item.value.toFixed(0)}}</span></span>
+        <i class="{{item.icon}}"></i>
+      </div>
+
+      <span class="text" [toolTip]="item.toolTip">{{item.text | translate}}</span>
+    </div>
+  </div>
+
+  <ng-content></ng-content>
+</c4u-painel-vidro>

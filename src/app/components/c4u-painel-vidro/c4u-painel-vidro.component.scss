@@ -1,0 +1,35 @@
+$inner-width: 64%;
+$inner-height: 76%;
+
+:host {
+  display: block;
+  position: relative;
+
+  &:before {
+    z-index: -1;
+    content: '';
+    width: $inner-width;
+    height: $inner-height;
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    border-radius: 0 0 0 16px;
+    border-left: solid 1px;
+    border-bottom: solid 1px;
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  &:after {
+    z-index: -1;
+    content: '';
+    width: $inner-width;
+    height: $inner-height;
+    position: absolute;
+    right: 0;
+    top: 0;
+    border-radius: 0 16px 0 0;
+    border-right: solid 1px;
+    border-top: solid 1px;
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+}

@@ -1,0 +1,154 @@
+.convert-modal-container {
+  background: #23242a;
+  border-radius: 1.5rem;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+  padding: 2.5rem 2rem 2rem 2rem;
+  width: 100%;
+  max-width: 420px;
+  min-width: 320px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.convert-modal-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  width: 100%;
+  h2 {
+    color: #fff;
+    font-size: 2.1rem;
+    font-weight: 500;
+    margin: 0 0 0.5rem 0;
+    text-align: center;
+  }
+  p {
+    color: #bfcfff;
+    font-size: 1.1rem;
+    margin: 0 0 0.5rem 0;
+    text-align: center;
+  }
+  .rate-info {
+    background: #23242a;
+    border: 1.5px solid #353a45;
+    border-radius: 0.7rem;
+    color: #fff;
+    font-size: 1.2rem;
+    font-weight: 600;
+    padding: 0.5rem 0.75rem;
+    margin: 0.5rem 0 0 0;
+    text-align: center;
+    width: 100%;
+    max-width: 320px;
+  }
+}
+
+.convert-modal-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 2rem;
+  .input-label {
+    color: #bfcfff;
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+    align-self: flex-start;
+  }
+  .points-input {
+    width: 100%;
+    max-width: 320px;
+    padding: 1rem;
+    font-size: 1.5rem;
+    border-radius: 0.7rem;
+    border: 1.5px solid #353a45;
+    background: #181a20;
+    color: #fff;
+    margin-bottom: 1.2rem;
+    text-align: left;
+  }
+  .points-slider {
+    width: 100%;
+    max-width: 320px;
+    margin-bottom: 1.2rem;
+    accent-color: #bfcfff;
+    height: 8px;
+    border-radius: 8px;
+    background: #23242a;
+  }
+  .converted-value {
+    color: #fff;
+    font-size: 2rem;
+    font-weight: 500;
+    margin-top: 0.5rem;
+    text-align: center;
+  }
+}
+
+.convert-modal-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.2rem;
+  width: 100%;
+  max-width: 320px;
+  margin-top: 1.5rem;
+  .cancel-btn, .confirm-btn {
+    flex: 1 1 0;
+    min-width: 0;
+    align-self: stretch;
+    padding: 0.85rem 0;
+    border-radius: 1.2rem;
+    font-size: 1rem;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+  .cancel-btn {
+    background: none;
+    color: #bfcfff;
+    border: 1.5px solid #353a45;
+    &:hover { 
+      background: #23242a; 
+      color: #fff;
+      transform: translateY(-1px);
+    }
+  }
+  .confirm-btn {
+    background: #bfcfff;
+    color: #23242a;
+    &:hover { 
+      background: #fff;
+      color: #23242a;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(123, 143, 255, 0.3);
+    }
+    &:disabled {
+      background: #353a45;
+      color: #888;
+      cursor: not-allowed;
+    }
+  }
+}
+
+@media (max-width: 576px) {
+  .convert-modal-container {
+    margin: 1rem;
+    min-width: auto;
+  }
+  .convert-modal-footer {
+    flex-direction: column;
+    .cancel-btn, .confirm-btn {
+      width: 100%;
+    }
+  }
+}

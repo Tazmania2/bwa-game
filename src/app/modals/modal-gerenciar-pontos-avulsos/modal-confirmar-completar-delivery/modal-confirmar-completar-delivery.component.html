@@ -1,0 +1,26 @@
+<div class="modal-confirm">
+  <div class="modal-confirm-content">
+    <div class="modal-confirm-icon"><i class="ri-check-line"></i></div>
+    <div class="modal-confirm-text">
+      <h3>Confirmar Conclusão</h3>
+      <p>Tem certeza que deseja completar esta delivery?</p>
+    </div>
+    
+    <div class="delivery-info">
+      <strong>Delivery:</strong> {{ deliveryTitle || 'N/A' }}
+    </div>
+    
+    <div class="info-message">
+      <p><i class="ri-check-line"></i> A delivery será marcada como entregue e movida para a lista de entregues.</p>
+    </div>
+    
+    <div class="modal-confirm-footer">
+      <button class="btn-ghost" (click)="cancelar()">
+        <i class="icon-cancel"></i> Cancelar
+      </button>
+      <button class="btn-success" (click)="confirmar()">
+        <i class="icon-check_circle"></i> Confirmar Conclusão
+      </button>
+    </div>
+  </div>
+</div> 

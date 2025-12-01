@@ -1,0 +1,297 @@
+.redeem-modal-container {
+  background: #23242a;
+  border-radius: 1.5rem;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+  padding: 2.5rem 2rem 2rem 2rem;
+  width: 100%;
+  max-width: 420px;
+  min-width: 320px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.redeem-modal-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  width: 100%;
+  position: relative;
+
+  .back-btn {
+    position: absolute;
+    left: 0;
+    top: 0;
+    background: none;
+    border: none;
+    color: #bfcfff;
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: color 0.2s;
+    z-index: 2;
+    &:hover { color: #fff; }
+  }
+
+  i.ri-shopping-cart-line {
+    font-size: 2.2rem;
+    color: #bfcfff;
+    margin-bottom: 0.2rem;
+  }
+
+  h2 {
+    color: #fff;
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin: 0;
+    text-align: center;
+  }
+}
+
+.redeem-modal-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.2rem;
+  margin-bottom: 2rem;
+  width: 100%;
+  text-align: center;
+
+  .reward-details,
+  .confirmation-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+    width: 100%;
+    align-items: center;
+  }
+
+  .reward-preview {
+    background: #181a20;
+    border-radius: 1rem;
+    padding: 1.2rem;
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    justify-content: center;
+    width: 100%;
+    max-width: 420px;
+
+    .redeem-modal-img {
+      width: 140px;
+      height: 140px;
+      object-fit: contain;
+      border-radius: 1rem;
+      background: #181a20;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+    }
+    .reward-info {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: flex-start;
+      text-align: left;
+      padding-left: 1rem;
+    }
+  }
+
+  .redeem-modal-img {
+    width: 140px;
+    height: 140px;
+    object-fit: contain;
+    border-radius: 1rem;
+    background: #181a20;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+  }
+
+  .placeholder-image {
+    width: 140px;
+    height: 140px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 1rem;
+    background: #181a20;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+    transition: transform 0.3s ease;
+
+    &:hover {
+      transform: scale(1.02);
+    }
+
+    i {
+      font-size: 3rem;
+      color: rgba(255, 255, 255, 0.7);
+      transition: color 0.3s ease;
+    }
+
+    &:hover i {
+      color: rgba(255, 255, 255, 0.9);
+    }
+  }
+
+  .reward-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    h5 {
+      color: #fff;
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 0 0 0.5rem 0;
+    }
+
+    .reward-description {
+      color: #bfcfff;
+      font-size: 0.9rem;
+      margin: 0 0 0.75rem 0;
+      line-height: 1.4;
+    }
+  }
+
+  .coin-cost {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #f1c40f;
+    font-weight: 600;
+    font-size: 1.1rem;
+    background: rgba(241, 196, 15, 0.1);
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.75rem;
+    width: fit-content;
+
+    i {
+      font-size: 1.2rem;
+      animation: coinSpin 2s infinite linear;
+    }
+  }
+
+  .confirmation-message {
+    text-align: center;
+    color: #bfcfff;
+    font-size: 1.05rem;
+    padding: 1.25rem;
+    background: #181a20;
+    border-radius: 1rem;
+    line-height: 1.5;
+    width: 100%;
+    max-width: 420px;
+
+    i {
+      font-size: 2.2rem;
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+  }
+}
+
+.redeem-modal-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.2rem;
+  width: 100%;
+  max-width: 420px;
+  margin-top: 1.5rem;
+
+  .cancel-btn, .confirm-btn {
+    flex: 1 1 0;
+    min-width: 0;
+    align-self: stretch;
+    padding: 0.85rem 0;
+    border-radius: 1.2rem;
+    font-size: 1rem;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  .cancel-btn {
+    background: none;
+    color: #bfcfff;
+    border: 1.5px solid #353a45;
+    &:hover { 
+      background: #23242a; 
+      color: #fff;
+      transform: translateY(-1px);
+    }
+  }
+
+  .confirm-btn {
+    background: #2F363F;
+    color: #fff;
+    font-weight: 700;
+    transition: all 0.5s ease;
+    
+    &:hover:not(:disabled) {
+      background: linear-gradient(90deg, #f1c40f 60%, #f39c12 100%);
+      color: #2c3e50;
+      transform: translateY(-2px);
+    }
+
+    &:disabled {
+      background: linear-gradient(90deg, #95a5a6 60%, #7f8c8d 100%);
+      color: #34495e;
+      cursor: not-allowed;
+      transform: none;
+    }
+  }
+}
+
+@keyframes coinSpin {
+  from {
+    transform: rotateY(0deg);
+  }
+  to {
+    transform: rotateY(360deg);
+  }
+}
+
+@media (max-width: 576px) {
+  .redeem-modal-container {
+    margin: 1rem;
+    min-width: auto;
+  }
+
+  .reward-preview {
+    flex-direction: column;
+    text-align: center;
+    align-items: center;
+    
+    .redeem-modal-img, .reward-info {
+      width: 100%;
+      padding-left: 0;
+      align-items: center;
+      text-align: center;
+    }
+  }
+
+  .coin-cost {
+    margin: 0 auto;
+  }
+
+  .redeem-modal-footer {
+    flex-direction: column;
+  }
+
+  .cancel-btn, .confirm-btn {
+    width: 100%;
+  }
+} 

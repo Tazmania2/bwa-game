@@ -1,0 +1,4 @@
+<c4u-tabbar flexItem="1" [items]="tabItens" [marginTop]="40" [(selected)]="selectedTab"></c4u-tabbar>
+
+<dados-metas-progresso-time *ngIf="selectedTab === 0" [idTime]="idTime" [mesAnterior]="mesAnterior"></dados-metas-progresso-time>
+<dados-produtividade-time *ngIf="selectedTab === 1" [idTime]="idTime" [mesAnterior]="mesAnterior" [nomeTime]="nomeTime"></dados-produtividade-time>

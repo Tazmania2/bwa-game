@@ -1,0 +1,59 @@
+<c4u-modal [modalTitle]="company?.name || ''" *ngIf="company">
+  <!-- KPI Header Section -->
+  <div class="kpi-header" flex gap="24px" [marginBottom]="32">
+    <div class="kpi-item" flex direction="column" vAlign="center" hAlign="center">
+      <c4u-kpi-circular-progress
+        [label]="company.kpi1.label"
+        [current]="company.kpi1.current"
+        [target]="company.kpi1.target"
+      ></c4u-kpi-circular-progress>
+    </div>
+    <div class="kpi-item" flex direction="column" vAlign="center" hAlign="center">
+      <c4u-kpi-circular-progress
+        [label]="company.kpi2.label"
+        [current]="company.kpi2.current"
+        [target]="company.kpi2.target"
+      ></c4u-kpi-circular-progress>
+    </div>
+    <div class="kpi-item" flex direction="column" vAlign="center" hAlign="center">
+      <c4u-kpi-circular-progress
+        [label]="company.kpi3.label"
+        [current]="company.kpi3.current"
+        [target]="company.kpi3.target"
+      ></c4u-kpi-circular-progress>
+    </div>
+  </div>
+
+  <!-- Tab Navigation -->
+  <c4u-tabbar 
+    [items]="tabs" 
+    [(selected)]="selectedTab"
+    (selectedChange)="selectTab($event)"
+    [marginBottom]="24"
+  ></c4u-tabbar>
+
+  <!-- Content Area -->
+  <div class="modal-content" flex scroll flexItem="1">
+    <!-- Loading State -->
+    <div *ngIf="isLoading" flex vAlign="center" hAlign="center" flexItem="1">
+      <c4u-spinner></c4u-spinner>
+    </div>
+
+    <!-- Process Accordion -->
+    <div *ngIf="!isLoading && currentTabProcesses.length > 0" class="process-list">
+      <c4u-process-accordion [processes]="currentTabProcesses"></c4u-process-accordion>
+    </div>
+
+    <!-- Empty State -->
+    <div 
+      *ngIf="!isLoading && currentTabProcesses.length === 0" 
+      class="empty-state"
+      flex 
+      vAlign="center" 
+      hAlign="center" 
+      flexItem="1"
+    >
+      <p>Nenhum item encontrado para esta categoria</p>
+    </div>
+  </div>
+</c4u-modal>

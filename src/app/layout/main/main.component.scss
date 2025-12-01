@@ -1,0 +1,30 @@
+@import "src/assets/styles/tools";
+@import "src/assets/styles/variables";
+
+.background {
+  position: absolute;
+  @include fullSize;
+
+  // opacity: 0.3;
+  // background: url("/assets/images/back_up.svg") no-repeat;
+
+  // &:before {
+  //   background: url("/assets/images/back_down.svg") no-repeat;
+  //   position: absolute;
+  //   bottom: 0;
+  //   left: 0;
+  //   width: 866px;
+  //   height: 625px;
+  //   content: '';
+  // }
+
+  // &:after {
+  //   background: url("/assets/images/back_right.svg") no-repeat;
+  //   position: absolute;
+  //   top: 0;
+  //   right: 0;
+  //   width: 315px;
+  //   height: 686px;
+  //   content: '';
+  // }
+}

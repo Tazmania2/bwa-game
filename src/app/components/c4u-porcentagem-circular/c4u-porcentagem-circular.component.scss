@@ -1,0 +1,47 @@
+@import "tools";
+
+:host {
+  @include flexCenter;
+  width: fit-content;
+}
+
+.svg {
+  transform: rotate(-90deg);
+}
+
+.circle {
+  transition: stroke-dashoffset 1s;
+
+  &.red {
+    stroke: url(#redColor);
+  }
+
+  &.green {
+    stroke: url(#greenColor);
+  }
+
+  &.gold {
+    stroke: url(#goldColor);
+  }
+}
+
+.centro {
+  position: absolute;
+
+  &.green .valor {
+    color: #37CC42;
+  }
+
+  &.red .valor {
+    color: #C56685;
+  }
+
+  &.gold .valor {
+    color: #956f0e;
+  }
+}
+
+.valor {
+  font-weight: 700;
+  font-size: 28px;
+}

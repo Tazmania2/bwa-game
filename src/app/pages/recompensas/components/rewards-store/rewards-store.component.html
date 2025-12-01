@@ -1,0 +1,217 @@
+<div class="store-container">
+  <div class="tabs">
+    <button 
+      class="tab-button" 
+      [class.active]="activeTab === 'store'"
+      (click)="onTabChange('store')"
+      style="gap: 0.5rem;"
+    >
+      <i class="ri ri-gift-fill"></i>
+    {{ 'LABEL_REWARDS_STORE' | translate }}
+    </button>
+    <button 
+    class="tab-button"
+    [class.active]="activeTab === 'my-rewards'"
+    (click)="onTabChange('my-rewards')"
+    style="gap: 0.5rem;"
+    >
+    <i class="ri ri-shopping-bag-3-fill"></i>
+      {{ 'LABEL_MY_REWARDS' | translate }}
+    </button>
+  </div>
+
+  <div class="filters" *ngIf="activeTab === 'store'">
+    <div class="filter-buttons">
+      <button 
+        class="filter-button"
+        [class.active]="selectedCategory === 'all'"
+        (click)="onCategorySelect('all')"
+      >
+        Todos
+      </button>
+      <button 
+        *ngFor="let category of categories" 
+        class="filter-button"
+        [class.active]="selectedCategory === category"
+        (click)="onCategorySelect(category)"
+      >
+        {{ category }}
+      </button>
+    </div>
+
+    <div class="search-container">
+      <i class="ri-search-line"></i>
+      <input 
+        type="text" 
+        [placeholder]="'PLACEHOLDER_SEARCH_REWARDS' | translate"
+        [(ngModel)]="searchTerm"
+        (ngModelChange)="onSearch()"
+      />
+    </div>
+  </div>
+
+  <div class="rewards-grid" *ngIf="activeTab === 'store'">
+    <!-- Shimmer cards durante o carregamento -->
+    <ng-container *ngIf="isLoading || isLoadingInternal">
+      <div 
+        *ngFor="let item of [1,2,3,4,5,6]" 
+        class="reward-card shimmer-card"
+      >
+        <div class="reward-image">
+          <div class="shimmer-placeholder"></div>
+        </div>
+        <div class="reward-content">
+          <div class="reward-header">
+            <div class="shimmer-title"></div>
+            <div class="shimmer-cost"></div>
+          </div>
+          <div class="shimmer-category"></div>
+          <div class="shimmer-description"></div>
+          <div class="reward-footer">
+            <div style="display: flex; flex-direction: column; gap: 2px;">
+              <div class="shimmer-info"></div>
+              <div class="shimmer-info"></div>
+            </div>
+            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px;">
+              <div class="shimmer-button"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bright"></div>
+      </div>
+    </ng-container>
+
+    <!-- Cards de recompensas reais -->
+    <ng-container *ngIf="!isLoading && !isLoadingInternal && filteredRewards.length > 0">
+      <div 
+        *ngFor="let reward of filteredRewards" 
+        class="reward-card"
+        [class.highlighted]="reward.isHighlighted"
+      >
+        <div class="reward-image">
+          <img *ngIf="reward.imageUrl && reward.imageUrl !== 'placeholder-gift-icon'" [src]="reward.imageUrl" [alt]="reward.title">
+          <div *ngIf="!reward.imageUrl || reward.imageUrl === 'placeholder-gift-icon'" class="placeholder-image">
+            <i class="ri ri-gift-fill"></i>
+          </div>
+          <div *ngIf="reward.isHighlighted" class="reward-badge highlight">
+            {{ 'LABEL_HIGHLIGHTED' | translate }}
+          </div>
+          <div *ngIf="reward.isLimited" class="reward-badge limited">
+            {{ 'LABEL_LIMITED' | translate }}
+          </div>
+        <div class="bright"></div>
+
+        </div>
+
+        <div class="reward-content">
+          <div class="reward-header">
+            <h3>{{ reward.title }}</h3>
+            <div class="reward-cost" [ngSwitch]="reward.requires[0].item">
+              <i *ngSwitchCase="'coins'" class="ri-coins-fill" style="color: goldenrod;"></i>
+              <i *ngSwitchCase="'points'" class="ri-bard-fill" style="color: #3b82f6;"></i>
+              <span>{{ reward.cost }}</span>
+            </div>
+          </div>
+          
+          <span class="reward-category">{{ reward.category }}</span>
+          <p class="reward-description">{{ reward.description }}</p>
+
+          <div class="reward-footer">
+            <div style="display: flex; flex-direction: column; gap: 2px;">
+              <span *ngIf="activeTab === 'store'">
+                <i class="ri-gift-fill" style="margin-right: 2px;"></i>
+                  {{ 'LABEL_STOCK' | translate }}: <b>{{ reward.amount === -1 ? '∞': reward.amount}}</b>
+              </span>
+              <span>
+                <i class="ri-shopping-bag-3-fill" style="margin-right: 2px;"></i>
+                {{ 'LABEL_REDEEMED' | translate }}: <b>{{ reward.owned }}</b>
+              </span>
+            </div>
+            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px;">
+              <button 
+                *ngIf="activeTab === 'store'"
+                class="redeem-button"
+                (click)="onRewardRedeem(reward)"
+              >
+                {{ 'LABEL_REDEEM' | translate }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- <div class="bright"></div> -->
+      </div>
+    </ng-container>
+
+    <div *ngIf="!isLoading && !isLoadingInternal && filteredRewards.length === 0" class="empty-state" flex direction="column" hAlign="center" vAlign="center">
+      <div class="empty-state-icon">
+        <i class="ri ri-gift-line"></i>
+      </div>
+      <div class="empty-state-text">
+        {{ activeTab === 'store' ? 'Nenhuma recompensa disponível no momento.' : 'Você ainda não resgatou nenhuma recompensa.' }}
+      </div>
+    </div>
+  </div>
+
+  <!-- Logs de resgate do jogador (mock) -->
+  <div class="player-redeem-logs-section" *ngIf="activeTab === 'my-rewards'">
+    <div class="rewards-grid">
+      <div 
+        class="reward-card"
+        *ngFor="let log of playerRedeemLogs"
+      >
+        <div class="reward-image">
+          <img *ngIf="log.imageUrl && log.imageUrl !== 'placeholder-gift-icon'" [src]="log.imageUrl" [alt]="log.itemName">
+          <div *ngIf="!log.imageUrl || log.imageUrl === 'placeholder-gift-icon'" class="placeholder-image">
+            <i class="ri ri-gift-fill"></i>
+          </div>
+        </div>
+
+        <div class="reward-content">
+          <div class="reward-header">
+            <div class="reward-header-left">
+              <h3>{{ log.itemName }}</h3>
+              <span class="reward-category">{{ log.category }}</span>
+            </div>
+            <div class="reward-cost">
+              <ng-container [ngSwitch]="log.requires[0].item">
+                <i *ngSwitchCase="'points'" class="ri-bard-fill" style="color: #3b82f6;"></i>
+                <i *ngSwitchCase="'coins'" class="ri-coins-fill" style="color: goldenrod;"></i>
+                <i *ngSwitchDefault class="ri-coins-fill" style="color: goldenrod;"></i>
+              </ng-container>
+              <span>{{ log.price }}</span>
+            </div>
+          </div>
+          <div class="reward-label">ID da transação: {{ log.id }}</div>
+          
+          <div class="reward-description">
+          </div>
+          <div class="reward-footer">
+            <div style="display: flex; flex-direction: column; gap: 2px;">
+              <span>
+                <i class="ri-calendar-line" style="margin-right: 2px;"></i>
+                Data: <b>{{ log.redeemedAt | date:'dd/MM/yyyy' }}</b>
+              </span>
+              <span>
+                <i class="ri-time-line" style="margin-right: 2px;"></i>
+                Horário: <b>{{ log.redeemedAt | date:'HH:mm:ss' }}</b>
+              </span>
+              <span>
+                <i class="ri-coins-line" style="margin-right: 2px;"></i>
+                Tipo de moeda: <b>{{ log.currency }}</b>
+              </span>
+              <span>
+                <i class="ri-shopping-bag-3-fill" style="margin-right: 2px;"></i>
+                {{ 'LABEL_REDEEMED' | translate }}: <b>{{ log.quantity }}</b>
+              </span>
+            </div>
+            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px;">
+              
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div> 

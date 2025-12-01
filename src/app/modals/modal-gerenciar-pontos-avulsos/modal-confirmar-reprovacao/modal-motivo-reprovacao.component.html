@@ -1,0 +1,41 @@
+<div class="modal-motivo">
+  <div class="modal-motivo-header">
+    <div class="modal-motivo-icon"><i class="ri-close-line"></i></div>
+    <div class="modal-motivo-titulo">Reprovar Atividade</div>
+  </div>
+  
+  <div class="modal-motivo-content">
+    <div class="modal-motivo-texto">
+      <h3>Motivo da Reprovação</h3>
+      <p>Qual é o motivo para reprovar esta atividade?</p>
+      <small class="modal-motivo-descricao">
+        Ao reprovar a atividade, ela retorna para o executor com status "Pendente"
+      </small>
+    </div>
+    
+    <form [formGroup]="formMotivo" (ngSubmit)="confirmar()">
+      <div class="form-group">
+        <textarea 
+          formControlName="motivo" 
+          placeholder="Descreva o motivo da reprovação (mínimo 10 caracteres)"
+          rows="4"
+          class="form-control"
+          [class.is-invalid]="formMotivo.get('motivo')?.invalid && formMotivo.get('motivo')?.touched">
+        </textarea>
+        <div class="invalid-feedback" *ngIf="formMotivo.get('motivo')?.invalid && formMotivo.get('motivo')?.touched">
+          <span *ngIf="formMotivo.get('motivo')?.errors?.['required']">Motivo é obrigatório</span>
+          <span *ngIf="formMotivo.get('motivo')?.errors?.['minlength']">Mínimo 10 caracteres</span>
+        </div>
+      </div>
+      
+      <div class="modal-motivo-footer">
+        <button type="button" class="btn-ghost" (click)="cancelar()">
+          <i class="icon-cancel"></i> Cancelar
+        </button>
+        <button type="submit" class="btn-danger" [disabled]="formMotivo.invalid">
+          <i class="icon-cancel"></i> Reprovar Atividade
+        </button>
+      </div>
+    </form>
+  </div>
+</div> 

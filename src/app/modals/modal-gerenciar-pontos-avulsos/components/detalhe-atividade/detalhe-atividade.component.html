@@ -1,0 +1,157 @@
+<div class="detalhe-atividade-container" *ngIf="atividade">
+  <button class="back-btn" type="button" (click)="onVoltar()">&larr; Voltar</button>
+  
+  <div class="detalhe-atividade-content">
+    <!-- Header com status -->
+    <div [class]="'detalhe-' + cor + ' detalhe-atividade-status'">
+      {{ getStatusLabel(atividade?.status) }} desde
+      <ng-container *ngIf="atividade?.created_at; else noCreatedAtStatus">
+        {{ atividade.created_at | date:'dd/MM/yyyy' }}
+      </ng-container>
+      <ng-template #noCreatedAtStatus>N/A</ng-template>
+    </div>
+
+    <!-- Título da atividade -->
+    <div class="detalhe-atividade-nome">
+      <ng-container *ngIf="atividade?.action_title; else noTitleDetail">
+        {{ atividade.action_title }}
+      </ng-container>
+      <ng-template #noTitleDetail>
+        N/A
+      </ng-template>
+    </div>
+
+    <!-- Executor -->
+    <div class="detalhe-atividade-executor">
+      <div *ngIf="isTeamContext && isAdminOrGerente" class="executor-selector-container">
+        <label for="executor-selector">Executor:</label>
+        <select 
+          id="executor-selector"
+          [(ngModel)]="novoExecutorSelecionado"
+          [disabled]="atualizandoExecutor"
+          (change)="atualizarExecutor()"
+          class="executor-selector">
+          <option [ngValue]="'UNASSIGNED'">Não atribuído (Unassigned)</option>
+          <option *ngFor="let jogador of jogadores" [ngValue]="jogador.email">
+            {{ jogador.name || jogador.full_name || jogador.email }} ({{ jogador.email }})
+          </option>
+        </select>
+        <small *ngIf="atualizandoExecutor" class="updating-indicator">Atualizando...</small>
+      </div>
+      <div *ngIf="!isTeamContext || !isAdminOrGerente" class="executor-display">
+        {{ formatEmailToName(atividade?.user_email) || 'Não atribuído' }}
+      </div>
+    </div>
+
+    <!-- Informações detalhadas -->
+    <div class="detalhe-atividade-info">
+      <div class="info-item">
+        <strong>{{aliases?.deliveryAlias}}:</strong> 
+        <ng-container *ngIf="atividade?.integration_id || atividade?.delivery_id; else noTaskId">
+          {{ atividade?.delivery_title }}
+        </ng-container>
+        <ng-template #noTaskId>N/A</ng-template>
+      </div>
+      
+      <div class="info-item" *ngIf="atividade?.points">
+        <strong>Pontos:</strong> {{ atividade?.points }}
+      </div>
+      
+      <div class="info-item">
+        <strong>Status:</strong> {{ getStatusLabel(atividade?.status) }}
+      </div>
+      
+      <div class="info-item">
+        <strong>Criado em:</strong> 
+        <ng-container *ngIf="atividade?.created_at; else noCreatedAt">
+          {{ atividade.created_at | date:'dd/MM/yyyy HH:mm' }}
+        </ng-container>
+        <span>por {{ atividade.created_by || "Sistema" }}</span>
+        <ng-template #noCreatedAt>N/A</ng-template>
+      </div>
+      
+      <div class="info-item" *ngIf="atividade?.finished_at">
+        <strong>Finalizado em:</strong> 
+        <ng-container *ngIf="atividade.finished_at; else noFinishedAt">
+          {{ atividade.finished_at | date:'dd/MM/yyyy HH:mm' }}
+        </ng-container>
+        <span>por {{ atividade.finished_by || "Sistema" }}</span>
+        <ng-template #noFinishedAt>N/A</ng-template>
+      </div>
+    </div>
+
+    <!-- Seção de Comentários -->
+    <app-comentarios
+      [userActionId]="atividade?.id || ''"
+      [currentUserEmail]="currentUserEmail"
+      [aliases]="aliases"
+      [comentarios]="atividade?.comments || []"
+      [loadingComentarios]="false"
+      (comentarioAdicionado)="onComentarioAdicionado($event)"
+      (comentariosCarregados)="onComentariosCarregados($event)">
+    </app-comentarios>
+
+    <!-- Seção de Evidências -->
+    <div class="detalhe-atividade-evidencias">
+      <div class="evidencias-header">
+        <h4>Evidências</h4>
+        <small>Anexe arquivos que comprovem a execução da {{aliases?.actionAlias}}</small>
+      </div>
+
+      <app-upload-anexos
+        [userActionId]="atividade?.id || ''"
+        [maxArquivos]="maxArquivos"
+        [maxTamanhoArquivo]="maxTamanhoArquivo"
+        [aliases]="aliases"
+        (uploadConcluido)="onUploadConcluido()"
+        (downloadIniciado)="onDownloadIniciado($event)">
+      </app-upload-anexos>
+    </div>
+
+    <!-- Footer com ações -->
+    <div class="detalhe-atividade-footer">
+      <div class="footer-actions-left" *ngIf="isAdminOrGerente">
+        <button class="btn-cancelar" 
+                (click)="onCancelar()" 
+                [disabled]="!podeCancelar()">
+          <i class="icon-cancel"></i><i class="ri-forbid-line"></i> Cancelar {{aliases?.actionAlias}}
+        </button>
+      </div>
+      
+      <div class="footer-actions-right">
+        <!-- Botões específicos baseados no status -->
+        <ng-container [ngSwitch]="atividade?.status">
+          
+          <!-- Para atividades pendentes -->
+          <button *ngSwitchCase="'PENDING'" 
+                  class="btn-finalizar" 
+                  (click)="onFinalizar()">
+            <i class="icon-check_circle"></i><i class="ri-check-line"></i> Finalizar {{aliases?.actionAlias}}
+          </button>
+          
+          <!-- Para atividades finalizadas -->
+          <ng-container *ngSwitchCase="'DONE'">
+            <button class="btn-reprovar" 
+                    (click)="onReprovar()" 
+                    [disabled]="!podeReprovar()">
+              <i class="icon-cancel"></i><i class="ri-close-line"></i> Reprovar
+            </button>
+            <button class="btn-aprovar" 
+                    (click)="onAprovar()" 
+                    [disabled]="!podeAprovar()">
+              <i class="icon-check_circle"></i><i class="ri-check-line"></i> Aprovar
+            </button>
+          </ng-container>
+          
+          <!-- Para outras atividades -->
+          <button *ngSwitchDefault 
+                  class="btn-finalizar" 
+                  (click)="onFinalizar()">
+            <i class="icon-check_circle"></i><i class="ri-check-line"></i> Finalizar {{aliases?.actionAlias}}
+          </button>
+          
+        </ng-container>
+      </div>
+    </div>
+  </div>
+</div> 

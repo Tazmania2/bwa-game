@@ -1,0 +1,23 @@
+<div class="animacao-cid">
+<div [h]="273" *ngIf="!showAnimation">
+  <c4u-spinner></c4u-spinner>
+</div>
+
+<ng-lottie #spawnAnim [options]="optionsSpawn" (dataReady)="$spawnAnimReady.next(true)"
+           (complete)="$spawnAnimComplete.next(true)"></ng-lottie>
+<ng-lottie #idleAnim [options]="optionsIdle" (dataReady)="$idleAnimReady.next(true)"></ng-lottie>
+
+<span *ngIf="showAnimation">
+    <div class="unlocked-points" flex direction="column" vAlign="center">
+        <span
+          *enableShimmer="[!showValues, {width: 40, height: 40, borderRadius: 16}]">{{text}}</span>
+        <span *ngIf="subtext">{{subtext}}</span>
+    </div>
+    <div class="unlocked-points b{{i + 1}}" *ngFor="let a of Array(20), let i = index" flex
+         direction="column" vAlign="center">
+        <span
+          *enableShimmer="[!showValues, {width: 40, height: 40, borderRadius: 16}]">{{text}}</span>
+        <span *ngIf="subtext">{{subtext}}</span>
+    </div>
+</span>
+</div>

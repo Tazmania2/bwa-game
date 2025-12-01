@@ -1,0 +1,47 @@
+@import "variables";
+@import "tools";
+
+.container {
+  height: size(3);
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  background: $texto-cinza;
+  position: relative;
+  border-radius: size(5);
+  overflow: hidden;
+}
+
+.progress-bar {
+  transition: width $default-anim-time * 10 ease-out;
+  width: 0;
+  height: 100%;
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  background: linear-gradient(180deg, #440017 0%, #743248 50%, #440017 100%);
+
+  &.red {
+    background: linear-gradient(180deg, #440017 0%, #743248 50%, #440017 100%);
+  }
+
+  &.gold {
+    background: linear-gradient(180deg, #956f0e 0%, #dbcaa0 50%, #956f0e 100%);
+  }
+
+  &.green {
+    background: linear-gradient(180deg, #006f09 0%, #37cc42 50%, #006f09 100%);
+  }
+}
+
+[id^="point-mark"] {
+  min-width: 1px;
+  min-width: 1px;
+  height: auto;
+  display: flex;
+  margin-top: auto;
+  height: 70%;
+  border-right: 1px dotted #000;
+  position: relative;
+  z-index: 1;
+}

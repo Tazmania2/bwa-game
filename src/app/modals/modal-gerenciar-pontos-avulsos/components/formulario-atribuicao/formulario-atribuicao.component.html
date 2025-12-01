@@ -1,0 +1,64 @@
+<form [formGroup]="formAtribuir" (ngSubmit)="onSubmit()" style="margin-top: 2rem;">
+  <div class="form-row">
+    <div class="form-group">
+      <label>Título do(a) {{aliases?.deliveryAlias}} *</label>
+      <input type="text" formControlName="delivery_title" placeholder="Ex: Sprint 1" />
+    </div>
+    <div class="form-group">
+      <label>ID do(a) {{aliases?.deliveryAlias}} *</label>
+      <input type="text" formControlName="delivery_id" placeholder="Ex: sprint_1" readonly />
+      <small class="helper-text">Gerado automaticamente a partir do título</small>
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label>{{aliases?.actionAlias}}</label>
+      <select formControlName="atividade" [disabled]="loadingAtividades">
+        <option [ngValue]="null">
+          {{ loadingAtividades ? 'Carregando ' + aliases?.actionAlias + '...' : 'Selecione uma ' + aliases?.actionAlias }}
+        </option>
+        <option *ngFor="let atividade of atividades" [ngValue]="atividade.id">
+          {{ atividade.name }} {{ atividade.points ? '(' + atividade.points + ' pts)' : '' }}
+        </option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Executor</label>
+      <div *ngIf="isTeamContext">
+        <select formControlName="jogador" [disabled]="loadingJogadores">
+          <option [ngValue]="null">
+            {{ loadingJogadores ? 'Carregando executores...' : 'Selecione um executor' }}
+          </option>
+          <option [ngValue]="'UNASSIGNED'">Não atribuído (Unassigned)</option>
+          <option *ngFor="let jogador of jogadores" [ngValue]="jogador.id || jogador._id || jogador.email">
+            {{ jogador.name || jogador.full_name || jogador.email }} ({{ jogador.email }})
+          </option>
+        </select>
+      </div>
+      <div *ngIf="!isTeamContext">
+        <input type="text" [value]="userName" readonly class="readonly-input" />
+        <small class="helper-text">Atividade será atribuída ao colaborador atual</small>
+      </div>
+    </div>
+  </div>
+  
+  <div class="form-row">
+    <div class="form-group">
+      <label>Status</label>
+      <select formControlName="status" class="status-select">
+        <option *ngFor="let status of statusList" [ngValue]="status.value">
+          {{ status.label }}
+        </option>
+      </select>
+    </div>
+    <div class="form-group" *ngIf="formAtribuir.get('status')?.value === 'DONE'">
+      <label>Data de Finalização</label>
+      <input type="datetime-local" formControlName="dataFinalizacao" />
+    </div>
+  </div>
+  
+  <button type="submit" [disabled]="formAtribuir.invalid || processandoAtribuicao">
+    {{ processandoAtribuicao ? 'Processando...' : 'Atribuir ' + aliases?.actionAlias }}
+  </button>
+</form> 

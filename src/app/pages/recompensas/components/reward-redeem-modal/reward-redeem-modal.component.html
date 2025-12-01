@@ -1,0 +1,72 @@
+<div class="redeem-modal-container">
+  <!-- Step 1: Detalhes da Recompensa -->
+  <div *ngIf="currentStep === 1" style="width: 100%;">
+    <div class="redeem-modal-header">
+      <i class="ri-shopping-cart-line"></i>
+      <h2>{{ 'REWARDS_REDEEM_TITLE' | translate }}</h2>
+    </div>
+    <div class="redeem-modal-body" >
+      <div class="reward-details" >
+        <img *ngIf="reward.imageUrl && reward.imageUrl !== 'placeholder-gift-icon'" [src]="reward.imageUrl" [alt]="reward.title" class="redeem-modal-img">
+        <div *ngIf="!reward.imageUrl || reward.imageUrl === 'placeholder-gift-icon'" class="redeem-modal-img placeholder-image">
+          <i class="ri ri-gift-fill"></i>
+        </div>
+        <div class="reward-info">
+          <h5>{{ reward.title }}</h5>
+          <p class="reward-description">{{ reward.description }}</p>
+          <div class="coin-cost">
+            <i class="ri ri-coins-fill" style="color: goldenrod;"></i>
+            <span style="color: goldenrod">{{ reward.cost }} {{ 'REWARDS_REDEEM_COINS' | translate }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="redeem-modal-footer">
+      <button class="cancel-btn" (click)="close()">
+        {{ 'REWARDS_REDEEM_CANCEL' | translate }}
+      </button>
+      <button class="confirm-btn" (click)="nextStep()">
+        {{ 'REWARDS_REDEEM_NEXT' | translate }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Step 2: Confirmação -->
+  <div *ngIf="currentStep === 2" style="width: 100%;">
+    <div class="redeem-modal-header">
+      <i class="ri-shopping-cart-line"></i>
+      <h2>{{ 'REWARDS_REDEEM_CONFIRM' | translate }}</h2>
+    </div>
+    <div class="redeem-modal-body">
+      <div class="confirmation-content">
+        <div class="reward-preview">
+          <img *ngIf="reward.imageUrl && reward.imageUrl !== 'placeholder-gift-icon'" [src]="reward.imageUrl" [alt]="reward.title" class="redeem-modal-img">
+          <div *ngIf="!reward.imageUrl || reward.imageUrl === 'placeholder-gift-icon'" class="redeem-modal-img placeholder-image">
+            <i class="ri ri-gift-fill"></i>
+          </div>
+          <div class="reward-info">
+            <h5>{{ reward.title }}</h5>
+            <p class="reward-description">{{ reward.description }}</p>
+            <div class="coin-cost">
+              <i class="ri ri-coins-fill"></i>
+              <span style="color: #bfcfff">{{ reward.cost }} {{ 'REWARDS_REDEEM_COINS' | translate }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="confirmation-message">
+          <i class="ri ri-error-warning-line" ></i>
+          <p>{{ 'REWARDS_REDEEM_MESSAGE' | translate: { cost: reward.cost, title: reward.title } }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="redeem-modal-footer">
+      <button class="cancel-btn" (click)="previousStep()">
+        {{ 'REWARDS_REDEEM_CANCEL' | translate }}
+      </button>
+      <button class="confirm-btn" (click)="confirmRedeem()" [disabled]="isProcessing">
+        <span *ngIf="!isProcessing">{{ 'REWARDS_REDEEM_CONFIRM' | translate }}</span>
+        <span *ngIf="isProcessing">Processando...</span>
+      </button>
+    </div>
+  </div>
+</div> 

@@ -1,0 +1,8 @@
+<div id="toolTip">
+</div>
+<div *ngIf="loadingProvider.show">
+  <c4u-spinner></c4u-spinner>
+</div>
+
+
+<router-outlet *ngIf="translateReady && paramReady"></router-outlet>

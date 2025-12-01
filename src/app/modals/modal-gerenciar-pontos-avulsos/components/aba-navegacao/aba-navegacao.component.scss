@@ -1,0 +1,27 @@
+.tabs {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  border-bottom: 1px solid #e5e7eb;
+  
+  li {
+    padding: 12px 20px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.3s ease;
+    
+    &:hover {
+      background-color: #f9fafb;
+    }
+    
+    &.active {
+      border-bottom-color: #3b82f6;
+      color: #3b82f6;
+    }
+    
+    i {
+      margin-right: 8px;
+    }
+  }
+} 

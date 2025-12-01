@@ -1,0 +1,12 @@
+@import "tools";
+
+:host {
+  display: block;
+  position: relative;
+  height: 250px;
+}
+
+canvas {
+  width: 100% !important;
+  color: rgba(238, 238, 238, 0.5);
+}

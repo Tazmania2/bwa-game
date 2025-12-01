@@ -1,0 +1,62 @@
+<div *ngIf="loading" class="loading-container">
+  <div class="loading-spinner">Carregando {{aliases?.actionAlias}}s...</div>
+</div>
+
+<div *ngIf="!loading" class="table-container">
+  <div class="table-header" [style.border-left-color]="configuracao.corBorda">
+    <h3>{{ configuracao.titulo }}</h3>
+    <small class="table-subtitle">{{ configuracao.subtitulo }}</small>
+  </div>
+  
+  <table class="table" *ngIf="atividades.length > 0">
+    <thead class="tableHeader">
+      <tr>
+        <th>ID</th>
+        <th>Título</th>
+        <th>Status</th>
+        <th>Executor</th>
+        <th>Data</th>
+      </tr>
+    </thead>
+    <tbody class="tableBody">
+      <tr *ngFor="let atividade of atividades" 
+          (click)="onAtividadeClick(atividade)" 
+          style="cursor:pointer">
+        <td>
+          <span (click)="$event.stopPropagation()" 
+                [title]="'ID: ' + (atividade.integration_id || atividade.delivery_id || 'n/a')">
+            {{ atividade.integration_id || atividade.delivery_id || 'n/a' }}
+          </span>
+        </td>
+        <td>
+          <ng-container *ngIf="atividade.action_title; else noTitle">
+            {{ atividade.action_title | slice:0:35 }}{{ atividade.action_title.length > 35 ? '...' : '' }}
+          </ng-container>
+          <ng-template #noTitle>
+            N/A
+          </ng-template>
+        </td>
+        <td [ngClass]="getStatusClass(atividade.status || '', atividade)">
+          {{ getStatusLabel(atividade.status || '', atividade) }}
+        </td>
+        <td>{{ formatEmailToName(atividade.user_email || '') }}</td>
+        <td>
+          <ng-container *ngIf="tipo === 'finalizadas' || tipo === 'aprovadas'; else dataCriacao">
+            Finalizado dia {{ (atividade.finished_at || atividade.created_at || '') | date: 'dd/MM/yyyy' }}
+          </ng-container>
+          <ng-template #dataCriacao>
+            Criado dia {{ (atividade.created_at || '') | date: 'dd/MM/yyyy' }}
+          </ng-template>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  
+  <div *ngIf="atividades.length === 0" class="sem-resultados">
+    <div class="empty-state">
+      <i [class]="configuracao.iconeVazio"></i>
+      <p>{{ configuracao.mensagemVazio }}</p>
+      <small>{{ configuracao.subtituloVazio }}</small>
+    </div>
+  </div>
+</div> 

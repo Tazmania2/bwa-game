@@ -1,0 +1,40 @@
+<div class="season-progress">
+  <div class="progress-header">
+    <h4 class="progress-title">Progresso da Temporada</h4>
+    <p class="season-dates">{{ seasonDateRange }}</p>
+  </div>
+
+  <div class="progress-metrics">
+    <div class="metric-item">
+      <div class="metric-icon">
+        <i class="ri-target-line"></i>
+      </div>
+      <div class="metric-info">
+        <span class="metric-label">Metas</span>
+        <span class="metric-value">
+          {{ progress.metas.current }} / {{ progress.metas.target }}
+        </span>
+      </div>
+    </div>
+
+    <div class="metric-item">
+      <div class="metric-icon">
+        <i class="ri-building-line"></i>
+      </div>
+      <div class="metric-info">
+        <span class="metric-label">Clientes</span>
+        <span class="metric-value">{{ progress.clientes | number:'1.0-0':'pt-BR' }}</span>
+      </div>
+    </div>
+
+    <div class="metric-item">
+      <div class="metric-icon">
+        <i class="ri-checkbox-circle-line"></i>
+      </div>
+      <div class="metric-info">
+        <span class="metric-label">Tarefas Finalizadas</span>
+        <span class="metric-value">{{ progress.tarefasFinalizadas | number:'1.0-0':'pt-BR' }}</span>
+      </div>
+    </div>
+  </div>
+</div>

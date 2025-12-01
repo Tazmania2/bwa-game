@@ -1,0 +1,10 @@
+<div flex direction="column" vAlign="start" [gap]="8">
+  <span>{{label | translate}}</span>
+
+  <div flex vAlign="center" hAlign="center" [gap]="40" class="div-selector">
+    <ng-select class="ng-select-large" [clearable]="clearValue" [searchable]="searcheable" [items]="items"
+      [(ngModel)]="selected" (change)="onChange()" (search)="onSearch($event)" bindLabel="nome"
+      notFoundText="{{'LABEL_NO_ITEMS' | translate}}">
+    </ng-select>
+  </div>
+</div>

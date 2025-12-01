@@ -1,0 +1,132 @@
+<div class="company-table-container">
+  <!-- Virtual scrolling for large datasets -->
+  <div *ngIf="useVirtualScrolling" class="table-responsive virtual-scroll-wrapper">
+    <cdk-virtual-scroll-viewport 
+      [itemSize]="ITEM_SIZE" 
+      class="virtual-scroll-viewport"
+      [attr.aria-label]="'Tabela de empresas com ' + companies.length + ' itens'">
+      <table class="table company-table">
+        <thead>
+          <tr>
+            <th>Empresa</th>
+            <th>CNPJ</th>
+            <th class="text-center">Saúde</th>
+            <th class="text-center">{{ companies[0]?.kpi1?.label || 'KPI 1' }}</th>
+            <th class="text-center">{{ companies[0]?.kpi2?.label || 'KPI 2' }}</th>
+            <th class="text-center">{{ companies[0]?.kpi3?.label || 'KPI 3' }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr 
+            *cdkVirtualFor="let company of companies; trackBy: trackByCompanyId" 
+            class="company-row"
+            (click)="onRowClick(company)"
+            [attr.data-company-id]="company.id"
+            tabindex="0"
+            role="button"
+            [attr.aria-label]="'Ver detalhes de ' + company.name">
+            <td class="company-name">{{ company.name }}</td>
+            <td class="company-cnpj">{{ company.cnpj }}</td>
+            <td class="text-center">
+              <span 
+                class="health-indicator"
+                [ngClass]="'health-' + getHealthColor(company.healthScore)"
+                [attr.aria-label]="'Saúde: ' + company.healthScore + '%'">
+                {{ company.healthScore }}%
+              </span>
+            </td>
+            <td class="text-center">
+              <span 
+                class="kpi-score"
+                [ngClass]="'kpi-' + getKPIColor(getKPIPercentage(company.kpi1))"
+                [attr.aria-label]="company.kpi1.label + ': ' + company.kpi1.current + ' de ' + company.kpi1.target">
+                {{ company.kpi1.current }} / {{ company.kpi1.target }}
+              </span>
+            </td>
+            <td class="text-center">
+              <span 
+                class="kpi-score"
+                [ngClass]="'kpi-' + getKPIColor(getKPIPercentage(company.kpi2))"
+                [attr.aria-label]="company.kpi2.label + ': ' + company.kpi2.current + ' de ' + company.kpi2.target">
+                {{ company.kpi2.current }} / {{ company.kpi2.target }}
+              </span>
+            </td>
+            <td class="text-center">
+              <span 
+                class="kpi-score"
+                [ngClass]="'kpi-' + getKPIColor(getKPIPercentage(company.kpi3))"
+                [attr.aria-label]="company.kpi3.label + ': ' + company.kpi3.current + ' de ' + company.kpi3.target">
+                {{ company.kpi3.current }} / {{ company.kpi3.target }}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </cdk-virtual-scroll-viewport>
+  </div>
+
+  <!-- Regular table for smaller datasets -->
+  <div *ngIf="!useVirtualScrolling" class="table-responsive">
+    <table class="table company-table">
+      <thead>
+        <tr>
+          <th>Empresa</th>
+          <th>CNPJ</th>
+          <th class="text-center">Saúde</th>
+          <th class="text-center">{{ companies[0]?.kpi1?.label || 'KPI 1' }}</th>
+          <th class="text-center">{{ companies[0]?.kpi2?.label || 'KPI 2' }}</th>
+          <th class="text-center">{{ companies[0]?.kpi3?.label || 'KPI 3' }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr 
+          *ngFor="let company of companies; trackBy: trackByCompanyId" 
+          class="company-row"
+          (click)="onRowClick(company)"
+          [attr.data-company-id]="company.id"
+          tabindex="0"
+          role="button"
+          [attr.aria-label]="'Ver detalhes de ' + company.name">
+          <td class="company-name">{{ company.name }}</td>
+          <td class="company-cnpj">{{ company.cnpj }}</td>
+          <td class="text-center">
+            <span 
+              class="health-indicator"
+              [ngClass]="'health-' + getHealthColor(company.healthScore)"
+              [attr.aria-label]="'Saúde: ' + company.healthScore + '%'">
+              {{ company.healthScore }}%
+            </span>
+          </td>
+          <td class="text-center">
+            <span 
+              class="kpi-score"
+              [ngClass]="'kpi-' + getKPIColor(getKPIPercentage(company.kpi1))"
+              [attr.aria-label]="company.kpi1.label + ': ' + company.kpi1.current + ' de ' + company.kpi1.target">
+              {{ company.kpi1.current }} / {{ company.kpi1.target }}
+            </span>
+          </td>
+          <td class="text-center">
+            <span 
+              class="kpi-score"
+              [ngClass]="'kpi-' + getKPIColor(getKPIPercentage(company.kpi2))"
+              [attr.aria-label]="company.kpi2.label + ': ' + company.kpi2.current + ' de ' + company.kpi2.target">
+              {{ company.kpi2.current }} / {{ company.kpi2.target }}
+            </span>
+          </td>
+          <td class="text-center">
+            <span 
+              class="kpi-score"
+              [ngClass]="'kpi-' + getKPIColor(getKPIPercentage(company.kpi3))"
+              [attr.aria-label]="company.kpi3.label + ': ' + company.kpi3.current + ' de ' + company.kpi3.target">
+              {{ company.kpi3.current }} / {{ company.kpi3.target }}
+            </span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  
+  <div *ngIf="companies.length === 0" class="empty-state">
+    <p>Nenhuma empresa encontrada</p>
+  </div>
+</div>

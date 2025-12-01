@@ -1,0 +1,17 @@
+<div class="convert-modal-container">
+  <div class="convert-modal-header">
+    <h2>Trocar pontos por moedas</h2>
+    <p>Informe quantos pontos você deseja trocar por moedas. Lembrando que:</p>
+    <div class="rate-info"><b>1 moeda = {{ price }} ponto{{ price > 1 ? 's' : '' }}</b></div>
+  </div>
+  <div class="convert-modal-body">
+    <label class="input-label">Quantidade de pontos</label>
+    <input type="text" class="points-input" [value]="formatNumber(amountToConvert)" (input)="onInputChange(getInputValue($event))" [disabled]="max === 0">
+    <input type="range" class="points-slider" [min]="min" [max]="max" [(ngModel)]="amountToConvert" [disabled]="max === 0" (input)="onSliderChange($event)">
+    <div class="converted-value">{{ formatNumber(getCoinsToReceive()) }} moeda{{ getCoinsToReceive() === 1 ? '' : 's' }}</div>
+  </div>
+  <div class="convert-modal-footer">
+    <button class="cancel-btn" (click)="close()">Cancelar</button>
+    <button class="confirm-btn" [disabled]="getCoinsToReceive() < 1 || max === 0" (click)="swapPointsForCoins()">Trocar pontos</button>
+  </div>
+</div>

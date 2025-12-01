@@ -1,0 +1,15 @@
+<div class="season-level">
+  <div class="level-badge">
+    <span class="level-number">{{ level }}</span>
+  </div>
+  <div class="player-info">
+    <h3 class="player-name">{{ playerName }}</h3>
+    <p class="player-metadata" *ngIf="metadata.area || metadata.time || metadata.squad">
+      <span *ngIf="metadata.area">{{ metadata.area }}</span>
+      <span *ngIf="metadata.area && metadata.time"> / </span>
+      <span *ngIf="metadata.time">{{ metadata.time }}</span>
+      <span *ngIf="(metadata.area || metadata.time) && metadata.squad"> / </span>
+      <span *ngIf="metadata.squad">{{ metadata.squad }}</span>
+    </p>
+  </div>
+</div>

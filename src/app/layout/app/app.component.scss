@@ -1,0 +1,6 @@
+@import "tailwind";
+@reference "tailwind";
+
+:host {
+    @apply block size-full relative;
+}

@@ -1,0 +1,142 @@
+<c4u-modal [modalTitle]="'Gerenciar Realizações Avulsas'" *ngIf="data">
+  <!-- Seleção de tipo -->
+  <app-tipo-selecao
+    [selectedType]="(state$ | async)?.selectedType || 0"
+    (typeChange)="onTypeChange($event)">
+  </app-tipo-selecao>
+
+  <!-- Navegação entre abas -->
+  <app-aba-navegacao
+    [selectedType]="(state$ | async)?.selectedType || 0"
+    [currentAba]="(state$ | async)?.currentAba || 'processos-pendentes'"
+    (abaChange)="onAbaChange($event)">
+  </app-aba-navegacao>
+
+  <div class="tab-content">
+    <!-- Detalhe de Atividade -->
+    <app-detalhe-atividade
+      *ngIf="(state$ | async)?.mostrarDetalhe"
+      [atividade]="(state$ | async)?.atividadeSelecionada"
+      [cor]="getCorDetalheAtividade()"
+      [aliases]="aliases"
+      [isAdminOrGerente]="isAdminOrGerente"
+      [currentUserEmail]="currentUserEmail"
+      [jogadores]="jogadores"
+      [isTeamContext]="isTeamContext"
+      (voltar)="onVoltarDetalheAtividade()"
+      (finalizar)="onFinalizarAtividade()"
+      (aprovar)="onAprovarAtividade()"
+      (reprovar)="onReprovarAtividade()"
+      (cancelar)="onCancelarAtividade()"
+      (bloquear)="onBloquearAtividade()"
+      (executorAtualizado)="onExecutorAtualizado()">
+    </app-detalhe-atividade>
+
+    <!-- Detalhe de Delivery -->
+    <app-detalhe-delivery
+      *ngIf="(state$ | async)?.mostrarDetalheDelivery"
+      [delivery]="(state$ | async)?.deliverySelecionada"
+      [cor]="getCorDetalheDelivery()"
+      [aliases]="aliases"
+      [isAdminOrGerente]="isAdminOrGerente"
+      (voltar)="onVoltarDetalheDelivery()"
+      (cancelar)="onCancelarDelivery()"
+      (completar)="onCompletarDelivery()"
+      (desfazer)="onDesfazerDelivery()"
+      (restaurar)="onRestaurarDelivery()"
+      (criarTarefa)="onCriarTarefa($event)">
+    </app-detalhe-delivery>
+
+    <!-- Aba Atribuir -->
+    <app-formulario-atribuicao
+      *ngIf="(state$ | async)?.currentAba === 'atribuir' && !(state$ | async)?.mostrarDetalhe && !(state$ | async)?.mostrarDetalheDelivery"
+      [atividades]="atividades"
+      [jogadores]="jogadores"
+      [loadingAtividades]="loadingAtividades"
+      [loadingJogadores]="loadingJogadores"
+      [processandoAtribuicao]="processandoAtribuicao"
+      [isTeamContext]="isTeamContext"
+      [userName]="userName"
+      [aliases]="aliases"
+      (submitForm)="onFormSubmit($event)">
+    </app-formulario-atribuicao>
+
+    <!-- Lista de Atividades -->
+    <app-lista-atividades
+      *ngIf="(state$ | async)?.currentAba === 'pendentes' && !(state$ | async)?.mostrarDetalhe && !(state$ | async)?.mostrarDetalheDelivery"
+      [tipo]="'pendentes'"
+      [atividades]="atividadesPendentes"
+      [loading]="loadingAtividadesPendentes"
+      [aliases]="aliases"
+      (atividadeClick)="onAtividadeClick($event)">
+    </app-lista-atividades>
+
+    <app-lista-atividades
+      *ngIf="(state$ | async)?.currentAba === 'finalizados' && !(state$ | async)?.mostrarDetalhe && !(state$ | async)?.mostrarDetalheDelivery"
+      [tipo]="'finalizadas'"
+      [atividades]="atividadesFinalizadas"
+      [loading]="loadingAtividadesFinalizadas"
+      [aliases]="aliases"
+      (atividadeClick)="onAtividadeClick($event)">
+    </app-lista-atividades>
+
+    <app-lista-atividades
+      *ngIf="(state$ | async)?.currentAba === 'aprovados' && !(state$ | async)?.mostrarDetalhe && !(state$ | async)?.mostrarDetalheDelivery"
+      [tipo]="'aprovadas'"
+      [atividades]="atividadesAprovadas"
+      [loading]="loadingAtividadesAprovadas"
+      [aliases]="aliases"
+      (atividadeClick)="onAtividadeClick($event)">
+    </app-lista-atividades>
+
+    <app-lista-atividades
+      *ngIf="(state$ | async)?.currentAba === 'cancelados' && !(state$ | async)?.mostrarDetalhe && !(state$ | async)?.mostrarDetalheDelivery"
+      [tipo]="'canceladas'"
+      [atividades]="atividadesCanceladas"
+      [loading]="loadingAtividadesCanceladas"
+      [aliases]="aliases"
+      (atividadeClick)="onAtividadeClick($event)">
+    </app-lista-atividades>
+
+    <!-- Lista de Processos -->
+    <app-lista-processos
+      *ngIf="(state$ | async)?.currentAba === 'processos-pendentes' && !(state$ | async)?.mostrarDetalhe && !(state$ | async)?.mostrarDetalheDelivery"
+      [tipo]="'processos-pendentes'"
+      [processos]="processosPendentes"
+      [loading]="loadingProcessosPendentes"
+      [aliases]="aliases"
+      (processoClick)="onProcessoClick($event)"
+      (criarTarefa)="onCriarTarefa($event)">
+    </app-lista-processos>
+
+    <app-lista-processos
+      *ngIf="(state$ | async)?.currentAba === 'incompletos' && !(state$ | async)?.mostrarDetalhe && !(state$ | async)?.mostrarDetalheDelivery"
+      [tipo]="'incompletos'"
+      [processos]="processosIncompletos"
+      [loading]="loadingProcessosIncompletos"
+      [aliases]="aliases"
+      (processoClick)="onProcessoClick($event)"
+      (criarTarefa)="onCriarTarefa($event)">
+    </app-lista-processos>
+
+    <app-lista-processos
+      *ngIf="(state$ | async)?.currentAba === 'entregues' && !(state$ | async)?.mostrarDetalhe && !(state$ | async)?.mostrarDetalheDelivery"
+      [tipo]="'entregues'"
+      [processos]="processosEntregues"
+      [loading]="loadingProcessosEntregues"
+      [aliases]="aliases"
+      (processoClick)="onProcessoClick($event)"
+      (criarTarefa)="onCriarTarefa($event)">
+    </app-lista-processos>
+
+    <app-lista-processos
+      *ngIf="(state$ | async)?.currentAba === 'processos-cancelados' && !(state$ | async)?.mostrarDetalhe && !(state$ | async)?.mostrarDetalheDelivery"
+      [tipo]="'processos-cancelados'"
+      [processos]="processosCancelados"
+      [loading]="loadingProcessosCancelados"
+      [aliases]="aliases"
+      (processoClick)="onProcessoClick($event)"
+      (criarTarefa)="onCriarTarefa($event)">
+    </app-lista-processos>
+  </div>
+</c4u-modal> 

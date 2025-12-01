@@ -1,0 +1,7 @@
+<div flexItem="1" *ngFor="let tab of items, let i = index" flex hAlign="center"
+     class="tab-item" [ngClass]="{active: selected == i}" (click)="select(i)">
+    <div flex [gap]="4">
+        <i class="{{tab.icon}}" *ngIf="tab.icon"></i>
+        <span class="tab-title">{{tab.name}}</span>
+    </div>
+</div>

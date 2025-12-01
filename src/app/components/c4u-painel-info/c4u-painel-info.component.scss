@@ -1,0 +1,41 @@
+@import "tools";
+
+:host {
+  display: block;
+}
+
+c4u-painel-vidro {
+  padding: size(2);
+}
+
+.title {
+  text-align: center;
+  font-weight: 700;
+  font-size: 20px;
+}
+
+.value {
+  font-weight: 700;
+  font-size: 24px;
+  line-height: 29px;
+}
+
+[class^="icon-"] {
+  font-size: 25px;
+}
+
+div.hover {
+  &, * {
+    cursor: pointer;
+  }
+
+  .text, a, .value {
+    text-decoration: underline;
+    cursor: pointer;
+  }
+}
+
+.content-size-lg {
+  font-size: 60px;
+  order: -1;
+}

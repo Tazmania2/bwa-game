@@ -1,0 +1,16 @@
+<c4u-modal
+  modalTitle="{{data ? data.nome + ' - <strong>' + (getValor(data.qtdeTotalMoedas) | currency: 'BRL') + '</strong> - Nível '  + data.nivel : ''}}">
+  <div *ngIf="data" class="subtitulo">
+    <p>{{(data.qtdeTotalAtividades | number) + ' Atividades'}}</p>
+    <p>{{(data.qtdeTotalMoedas | number) + ' CidCoins'}}</p>
+  </div>
+  <div class="content" flexItem="1" flex direction="column" [gap]="24" scroll
+       *enableShimmer="[!data, {height: 200, width: 'calc(100% - 28px)', borderRadius: 16}]">
+    <div *ngFor="let dt of data?.atividades" flexItem="1" flex class="content-itens">
+      <p flexItem="10%">{{dt.quantidade}}x</p>
+      <p flexItem="60%"><b>{{dt.nome}}</b></p>
+      <p flexItem="15%">{{dt.moedas}} CidCoins</p>
+      <p flexItem="15%">{{getValor(dt.moedas) | currency: 'BRL'}}</p>
+    </div>
+  </div>
+</c4u-modal>

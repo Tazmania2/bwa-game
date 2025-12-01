@@ -1,0 +1,479 @@
+/* Global styles and dark theme */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import './styles/variables.scss';
+@import './styles/mixins.scss';
+@import './styles/animations.scss';
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  
+  @include mobile-only {
+    font-size: 14px;
+  }
+}
+
+body {
+  margin: 0;
+  font-family: $font-family;
+  background-color: $bg-primary;
+  color: $text-primary;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+// Wave background
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: -1;
+  background: 
+    radial-gradient(ellipse 80% 50% at 20% 30%, $wave-color 0%, transparent 50%),
+    radial-gradient(ellipse 60% 40% at 80% 70%, $wave-color 0%, transparent 50%),
+    radial-gradient(ellipse 100% 60% at 50% 90%, $wave-color 0%, transparent 50%);
+  animation: wave1 $wave-animation-duration ease-in-out infinite;
+}
+
+// Typography
+h1, h2, h3, h4, h5, h6 {
+  margin: 0 0 $spacing-md 0;
+  font-family: $font-family;
+  line-height: 1.2;
+}
+
+h1 {
+  @include text-heading-1;
+}
+
+h2 {
+  @include text-heading-2;
+}
+
+h3 {
+  @include text-heading-3;
+}
+
+p {
+  @include text-body;
+  margin: 0 0 $spacing-md 0;
+}
+
+code {
+  font-family: 'Fira Code', 'Courier New', monospace;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 2px 6px;
+  border-radius: $border-radius-xs;
+  font-size: 0.9em;
+}
+
+// Links
+a {
+  color: $primary-electric-blue;
+  text-decoration: none;
+  transition: color $transition-duration $transition-easing;
+  
+  &:hover {
+    color: lighten($primary-electric-blue, 10%);
+    text-decoration: underline;
+  }
+  
+  @include focus-visible;
+}
+
+// Form elements
+input, textarea, select {
+  font-family: $font-family;
+  background: $surface;
+  border: 1px solid $border-color;
+  color: $text-primary;
+  border-radius: $border-radius-sm;
+  padding: $spacing-sm $spacing-md;
+  transition: border-color $transition-duration $transition-easing;
+  
+  &:focus {
+    outline: none;
+    border-color: $primary-electric-blue;
+    box-shadow: 0 0 0 2px rgba($primary-electric-blue, 0.2);
+  }
+  
+  &::placeholder {
+    color: $text-secondary;
+  }
+}
+
+// Buttons
+.btn {
+  @include button-base;
+  
+  &.btn-primary {
+    @include button-primary;
+  }
+  
+  &.btn-secondary {
+    @include button-secondary;
+  }
+}
+
+// Cards
+.card {
+  @include card;
+}
+
+// Utility classes
+.text-primary {
+  color: $text-primary !important;
+}
+
+.text-secondary {
+  color: $text-secondary !important;
+}
+
+.text-success {
+  color: $success-green !important;
+}
+
+.text-warning {
+  color: $warning-orange !important;
+}
+
+.text-error {
+  color: $error-red !important;
+}
+
+.bg-primary {
+  background-color: $bg-primary !important;
+}
+
+.bg-secondary {
+  background-color: $bg-secondary !important;
+}
+
+.bg-surface {
+  background-color: $surface !important;
+}
+
+// Spacing utilities
+.m-0 { margin: 0 !important; }
+.m-1 { margin: $spacing-xs !important; }
+.m-2 { margin: $spacing-sm !important; }
+.m-3 { margin: $spacing-md !important; }
+.m-4 { margin: $spacing-lg !important; }
+.m-5 { margin: $spacing-xl !important; }
+
+.p-0 { padding: 0 !important; }
+.p-1 { padding: $spacing-xs !important; }
+.p-2 { padding: $spacing-sm !important; }
+.p-3 { padding: $spacing-md !important; }
+.p-4 { padding: $spacing-lg !important; }
+.p-5 { padding: $spacing-xl !important; }
+
+// Animation utilities
+.fade-in {
+  @include fade-in;
+}
+
+.slide-up {
+  @include slide-up;
+}
+
+.scale-in {
+  @include scale-in;
+}
+
+// Loading states
+.loading {
+  @extend .shimmer;
+  border-radius: $border-radius-xs;
+  height: 1em;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+// Scrollbar styling
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: $bg-secondary;
+}
+
+::-webkit-scrollbar-thumb {
+  background: $border-color;
+  border-radius: 4px;
+  
+  &:hover {
+    background: lighten($border-color, 10%);
+  }
+}
+
+// Focus management
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+// High contrast mode support
+@media (prefers-contrast: high) {
+  * {
+    border-color: currentColor !important;
+  }
+}
+
+// Print styles
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  
+  body::before {
+    display: none !important;
+  }
+}
+
+// Estilos para o toast notification de sucesso
+::ng-deep .success-snackbar {
+  background: $success-green !important;
+  color: white !important;
+  font-weight: 500 !important;
+  border-radius: $border-radius-sm !important;
+  box-shadow: $shadow-card !important;
+  padding: 16px !important;
+  margin: 16px !important;
+  z-index: 10000 !important;
+  min-width: 300px !important;
+  max-width: 500px !important;
+  position: relative !important;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+  transition: transform $transition-duration $transition-easing !important;
+
+  .mat-simple-snackbar-action {
+    color: white !important;
+    font-weight: 600 !important;
+  }
+}
+
+// Estilos para o container do snackbar
+::ng-deep .mat-snack-bar-container {
+  min-width: 300px !important;
+  max-width: 500px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  position: relative !important;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+  transition: transform 0.3s ease-in-out !important;
+}
+
+::ng-deep .mat-simple-snackbar {
+  padding: 0 !important;
+  margin: 0 !important;
+  position: relative !important;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+  transition: transform 0.3s ease-in-out !important;
+}
+
+// Estilos para o overlay container
+::ng-deep .cdk-overlay-container {
+  z-index: 10000 !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  pointer-events: none !important;
+}
+
+::ng-deep .cdk-overlay-pane {
+  z-index: 10000 !important;
+  position: absolute !important;
+  pointer-events: auto !important;
+  box-sizing: border-box !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+  transition: transform 0.3s ease-in-out !important;
+}
+
+// Estilos para os confetes
+.confetti-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 999999;
+}
+
+.confetti {
+  position: fixed;
+  width: 10px;
+  height: 10px;
+  opacity: 0.8;
+  transform-origin: center;
+  will-change: transform, opacity;
+}
+
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(-100vh) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+// Estilos para o modal de confirmação
+::ng-deep .confirm-redeem-modal {
+  .modal-content {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+  }
+
+  .modal-dialog {
+    max-width: 500px;
+  }
+}
+
+// Toastr styles
+#toast-container {
+  position: fixed;
+  z-index: 999999;
+  pointer-events: auto;
+  width: 350px;
+  max-width: 100%;
+  max-height: 100%;
+  overflow: hidden;
+}
+
+.toast-top-right {
+  top: $spacing-md;
+  right: $spacing-md;
+}
+
+.toast {
+  background-color: $success-green;
+  color: $text-primary;
+  padding: $spacing-md;
+  border-radius: $border-radius-sm;
+  box-shadow: $shadow-card;
+  margin-bottom: $spacing-sm;
+  opacity: 1;
+  transition: opacity $transition-duration $transition-easing;
+  position: relative;
+  overflow: hidden;
+  min-height: 64px;
+  width: 300px;
+  display: flex;
+  align-items: center;
+}
+
+.toast-success {
+  background-color: $success-green;
+}
+
+.toast-error {
+  background-color: $error-red;
+}
+
+.toast-warning {
+  background-color: $warning-orange;
+}
+
+.toast-progress {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 4px;
+  background-color: rgba(255, 255, 255, 0.3);
+  transition: width 0.1s linear;
+}
+
+.toast-close-button {
+  position: absolute;
+  top: $spacing-sm;
+  right: $spacing-sm;
+  color: $text-primary;
+  opacity: 0.5;
+  transition: opacity $transition-duration $transition-easing;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 1;
+  min-height: $min-touch-target;
+  min-width: $min-touch-target;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  @include focus-visible;
+}
+
+.toast-close-button:hover {
+  opacity: 0.8;
+}
+
+.toast-title {
+  font-weight: $font-weight-semibold;
+  margin-bottom: $spacing-xs;
+}
+
+.toast-message {
+  margin: 0;
+  font-size: $font-size-small;
+  line-height: 1.4;
+}
+
+// Confetti styles
+.confetti-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 999999;
+}
+
+.confetti {
+  position: fixed;
+  width: 10px;
+  height: 10px;
+  opacity: 0.8;
+  transform-origin: center;
+  will-change: transform, opacity;
+} 

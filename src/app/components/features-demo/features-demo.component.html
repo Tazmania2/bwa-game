@@ -1,0 +1,124 @@
+<div class="features-demo">
+  <h2>🎮 Funcionalidades do Sistema</h2>
+
+  <div *ngIf="isLoading" class="loading">
+    <c4u-spinner></c4u-spinner>
+    <p>Carregando funcionalidades...</p>
+  </div>
+
+  <div *ngIf="!isLoading && features" class="features-grid">
+    
+    <!-- Update Notes -->
+    <c4u-card *ngIf="isUpdateNotesEnabled()" class="feature-card">
+      <div class="feature-header">
+        <h3>📝 Notas de Atualização</h3>
+        <span class="status enabled">Habilitado</span>
+      </div>
+      <p>Funcionalidade de notas de atualização está ativa</p>
+    </c4u-card>
+
+    <!-- Mascot -->
+    <c4u-card *ngIf="isMascotEnabled()" class="feature-card">
+      <div class="feature-header">
+        <h3>🎭 Mascote</h3>
+        <span class="status enabled">Habilitado</span>
+      </div>
+      <div *ngIf="getMascotImageUrl()" class="mascot-image">
+        <img [src]="getMascotImageUrl()" alt="Mascote" />
+      </div>
+      <p>Mascote do sistema está ativo</p>
+    </c4u-card>
+
+    <!-- Achievements -->
+    <c4u-card *ngIf="isAchievementsEnabled()" class="feature-card">
+      <div class="feature-header">
+        <h3>🏆 Achievements</h3>
+        <span class="status enabled">Habilitado</span>
+      </div>
+      <p>Sistema de conquistas está ativo</p>
+    </c4u-card>
+
+    <!-- Leaderboards -->
+    <c4u-card *ngIf="isLeaderboardsEnabled()" class="feature-card">
+      <div class="feature-header">
+        <h3>📊 Leaderboards</h3>
+        <span class="status enabled">Habilitado</span>
+      </div>
+      <p>Rankings e classificações estão ativos</p>
+    </c4u-card>
+
+    <!-- Challenges -->
+    <c4u-card *ngIf="isChallengesEnabled()" class="feature-card">
+      <div class="feature-header">
+        <h3>🎯 Desafios</h3>
+        <span class="status enabled">Habilitado</span>
+      </div>
+      <p>Sistema de desafios está ativo</p>
+    </c4u-card>
+
+    <!-- Social Features -->
+    <c4u-card *ngIf="isSocialFeaturesEnabled()" class="feature-card">
+      <div class="feature-header">
+        <h3>👥 Funcionalidades Sociais</h3>
+        <span class="status enabled">Habilitado</span>
+      </div>
+      <p>Recursos sociais estão ativos</p>
+    </c4u-card>
+
+    <!-- Virtual Store -->
+    <c4u-card *ngIf="isVirtualStoreEnabled()" class="feature-card">
+      <div class="feature-header">
+        <h3>🛒 Loja Virtual</h3>
+        <span class="status enabled">Habilitado</span>
+      </div>
+      <p>Loja virtual está ativa</p>
+    </c4u-card>
+
+    <!-- Language Settings -->
+    <c4u-card class="feature-card">
+      <div class="feature-header">
+        <h3>🌐 Idioma</h3>
+        <span class="status" [class.enabled]="isMultilingual()" [class.disabled]="!isMultilingual()">
+          {{ isMultilingual() ? 'Multilíngue' : 'Único' }}
+        </span>
+      </div>
+      <p>Idioma padrão: <strong>{{ getDefaultLanguage() }}</strong></p>
+      <p *ngIf="isMultilingual()">Sistema suporta múltiplos idiomas</p>
+      <p *ngIf="!isMultilingual()">Sistema em idioma único</p>
+    </c4u-card>
+
+    <!-- Theme Settings -->
+    <c4u-card class="feature-card">
+      <div class="feature-header">
+        <h3>🎨 Tema</h3>
+        <span class="status" [class.enabled]="isThemeSwitchAllowed()" [class.disabled]="!isThemeSwitchAllowed()">
+          {{ isThemeSwitchAllowed() ? 'Personalizável' : 'Fixo' }}
+        </span>
+      </div>
+      <p>Tema padrão: <strong>{{ getDefaultTheme() }}</strong></p>
+      <p *ngIf="isThemeSwitchAllowed()">Usuários podem trocar o tema</p>
+      <p *ngIf="!isThemeSwitchAllowed()">Tema fixo para todos os usuários</p>
+    </c4u-card>
+
+  </div>
+
+  <!-- Features Summary -->
+  <div *ngIf="!isLoading && features" class="features-summary">
+    <h3>📋 Resumo das Funcionalidades</h3>
+    <div class="summary-grid">
+      <div class="summary-item">
+        <span class="label">Funcionalidades Ativas:</span>
+        <span class="value">{{ getActiveFeaturesCount() }}</span>
+      </div>
+      <div class="summary-item">
+        <span class="label">Total de Funcionalidades:</span>
+        <span class="value">{{ getTotalFeaturesCount() }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- No Features Message -->
+  <div *ngIf="!isLoading && !features" class="no-features">
+    <p>❌ Nenhuma funcionalidade disponível</p>
+  </div>
+</div> 

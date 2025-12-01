@@ -1,0 +1,13 @@
+<div class="container" [toolTip]="tooltip">
+  <div class="progress-bar {{ theme }}" w="{{ percent }}%"></div>
+  <span
+    *ngFor="let elementIndex of elementsIndex"
+    #pointMark
+    id="point-mark"
+  ></span>
+</div>
+<progress-mark
+  *ngIf="pointMarkElements.length"
+  [percent]="percent"
+  [elements]="pointMarkElements"
+/>
