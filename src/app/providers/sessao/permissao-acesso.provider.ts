@@ -12,12 +12,28 @@ export class PermissaoAcessoProvider {
     }
 
     async validateSSOUser() {
+        // Check if user is already logged in (has token and user data)
         let user: Usuario | null = this.sessao.usuario;
+        let token = this.sessao.token;
+        
+        // If we have a user, they're authenticated
         if (user) {
             return true;
-        } else {
-            return await this.sessao.init(true)
         }
+        
+        // If we have a token but no user, try to initialize
+        // This happens when the page is refreshed
+        if (token) {
+            try {
+                return await this.sessao.init(true);
+            } catch (error) {
+                console.error('Error initializing session:', error);
+                return false;
+            }
+        }
+        
+        // No token, no user - not authenticated
+        return false;
     }
 
     async validaTokenAcessoValido(route: ActivatedRouteSnapshot, state: RouterStateSnapshot) {

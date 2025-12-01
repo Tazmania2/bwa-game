@@ -40,8 +40,6 @@ const routes: Routes = [
 
 @NgModule({
   imports: [RouterModule.forRoot(routes, {
-    // Enable preloading for better performance
-    preloadingStrategy: import('@angular/router').then(m => m.PreloadAllModules),
     // Enable scroll position restoration
     scrollPositionRestoration: 'enabled',
     // Enable anchor scrolling
