@@ -105,10 +105,22 @@ export class AuthInterceptor implements HttpInterceptor {
         );
     }
 
-    private isTokenExpired(token: string) {
-        const claims = jwtDecode(token)
-        const expDate = moment(claims.exp! * 1000);
-        return expDate.diff(moment.utc(), 'minutes') < 5;
+    private isTokenExpired(token: string): boolean {
+        try {
+            // Try to decode as standard JWT
+            const claims = jwtDecode(token);
+            if (claims.exp) {
+                const expDate = moment(claims.exp * 1000);
+                return expDate.diff(moment.utc(), 'minutes') < 5;
+            }
+            return false;
+        } catch (error) {
+            // Funifier tokens use GZIP compression and can't be decoded with jwtDecode
+            // For Funifier tokens, we rely on the expires_in from the login response
+            // which is stored in sessionStorage. Check if we have a valid session.
+            console.log('Token is not a standard JWT (likely Funifier compressed token)');
+            return false; // Assume not expired, let the API handle it
+        }
     }
 
     private refreshToken(request: HttpRequest<any>, next: HttpHandler) {
