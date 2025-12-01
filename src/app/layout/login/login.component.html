@@ -19,7 +19,7 @@
   <!-- Login Form -->
   <c4u-card *ngIf="resetFlow === 'login'" [title]="'LABEL_LOGIN_SUBTITLE' | translate" align="center">
     <div class="login-form-container">
-      <form class="login-form" (submit)="submit()" [formGroup]="form">
+      <form class="login-form" (ngSubmit)="submit()" [formGroup]="form">
         <input type="text" placeholder="Login" formControlName="username" [disabled]="isLoading" />
         <input type="password" placeholder="Senha" formControlName="password" [disabled]="isLoading" />
         <div *ngIf="isLoading" class="loading-content">
@@ -41,7 +41,7 @@
   <!-- Reset Request Form -->
   <c4u-card *ngIf="resetFlow === 'reset-request'" [title]="'LABEL_PASSWORD_RESET' | translate" align="center">
     <div class="login-form-container">
-      <form class="login-form" (submit)="requestResetCode()" [formGroup]="resetRequestForm">
+      <form class="login-form" (ngSubmit)="requestResetCode()" [formGroup]="resetRequestForm">
         <p class="reset-instructions">{{ 'LABEL_PASSWORD_RESET_INSTRUCTIONS' | translate }}</p>
         <input type="email" [placeholder]="'LABEL_EMAIL_PLACEHOLDER' | translate" formControlName="email" [disabled]="isLoading" />
         <div *ngIf="resetRequestForm.get('email')?.invalid && resetRequestForm.get('email')?.touched" class="error-message">
@@ -67,7 +67,7 @@
   <!-- Reset Confirm Form -->
   <c4u-card *ngIf="resetFlow === 'reset-confirm'" [title]="'LABEL_PASSWORD_RESET' | translate" align="center">
     <div class="login-form-container">
-      <form class="login-form" (submit)="confirmResetPassword()" [formGroup]="resetConfirmForm">
+      <form class="login-form" (ngSubmit)="confirmResetPassword()" [formGroup]="resetConfirmForm">
         <p class="reset-instructions">{{ 'LABEL_CODE_SENT_TO' | translate }}: <strong>{{resetEmail}}</strong></p>
         <input type="text" [placeholder]="'LABEL_CODE_PLACEHOLDER' | translate" formControlName="code" [disabled]="isLoading" maxlength="6" />
         <div *ngIf="resetConfirmForm.get('code')?.invalid && resetConfirmForm.get('code')?.touched" class="error-message">

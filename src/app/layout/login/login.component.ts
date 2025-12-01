@@ -139,22 +139,31 @@ export class LoginComponent implements OnInit {
   // }
 
   async submit() {
+    console.log('🔐 Submit called - Form valid:', this.form.valid);
+    console.log('🔐 Username:', this.username);
+    console.log('🔐 Password length:', this.password?.length);
+    
     if (this.username && this.password) {
       this.isLoading = true;
       this.startLoadingTextAnimation();
       try {
+        console.log('🔐 Calling sessao.login...');
         let user = await this.sessao.login(this.username, this.password);
+        console.log('🔐 Login response:', user);
         if (user) {
           this.router.navigate(['/']);
         } else {
           this.toastService.error("Usuário ou senha incorretos");
         }
       } catch (error) {
+        console.error('🔐 Login error:', error);
         this.toastService.error("Erro ao fazer login. Tente novamente.");
       } finally {
         this.stopLoadingTextAnimation();
         this.isLoading = false;
       }
+    } else {
+      console.warn('🔐 Form invalid or missing credentials');
     }
   }
 

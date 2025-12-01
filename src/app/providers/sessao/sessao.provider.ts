@@ -19,7 +19,9 @@ export class SessaoProvider {
     }
 
     public async login(email: string, password: string) {
+        console.log('🔐 SessaoProvider.login called');
         const loginResponse = await this.auth.login(email, password);
+        console.log('🔐 Login response received:', loginResponse);
         this.storeLoginInfo(loginResponse)
         return await this.init(true);
     }

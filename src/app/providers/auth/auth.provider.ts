@@ -14,6 +14,11 @@ export class AuthProvider {
   }
 
   async login(email: string, password: string) {
+    console.log('🔐 AuthProvider.login called');
+    console.log('🔐 Funifier URL:', `${this.funifierBaseUrl}/v3/auth/token`);
+    console.log('🔐 API Key:', this.funifierApiKey);
+    console.log('🔐 Username:', email);
+    
     // Use Funifier authentication
     const authBody = {
       apiKey: this.funifierApiKey,
@@ -22,6 +27,7 @@ export class AuthProvider {
       password: password
     };
 
+    console.log('🔐 Making POST request to Funifier...');
     return firstValueFrom(
       this.http.post<LoginResponse>(`${this.funifierBaseUrl}/v3/auth/token`, authBody)
     );
