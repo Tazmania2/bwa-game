@@ -109,8 +109,11 @@ export class GamificationDashboardComponent implements OnInit, OnDestroy, AfterV
   }
   
   ngOnInit(): void {
+    console.log('🎮 GamificationDashboardComponent ngOnInit STARTED');
     this.checkResponsiveBreakpoints();
+    console.log('🎮 About to call loadDashboardData...');
     this.loadDashboardData();
+    console.log('🎮 loadDashboardData called');
     this.announceToScreenReader('Painel de gamificação carregado');
     this.performanceMonitor.trackChangeDetection('GamificationDashboardComponent');
   }
