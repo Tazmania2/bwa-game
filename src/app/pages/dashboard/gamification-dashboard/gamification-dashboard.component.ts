@@ -7,6 +7,7 @@ import { CompanyService } from '@services/company.service';
 import { KPIService } from '@services/kpi.service';
 import { ToastService } from '@services/toast.service';
 import { PerformanceMonitorService } from '@services/performance-monitor.service';
+import { ActionLogService } from '@services/action-log.service';
 import { SessaoProvider } from '@providers/sessao/sessao.provider';
 import { 
   PlayerStatus, 
@@ -91,6 +92,7 @@ export class GamificationDashboardComponent implements OnInit, OnDestroy, AfterV
     private toastService: ToastService,
     private cdr: ChangeDetectorRef,
     private performanceMonitor: PerformanceMonitorService,
+    private actionLogService: ActionLogService,
     private sessaoProvider: SessaoProvider
   ) {
     // Start measuring render time
@@ -280,27 +282,45 @@ export class GamificationDashboardComponent implements OnInit, OnDestroy, AfterV
   }
   
   /**
-   * Load activity and macro progress data
+   * Load activity and macro progress data from action_log
    */
   private loadProgressData(): void {
     this.isLoadingProgress = true;
     
-    // TODO: Implement actual service calls when available
-    // For now, using mock data
-    this.activityMetrics = {
-      pendentes: 5,
-      emExecucao: 3,
-      finalizadas: 12,
-      pontos: 1250
-    };
+    // Get player email/id for action log query
+    // Funifier uses email as the player ID
+    const usuario = this.sessaoProvider.usuario as any;
+    const playerId = usuario?._id || usuario?.email || '';
     
-    this.macroMetrics = {
-      pendentes: 2,
-      incompletas: 1,
-      finalizadas: 8
-    };
-    
-    this.isLoadingProgress = false;
+    if (!playerId) {
+      console.warn('📊 No player ID available for progress data');
+      // Use default values if no player ID
+      this.activityMetrics = { pendentes: 0, emExecucao: 0, finalizadas: 0, pontos: 0 };
+      this.macroMetrics = { pendentes: 0, incompletas: 0, finalizadas: 0 };
+      this.isLoadingProgress = false;
+      this.cdr.markForCheck();
+      return;
+    }
+
+    this.actionLogService.getProgressMetrics(playerId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (metrics) => {
+          console.log('📊 Progress metrics loaded:', metrics);
+          this.activityMetrics = metrics.activity;
+          this.macroMetrics = metrics.macro;
+          this.isLoadingProgress = false;
+          this.cdr.markForCheck();
+        },
+        error: (error) => {
+          console.error('📊 Failed to load progress metrics:', error);
+          // Use default values on error
+          this.activityMetrics = { pendentes: 0, emExecucao: 0, finalizadas: 0, pontos: 0 };
+          this.macroMetrics = { pendentes: 0, incompletas: 0, finalizadas: 0 };
+          this.isLoadingProgress = false;
+          this.cdr.markForCheck();
+        }
+      });
   }
   
   /**

@@ -324,3 +324,108 @@ textarea:focus-visible {
   outline: $focus-outline;
   outline-offset: $focus-offset;
 }
+
+
+// Missing data placeholder
+.missing-data {
+  @include card;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-lg;
+  background: linear-gradient(135deg, rgba($warning-yellow, 0.1), rgba($warning-yellow, 0.05));
+  border: 1px dashed rgba($warning-yellow, 0.5);
+  border-radius: $border-radius-md;
+  min-height: 80px;
+  
+  .missing-data-text {
+    color: $text-secondary;
+    font-size: $font-size-base;
+    font-style: italic;
+    text-align: center;
+  }
+}
+
+// Dashboard layout
+.dashboard-sidebar {
+  .sidebar-content {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-md;
+  }
+  
+  .sidebar-section {
+    min-height: 80px;
+  }
+}
+
+.dashboard-main {
+  .dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: $spacing-lg;
+    flex-wrap: wrap;
+    gap: $spacing-md;
+    
+    @include mobile-only {
+      flex-direction: column;
+      align-items: stretch;
+    }
+  }
+  
+  .refresh-button {
+    display: flex;
+    align-items: center;
+    gap: $spacing-xs;
+    padding: $spacing-sm $spacing-md;
+    background: transparent;
+    border: 1px solid $border-color;
+    border-radius: $border-radius-sm;
+    color: $text-secondary;
+    cursor: pointer;
+    transition: all $transition-duration $transition-easing;
+    
+    &:hover:not(:disabled) {
+      background: rgba($primary-electric-blue, 0.1);
+      border-color: $primary-electric-blue;
+      color: $primary-electric-blue;
+    }
+    
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    i {
+      font-size: 1.2rem;
+      
+      &.spinning {
+        animation: spin 1s linear infinite;
+      }
+    }
+    
+    .refresh-time {
+      font-size: $font-size-small;
+    }
+  }
+  
+  .dashboard-section {
+    margin-bottom: $spacing-xl;
+    
+    .section-title {
+      @include text-heading-2;
+      margin-bottom: $spacing-md;
+    }
+  }
+  
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: $spacing-md;
+    
+    @include mobile-only {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+}

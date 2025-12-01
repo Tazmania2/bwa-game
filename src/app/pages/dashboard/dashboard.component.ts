@@ -158,7 +158,7 @@ export class DashboardComponent implements AfterViewInit, OnInit {
             this.getColaboradoresGestor();
         } else {
             this.idConsulta = this.sessao.usuario?.email;
-            this.nomeConsulta = this.sessao.usuario!.full_name;
+            this.nomeConsulta = this.sessao.usuario?.full_name || this.sessao.usuario?.name || '';
             this.tipoConsulta = TIPO_CONSULTA_COLABORADOR;
             this.time = this.sessao.usuario?.team_id;
             this.toggleMenu();

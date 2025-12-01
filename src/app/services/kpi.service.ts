@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { Observable, throwError } from 'rxjs';
-import { map, catchError, shareReplay } from 'rxjs/operators';
+import { Observable, throwError, forkJoin, of } from 'rxjs';
+import { map, catchError, shareReplay, switchMap } from 'rxjs/operators';
 import { FunifierApiService } from './funifier-api.service';
 import { KPIMapper } from './kpi-mapper.service';
 import { KPIData } from '@model/gamification-dashboard.model';
@@ -10,6 +10,15 @@ interface CacheEntry<T> {
   timestamp: number;
 }
 
+interface MetricTarget {
+  _id: string;
+  name: string;
+  label: string;
+  target: number;
+  unit?: string;
+  order?: number;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -17,6 +26,7 @@ export class KPIService {
   private readonly CACHE_DURATION = 3 * 60 * 1000; // 3 minutes
   private playerKPICache = new Map<string, CacheEntry<KPIData[]>>();
   private companyKPICache = new Map<string, CacheEntry<KPIData[]>>();
+  private metricTargetsCache: Observable<MetricTarget[]> | null = null;
 
   constructor(
     private funifierApi: FunifierApiService,
@@ -24,8 +34,48 @@ export class KPIService {
   ) {}
 
   /**
-   * Get player KPIs from player status extra.kpi
-   * KPIs are calculated as average of player's companies KPIs
+   * Get metric targets from database (uses Basic Auth)
+   * This defines the KPI names, order, and target values
+   */
+  getMetricTargets(): Observable<MetricTarget[]> {
+    if (this.metricTargetsCache) {
+      return this.metricTargetsCache;
+    }
+
+    // Query metric_targets__c database
+    const aggregateBody = [
+      { $sort: { order: 1 } } // Sort by order field
+    ];
+
+    this.metricTargetsCache = this.funifierApi.post<MetricTarget[]>(
+      '/v3/database/metric_targets__c/aggregate?strict=true',
+      aggregateBody
+    ).pipe(
+      map(response => {
+        console.log('📊 Metric targets loaded:', response);
+        return Array.isArray(response) ? response : [];
+      }),
+      catchError(error => {
+        console.error('Error fetching metric targets:', error);
+        // Return default KPI structure if database call fails
+        return of([
+          { _id: 'nps', name: 'NPS', label: 'NPS', target: 10, order: 0 },
+          { _id: 'multas', name: 'Multas', label: 'Multas', target: 10, order: 1 },
+          { _id: 'eficiencia', name: 'Eficiência', label: 'Eficiência', target: 10, order: 2 },
+          { _id: 'extra', name: 'Extra', label: 'Extra', target: 10, order: 3 },
+          { _id: 'prazo', name: 'Prazo', label: 'Prazo', target: 10, order: 4 }
+        ]);
+      }),
+      shareReplay({ bufferSize: 1, refCount: true, windowTime: this.CACHE_DURATION })
+    );
+
+    return this.metricTargetsCache;
+  }
+
+  /**
+   * Get player KPIs by combining:
+   * 1. Metric targets from metric_targets__c database (names, order, targets)
+   * 2. Current values from player status extra.kpi (values in order, separated by ; or ,)
    */
   getPlayerKPIs(playerId: string): Observable<KPIData[]> {
     const cached = this.getCachedData(this.playerKPICache, playerId);
@@ -33,18 +83,29 @@ export class KPIService {
       return cached;
     }
 
-    const request$ = this.funifierApi.get<any>(`/v3/player/${playerId}/status`).pipe(
-      map(response => {
-        const kpiData = response.extra?.kpi;
+    // Fetch both metric targets and player status in parallel
+    const request$ = forkJoin({
+      targets: this.getMetricTargets(),
+      playerStatus: this.funifierApi.get<any>(`/v3/player/${playerId}/status`)
+    }).pipe(
+      map(({ targets, playerStatus }) => {
+        const kpiString = playerStatus.extra?.kpi || '';
         
-        // Handle case where KPI data is not present
-        if (!kpiData) {
-          console.warn('KPI data not available in player status');
-          return [];
-        }
+        // Parse KPI values from string (e.g., "9.3; 8; 10; 9; 8")
+        const kpiValues = this.parseKpiValues(kpiString);
         
-        // Convert KPI object to array format
-        return this.mapper.toKPIDataArray(kpiData);
+        console.log('📊 KPI string:', kpiString);
+        console.log('📊 KPI values:', kpiValues);
+        console.log('📊 Metric targets:', targets);
+        
+        // Combine targets with current values
+        return targets.map((target, index) => ({
+          id: target._id || `kpi-${index}`,
+          label: target.label || target.name || `KPI ${index + 1}`,
+          current: kpiValues[index] || 0,
+          target: target.target || 10,
+          unit: target.unit || ''
+        }));
       }),
       catchError(error => {
         console.error('Error fetching player KPIs:', error);
@@ -55,6 +116,18 @@ export class KPIService {
 
     this.setCachedData(this.playerKPICache, playerId, request$);
     return request$;
+  }
+
+  /**
+   * Parse KPI values from string (separated by ; or ,)
+   */
+  private parseKpiValues(kpiString: string): number[] {
+    if (!kpiString || typeof kpiString !== 'string') return [];
+    
+    return kpiString.split(/[;,]/)
+      .map(v => v.trim())
+      .filter(v => v.length > 0)
+      .map(v => parseFloat(v) || 0);
   }
 
   /**

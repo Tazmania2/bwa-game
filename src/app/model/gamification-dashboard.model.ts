@@ -5,6 +5,8 @@ export interface PlayerStatus {
   email: string;
   level: number;
   seasonLevel: number;
+  levelName?: string;
+  percentCompleted?: number;
   metadata: PlayerMetadata;
   created: number;
   updated: number;

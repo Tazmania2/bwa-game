@@ -7,14 +7,20 @@ import { PlayerStatus, PointWallet, SeasonProgress, PlayerMetadata } from '@mode
 export class PlayerMapper {
   /**
    * Map Funifier API response to PlayerStatus model
+   * Based on actual /v3/player/me/status response structure
    */
   toPlayerStatus(apiResponse: any): PlayerStatus {
+    const levelProgress = apiResponse.level_progress || {};
+    const nextLevel = levelProgress.next_level || {};
+    
     return {
       _id: apiResponse._id || '',
       name: apiResponse.name || '',
-      email: apiResponse.email || '',
-      level: apiResponse.level_progress?.next_level?.position || 0,
-      seasonLevel: apiResponse.extra?.seasonLevel || apiResponse.level || 0,
+      email: apiResponse._id || '', // _id is the email in Funifier
+      level: nextLevel.position || 0,
+      seasonLevel: nextLevel.position || 0,
+      levelName: nextLevel.level || '',
+      percentCompleted: levelProgress.percent_completed || 0,
       metadata: this.extractMetadata(apiResponse),
       created: apiResponse.created || Date.now(),
       updated: apiResponse.updated || Date.now()
@@ -23,74 +29,98 @@ export class PlayerMapper {
 
   /**
    * Extract player metadata from API response
+   * Teams info comes from teams array
    */
   private extractMetadata(apiResponse: any): PlayerMetadata {
     const extra = apiResponse.extra || {};
+    const teams = apiResponse.teams || [];
+    
+    // Extract team info if available
+    const teamInfo = teams.length > 0 ? teams[0] : {};
+    
     return {
-      area: extra.area || '',
-      time: extra.time || '',
-      squad: extra.squad || '',
+      area: extra.area || teamInfo.area || '',
+      time: teamInfo.name || extra.time || '',
+      squad: extra.squad || teamInfo.squad || '',
       ...extra
     };
   }
 
   /**
    * Map Funifier API response to PointWallet model
+   * Uses pointCategories object with coins, locked_points, points
    */
   toPointWallet(apiResponse: any): PointWallet {
-    const pointCategories = apiResponse.point_categories || {};
+    // Use pointCategories (camelCase) as per actual API response
+    const pointCategories = apiResponse.pointCategories || apiResponse.point_categories || {};
     
-    // Handle different possible response structures
-    let bloqueados = 0;
-    let desbloqueados = 0;
-    let moedas = 0;
-
-    if (Array.isArray(pointCategories)) {
-      // If point_categories is an array
-      pointCategories.forEach((category: any) => {
-        const name = category.category?.toLowerCase() || category.shortName?.toLowerCase() || '';
-        const value = category.value || 0;
-        
-        // Check for desbloqueados first (more specific)
-        if (name.includes('desbloqueado')) {
-          desbloqueados = value;
-        } else if (name.includes('bloqueado')) {
-          bloqueados = value;
-        } else if (name.includes('moeda')) {
-          moedas = value;
-        }
-      });
-    } else if (typeof pointCategories === 'object') {
-      // If point_categories is an object
-      bloqueados = pointCategories.bloqueados || pointCategories.Bloqueados || 0;
-      desbloqueados = pointCategories.desbloqueados || pointCategories.Desbloqueados || 0;
-      moedas = pointCategories.moedas || pointCategories.Moedas || 0;
-    }
-
     return {
-      bloqueados,
-      desbloqueados,
-      moedas
+      moedas: pointCategories.coins || 0,
+      bloqueados: pointCategories.locked_points || 0,
+      desbloqueados: pointCategories.points || pointCategories.xp || 0
     };
   }
 
   /**
    * Map Funifier API response to SeasonProgress model
-   * Data comes from player status level_progress
+   * - clientes: count of extra.companies (separated by ; or ,)
+   * - metas: will be populated separately from metric_targets__c
+   * - tarefasFinalizadas: will be populated from action_log aggregate
    */
   toSeasonProgress(apiResponse: any, seasonDates: { start: Date; end: Date }): SeasonProgress {
-    const levelProgress = apiResponse.level_progress || {};
     const extra = apiResponse.extra || {};
     
-    // Extract from level progress and extra fields
+    // Count companies from extra.companies string (separated by ; or ,)
+    const companiesStr = extra.companies || '';
+    const clientesCount = this.countSeparatedValues(companiesStr);
+    
     return {
       metas: {
-        current: extra.metas_current || 0,
-        target: extra.metas_target || 0
+        current: 0, // Will be populated from KPI data
+        target: 0   // Will be populated from metric_targets__c
       },
-      clientes: extra.clientes || 0,
-      tarefasFinalizadas: extra.tarefas_finalizadas || 0,
+      clientes: clientesCount,
+      tarefasFinalizadas: 0, // Will be populated from action_log aggregate
       seasonDates
     };
+  }
+
+  /**
+   * Count values in a string separated by ; or ,
+   */
+  private countSeparatedValues(str: string): number {
+    if (!str || typeof str !== 'string') return 0;
+    
+    // Split by ; or , and filter out empty values
+    const values = str.split(/[;,]/)
+      .map(v => v.trim())
+      .filter(v => v.length > 0);
+    
+    return values.length;
+  }
+
+  /**
+   * Parse KPI values from extra.kpi string
+   * Returns array of numbers in order
+   */
+  parseKpiValues(kpiString: string): number[] {
+    if (!kpiString || typeof kpiString !== 'string') return [];
+    
+    return kpiString.split(/[;,]/)
+      .map(v => v.trim())
+      .filter(v => v.length > 0)
+      .map(v => parseFloat(v) || 0);
+  }
+
+  /**
+   * Parse companies from extra.companies string
+   * Returns array of company identifiers
+   */
+  parseCompanies(companiesString: string): string[] {
+    if (!companiesString || typeof companiesString !== 'string') return [];
+    
+    return companiesString.split(/[;,]/)
+      .map(v => v.trim())
+      .filter(v => v.length > 0);
   }
 }

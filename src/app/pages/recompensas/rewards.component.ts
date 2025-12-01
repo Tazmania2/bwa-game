@@ -78,7 +78,7 @@ export class RewardsComponent implements AfterViewInit, OnInit {
     const usuario = this.sessao.usuario;
     if (usuario) {
       this.idConsulta = usuario.email;
-      this.nomeConsulta = usuario.full_name;
+      this.nomeConsulta = usuario.full_name || usuario.name || '';
       this.tipoConsulta = TIPO_CONSULTA_COLABORADOR;
       this.temporadaService.getDadosTemporadaDashboard(this.idConsulta, this.tipoConsulta)
         .then(data => {
