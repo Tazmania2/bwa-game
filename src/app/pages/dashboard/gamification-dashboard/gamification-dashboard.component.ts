@@ -487,6 +487,8 @@ export class GamificationDashboardComponent implements OnInit, OnDestroy, AfterV
   refreshData(): void {
     this.toastService.alert('Atualizando dados...');
     this.announceToScreenReader('Atualizando dados do painel');
+    // Clear cache to force fresh data
+    this.playerService.clearCache();
     this.loadDashboardData();
   }
   

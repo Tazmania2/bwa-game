@@ -51,19 +51,26 @@ export class PlayerMapper {
    * API fields: locked_points -> Bloqueados, points -> Desbloqueados, coins -> Moedas
    */
   toPointWallet(apiResponse: any): PointWallet {
+    console.log('📊 Point wallet mapping - FULL API response:', JSON.stringify(apiResponse, null, 2));
+    
     // Use pointCategories (camelCase) as per actual API response
+    // The API returns both point_categories and pointCategories - use either
     const pointCategories = apiResponse.pointCategories || apiResponse.point_categories || {};
+    
+    console.log('📊 Point wallet mapping - pointCategories object:', pointCategories);
+    console.log('📊 Point wallet mapping - locked_points value:', pointCategories.locked_points);
+    console.log('📊 Point wallet mapping - points value:', pointCategories.points);
+    console.log('📊 Point wallet mapping - coins value:', pointCategories.coins);
     
     // Map according to Funifier API structure:
     // - locked_points -> Bloqueados
     // - points -> Desbloqueados  
     // - coins -> Moedas
-    const bloqueados = pointCategories.locked_points ?? 0;
-    const desbloqueados = pointCategories.points ?? 0;
-    const moedas = pointCategories.coins ?? 0;
+    const bloqueados = Number(pointCategories.locked_points) || 0;
+    const desbloqueados = Number(pointCategories.points) || 0;
+    const moedas = Number(pointCategories.coins) || 0;
     
-    console.log('📊 Point wallet mapping - raw pointCategories:', pointCategories);
-    console.log('📊 Point wallet result:', { bloqueados, desbloqueados, moedas });
+    console.log('📊 Point wallet FINAL result:', { bloqueados, desbloqueados, moedas });
     
     return {
       bloqueados,
