@@ -56,6 +56,7 @@ export class C4uCompanyTableComponent {
   getCompanyKPIs(company: Company): KPIData[] {
     // Prefer the new kpis array if available
     if (company.kpis && company.kpis.length > 0) {
+      console.log(`📊 Company ${company.name} has ${company.kpis.length} KPIs:`, company.kpis.map(k => k.label));
       return company.kpis;
     }
     // Fallback to legacy kpi1/kpi2/kpi3 properties
@@ -63,6 +64,7 @@ export class C4uCompanyTableComponent {
     if (company.kpi1) legacyKpis.push(company.kpi1);
     if (company.kpi2) legacyKpis.push(company.kpi2);
     if (company.kpi3) legacyKpis.push(company.kpi3);
+    console.log(`📊 Company ${company.name} using legacy KPIs:`, legacyKpis.map(k => k.label));
     return legacyKpis;
   }
 

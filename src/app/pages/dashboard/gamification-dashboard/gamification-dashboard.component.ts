@@ -241,7 +241,7 @@ export class GamificationDashboardComponent implements OnInit, OnDestroy, AfterV
         }
       });
     
-    // Load season progress
+    // Load season progress (basic data from player status)
     console.log('📊 Starting season progress request...');
     this.playerService.getSeasonProgress(playerId, this.seasonDates)
       .pipe(takeUntil(this.destroy$))
@@ -250,6 +250,9 @@ export class GamificationDashboardComponent implements OnInit, OnDestroy, AfterV
           console.log('📊 Season progress loaded:', progress);
           this.seasonProgress = progress;
           this.cdr.markForCheck();
+          
+          // Load additional data for season progress
+          this.loadSeasonProgressDetails();
         },
         error: (error) => {
           console.error('📊 Failed to load season progress:', error);
@@ -269,6 +272,47 @@ export class GamificationDashboardComponent implements OnInit, OnDestroy, AfterV
   }
   
   /**
+   * Load additional season progress details:
+   * - Metas: count of KPIs above target from metric_targets__c
+   * - Clientes: count of companies in player's carteira
+   * - Tarefas finalizadas: count of actions from action_log
+   */
+  private loadSeasonProgressDetails(): void {
+    const usuario = this.sessaoProvider.usuario as any;
+    const playerId = usuario?._id || usuario?.email || '';
+    
+    // Update clientes count from companies loaded
+    if (this.seasonProgress && this.companies.length > 0) {
+      this.seasonProgress = {
+        ...this.seasonProgress,
+        clientes: this.companies.length
+      };
+      this.cdr.markForCheck();
+    }
+    
+    // Load tarefas finalizadas from action_log
+    if (playerId) {
+      this.actionLogService.getCompletedTasksCount(playerId)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (count) => {
+            console.log('📊 Tarefas finalizadas count:', count);
+            if (this.seasonProgress) {
+              this.seasonProgress = {
+                ...this.seasonProgress,
+                tarefasFinalizadas: count
+              };
+              this.cdr.markForCheck();
+            }
+          },
+          error: (error) => {
+            console.error('📊 Failed to load tarefas count:', error);
+          }
+        });
+    }
+  }
+  
+  /**
    * Load company portfolio data
    */
   private loadCompanyData(): void {
@@ -283,6 +327,15 @@ export class GamificationDashboardComponent implements OnInit, OnDestroy, AfterV
           console.log('📊 Companies loaded:', companies);
           this.companies = companies;
           this.isLoadingCompanies = false;
+          
+          // Update season progress clientes count
+          if (this.seasonProgress) {
+            this.seasonProgress = {
+              ...this.seasonProgress,
+              clientes: companies.length
+            };
+          }
+          
           this.cdr.markForCheck();
         },
         error: (error) => {
@@ -309,6 +362,10 @@ export class GamificationDashboardComponent implements OnInit, OnDestroy, AfterV
           console.log('📊 KPIs loaded:', kpis);
           this.playerKPIs = kpis;
           this.isLoadingKPIs = false;
+          
+          // Update metas in season progress (count of KPIs above target)
+          this.updateMetasFromKPIs(kpis);
+          
           this.cdr.markForCheck();
         },
         error: (error) => {
@@ -318,6 +375,27 @@ export class GamificationDashboardComponent implements OnInit, OnDestroy, AfterV
           this.cdr.markForCheck();
         }
       });
+  }
+  
+  /**
+   * Update metas count based on KPIs that are above their target
+   * Metas = count of KPIs where current >= target
+   */
+  private updateMetasFromKPIs(kpis: KPIData[]): void {
+    if (!this.seasonProgress) return;
+    
+    const totalKPIs = kpis.length;
+    const metasAchieved = kpis.filter(kpi => kpi.current >= kpi.target).length;
+    
+    this.seasonProgress = {
+      ...this.seasonProgress,
+      metas: {
+        current: metasAchieved,
+        target: totalKPIs
+      }
+    };
+    
+    console.log('📊 Metas updated:', this.seasonProgress.metas);
   }
   
   /**
@@ -425,6 +503,23 @@ export class GamificationDashboardComponent implements OnInit, OnDestroy, AfterV
    */
   trackByKpiId(_index: number, kpi: KPIData): string {
     return kpi.id;
+  }
+  
+  /**
+   * Calculate the average KPI percentage across all player KPIs
+   * This is used for the level indicator in the sidebar
+   */
+  get kpiAveragePercent(): number {
+    if (!this.playerKPIs || this.playerKPIs.length === 0) {
+      return 0;
+    }
+    
+    const totalPercent = this.playerKPIs.reduce((sum, kpi) => {
+      const percent = kpi.target > 0 ? (kpi.current / kpi.target) * 100 : 0;
+      return sum + Math.min(100, percent); // Cap at 100%
+    }, 0);
+    
+    return Math.round(totalPercent / this.playerKPIs.length);
   }
   
   /**

@@ -69,16 +69,30 @@ export class ActionLogService {
 
   /**
    * Get count of completed tasks (tarefas finalizadas) for a player
+   * This is a simple count of all actions by the user in action_log
    */
   getCompletedTasksCount(playerId: string): Observable<number> {
-    return this.getPlayerActionLog(playerId).pipe(
-      map(actions => {
-        // Count actions that are completed
-        return actions.filter(a => 
-          a.status === 'completed' || 
-          a.status === 'finalizado' ||
-          a.status === 'done'
-        ).length;
+    // Use aggregate to count all actions for this player
+    const aggregateBody = [
+      { $match: { player: playerId } },
+      { $count: 'total' }
+    ];
+
+    return this.funifierApi.post<any[]>(
+      '/v3/database/action_log/aggregate?strict=true',
+      aggregateBody
+    ).pipe(
+      map(response => {
+        console.log('📊 Action count response:', response);
+        // Response is array with single object containing count
+        if (Array.isArray(response) && response.length > 0) {
+          return response[0].total || 0;
+        }
+        return 0;
+      }),
+      catchError(error => {
+        console.error('Error counting actions:', error);
+        return of(0);
       })
     );
   }

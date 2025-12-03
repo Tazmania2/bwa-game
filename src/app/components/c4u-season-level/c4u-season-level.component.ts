@@ -14,4 +14,23 @@ export class C4uSeasonLevelComponent {
     time: '',
     squad: ''
   };
+  /** Average KPI percentage (0-100) to display in the level circle */
+  @Input() kpiAveragePercent: number = 0;
+
+  /**
+   * Get the color class based on KPI average percentage
+   */
+  get levelColorClass(): string {
+    if (this.kpiAveragePercent >= 80) return 'level-success';
+    if (this.kpiAveragePercent >= 50) return 'level-warning';
+    return 'level-danger';
+  }
+
+  /**
+   * Get the stroke dasharray for the circular progress
+   */
+  get progressDasharray(): string {
+    const percent = Math.min(100, Math.max(0, this.kpiAveragePercent));
+    return `${percent}, 100`;
+  }
 }
