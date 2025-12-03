@@ -29,6 +29,18 @@ export class C4uCompanyTableComponent {
     return 'danger';
   }
 
+  /**
+   * Get emotion icon class based on health score
+   * - Happy (>=80): ri-emotion-happy-line
+   * - Normal (50-79): ri-emotion-normal-line
+   * - Unhappy (<50): ri-emotion-unhappy-line
+   */
+  getHealthEmotionIcon(healthScore: number): string {
+    if (healthScore >= 80) return 'ri-emotion-happy-line';
+    if (healthScore >= 50) return 'ri-emotion-normal-line';
+    return 'ri-emotion-unhappy-line';
+  }
+
   getKPIPercentage(kpi: { current: number; target: number }): number {
     if (kpi.target === 0) return 0;
     return Math.round((kpi.current / kpi.target) * 100);
