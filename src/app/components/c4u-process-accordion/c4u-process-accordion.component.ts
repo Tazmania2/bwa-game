@@ -1,5 +1,5 @@
 import { Component, Input } from '@angular/core';
-import { Process, Task } from '@model/gamification-dashboard.model';
+import { Process } from '@model/gamification-dashboard.model';
 
 @Component({
   selector: 'c4u-process-accordion',
@@ -10,8 +10,13 @@ export class C4uProcessAccordionComponent {
   @Input()
   processes: Process[] = [];
 
-  toggleProcess(process: Process): void {
-    process.expanded = !process.expanded;
+  /**
+   * Toggle process expansion by index
+   */
+  toggleProcess(index: number): void {
+    if (this.processes[index]) {
+      this.processes[index].expanded = !this.processes[index].expanded;
+    }
   }
 
   getStatusClass(status: string): string {

@@ -203,15 +203,19 @@ describe('ModalCompanyDetailComponent', () => {
   });
 
   describe('Tab Configuration', () => {
-    it('should have three tabs configured', () => {
-      expect(component.tabs.length).toBe(3);
-      expect(component.tabs[0].name).toBe('Macros incompletas');
-      expect(component.tabs[1].name).toBe('Atividades finalizadas');
-      expect(component.tabs[2].name).toBe('Macros finalizadas');
-    });
-
     it('should default to first tab', () => {
       expect(component.selectedTab).toBe(0);
+    });
+
+    it('should return correct tab description for each tab', () => {
+      component.selectTab(0);
+      expect(component.getTabDescription()).toContain('processos com atividades pendentes');
+      
+      component.selectTab(1);
+      expect(component.getTabDescription()).toContain('concluídas');
+      
+      component.selectTab(2);
+      expect(component.getTabDescription()).toContain('finalizadas');
     });
   });
 });

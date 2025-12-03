@@ -1,9 +1,11 @@
 <div class="kpi-circular-progress">
   <div class="kpi-label">{{ label }}</div>
-  <c4u-porcentagem-circular
-    [valor]="current"
-    [total]="target"
-    [percent]="percentage"
-    [theme]="progressColor">
-  </c4u-porcentagem-circular>
+  <div class="kpi-progress-wrapper">
+    <c4u-porcentagem-circular
+      [valor]="current"
+      [total]="target"
+      [percent]="percentage"
+      [theme]="progressColor">
+    </c4u-porcentagem-circular>
+  </div>
 </div>

@@ -107,4 +107,11 @@ export class PlayerService {
   clearCache(): void {
     this.cachedRawData = {};
   }
+
+  /**
+   * Clear cache for specific player
+   */
+  clearPlayerCache(playerId: string): void {
+    delete this.cachedRawData[playerId];
+  }
 }

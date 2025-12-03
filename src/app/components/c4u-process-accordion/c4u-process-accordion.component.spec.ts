@@ -1,11 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { C4uProcessAccordionComponent } from './c4u-process-accordion.component';
-import { C4uAccordionModule } from '../c4u-accordion/c4u-accordion.module';
-import { C4uAccordionItemModule } from '../c4u-accordion-item/c4u-accordion-item.module';
 import { SharedModule } from '@app/shared.module';
 import { Process, Task } from '@model/gamification-dashboard.model';
-import { DebugElement } from '@angular/core';
 import { By } from '@angular/platform-browser';
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 
 describe('C4uProcessAccordionComponent', () => {
   let component: C4uProcessAccordionComponent;
@@ -46,11 +44,8 @@ describe('C4uProcessAccordionComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       declarations: [C4uProcessAccordionComponent],
-      imports: [
-        SharedModule,
-        C4uAccordionModule,
-        C4uAccordionItemModule
-      ]
+      imports: [SharedModule],
+      schemas: [NO_ERRORS_SCHEMA]
     }).compileComponents();
 
     fixture = TestBed.createComponent(C4uProcessAccordionComponent);
@@ -62,63 +57,68 @@ describe('C4uProcessAccordionComponent', () => {
   });
 
   describe('Process Expansion Toggle', () => {
-    it('should toggle process expansion state when toggleProcess is called', () => {
-      const process: Process = {
-        id: 'test-1',
-        name: 'Test Process',
-        status: 'pending',
-        tasks: [],
-        expanded: false
-      };
+    it('should toggle process expansion state when toggleProcess is called by index', () => {
+      component.processes = [
+        { ...mockProcesses[0], expanded: false },
+        { ...mockProcesses[1], expanded: false }
+      ];
 
-      component.toggleProcess(process);
-      expect(process.expanded).toBe(true);
+      component.toggleProcess(0);
+      expect(component.processes[0].expanded).toBe(true);
 
-      component.toggleProcess(process);
-      expect(process.expanded).toBe(false);
+      component.toggleProcess(0);
+      expect(component.processes[0].expanded).toBe(false);
     });
 
     it('should expand process when initially collapsed', () => {
-      const process = { ...mockProcesses[0], expanded: false };
+      component.processes = [{ ...mockProcesses[0], expanded: false }];
       
-      expect(process.expanded).toBe(false);
-      component.toggleProcess(process);
-      expect(process.expanded).toBe(true);
+      expect(component.processes[0].expanded).toBe(false);
+      component.toggleProcess(0);
+      expect(component.processes[0].expanded).toBe(true);
     });
 
     it('should collapse process when initially expanded', () => {
-      const process = { ...mockProcesses[0], expanded: true };
+      component.processes = [{ ...mockProcesses[0], expanded: true }];
       
-      expect(process.expanded).toBe(true);
-      component.toggleProcess(process);
-      expect(process.expanded).toBe(false);
+      expect(component.processes[0].expanded).toBe(true);
+      component.toggleProcess(0);
+      expect(component.processes[0].expanded).toBe(false);
+    });
+
+    it('should handle invalid index gracefully', () => {
+      component.processes = [{ ...mockProcesses[0], expanded: false }];
+      
+      // Should not throw
+      expect(() => component.toggleProcess(99)).not.toThrow();
+      expect(component.processes[0].expanded).toBe(false);
     });
   });
 
   describe('Multiple Process Expansion', () => {
     it('should allow multiple processes to be expanded simultaneously', () => {
-      const processes: Process[] = [
+      component.processes = [
         { ...mockProcesses[0], expanded: false },
         { ...mockProcesses[1], expanded: false }
       ];
 
-      component.toggleProcess(processes[0]);
-      component.toggleProcess(processes[1]);
+      component.toggleProcess(0);
+      component.toggleProcess(1);
 
-      expect(processes[0].expanded).toBe(true);
-      expect(processes[1].expanded).toBe(true);
+      expect(component.processes[0].expanded).toBe(true);
+      expect(component.processes[1].expanded).toBe(true);
     });
 
     it('should not affect other processes when toggling one', () => {
-      const processes: Process[] = [
+      component.processes = [
         { ...mockProcesses[0], expanded: true },
         { ...mockProcesses[1], expanded: false }
       ];
 
-      component.toggleProcess(processes[1]);
+      component.toggleProcess(1);
 
-      expect(processes[0].expanded).toBe(true);
-      expect(processes[1].expanded).toBe(true);
+      expect(component.processes[0].expanded).toBe(true);
+      expect(component.processes[1].expanded).toBe(true);
     });
   });
 
@@ -218,28 +218,17 @@ describe('C4uProcessAccordionComponent', () => {
       component.processes = mockProcesses;
       fixture.detectChanges();
 
-      const accordionItems = fixture.debugElement.queryAll(By.css('c4u-accordion-item'));
-      expect(accordionItems.length).toBe(mockProcesses.length);
+      const processHeaders = fixture.debugElement.queryAll(By.css('.process-header'));
+      expect(processHeaders.length).toBe(mockProcesses.length);
     });
 
     it('should display process names', () => {
       component.processes = mockProcesses;
       fixture.detectChanges();
 
-      const accordionItems = fixture.debugElement.queryAll(By.css('c4u-accordion-item'));
-      expect(accordionItems.length).toBe(mockProcesses.length);
-      
-      // Verify the itemTitle is passed correctly
-      const firstItem = accordionItems[0].componentInstance;
-      expect(firstItem.itemTitle).toBe(mockProcesses[0].name);
-    });
-
-    it('should display process status badges', () => {
-      component.processes = [{ ...mockProcesses[0], expanded: true }];
-      fixture.detectChanges();
-
-      const statusBadges = fixture.debugElement.queryAll(By.css('.process-status'));
-      expect(statusBadges.length).toBeGreaterThan(0);
+      const processLabels = fixture.debugElement.queryAll(By.css('.process-label'));
+      expect(processLabels.length).toBe(mockProcesses.length);
+      expect(processLabels[0].nativeElement.textContent).toContain(mockProcesses[0].name);
     });
   });
 });

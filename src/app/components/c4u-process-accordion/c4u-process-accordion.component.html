@@ -1,24 +1,37 @@
-<c4u-accordion>
-  <c4u-accordion-item 
-    *ngFor="let process of processes"
-    [itemTitle]="process.name"
-    [(open)]="process.expanded"
+<div class="process-accordion-container">
+  <div 
+    *ngFor="let process of processes; let i = index" 
+    class="process-section"
   >
-    <!-- Process Header with Status -->
-    <div class="process-header" flex vAlign="center" hAlign="space-between" [marginBottom]="16">
-      <div class="process-info" flex vAlign="center" gap="12px">
-        <span class="process-name">{{ process.name }}</span>
-        <span 
-          class="process-status badge" 
-          [ngClass]="getStatusClass(process.status)"
-        >
-          {{ getStatusLabel(process.status) }}
-        </span>
-      </div>
+    <!-- Process Header - Figma Design -->
+    <div 
+      class="process-header"
+      [class.expanded]="process.expanded"
+      (click)="toggleProcess(i)"
+      (keydown.enter)="toggleProcess(i)"
+      (keydown.space)="toggleProcess(i); $event.preventDefault()"
+      tabindex="0"
+      role="button"
+      [attr.aria-expanded]="process.expanded"
+      [attr.aria-controls]="'process-content-' + i"
+    >
+      <span class="process-label">{{ process.name }}</span>
+      <div class="process-line"></div>
+      <i 
+        class="expand-icon" 
+        [class.ri-arrow-up-s-line]="process.expanded"
+        [class.ri-arrow-down-s-line]="!process.expanded"
+      ></i>
     </div>
 
-    <!-- Task List -->
-    <div class="task-list" flex direction="column" gap="12px">
+    <!-- Process Content - Task List -->
+    <div 
+      *ngIf="process.expanded"
+      class="process-content"
+      [id]="'process-content-' + i"
+      role="region"
+      [attr.aria-labelledby]="'process-header-' + i"
+    >
       <div *ngIf="process.tasks.length === 0" class="no-tasks">
         Nenhuma tarefa disponível
       </div>
@@ -26,21 +39,13 @@
       <div 
         *ngFor="let task of process.tasks" 
         class="task-item"
-        flex 
-        vAlign="center" 
-        hAlign="space-between"
       >
-        <div class="task-info" flex direction="column" gap="4px">
+        <div class="task-info">
           <span class="task-name">{{ task.name }}</span>
-          <span class="task-responsible">Responsável: {{ task.responsible }}</span>
+          <span class="task-responsible">{{ task.responsible }}</span>
         </div>
-        <span 
-          class="task-status badge" 
-          [ngClass]="getStatusClass(task.status)"
-        >
-          {{ getStatusLabel(task.status) }}
-        </span>
+        <span class="task-status">{{ getStatusLabel(task.status) }}</span>
       </div>
     </div>
-  </c4u-accordion-item>
-</c4u-accordion>
+  </div>
+</div>

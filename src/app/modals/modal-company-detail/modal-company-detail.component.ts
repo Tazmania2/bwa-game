@@ -1,7 +1,6 @@
 import { Component, Input, OnInit, ViewChild } from '@angular/core';
 import { C4uModalComponent } from '@components/c4u-modal/c4u-modal.component';
-import { Company, CompanyDetails, Process, Task } from '@model/gamification-dashboard.model';
-import { TabBarItemModel } from '@components/c4u-tabbar/c4u-tabbar.component';
+import { Company, CompanyDetails, Process } from '@model/gamification-dashboard.model';
 import { CompanyService } from '@services/company.service';
 
 @Component({
@@ -20,10 +19,10 @@ export class ModalCompanyDetailComponent implements OnInit {
   selectedTab: number = 0;
   isLoading: boolean = false;
 
-  tabs: TabBarItemModel[] = [
-    { name: 'Macros incompletas', icon: '' },
-    { name: 'Atividades finalizadas', icon: '' },
-    { name: 'Macros finalizadas', icon: '' }
+  private readonly tabDescriptions: string[] = [
+    'São processos com atividades pendentes, minhas ou de outros colaboradores',
+    'Atividades que foram concluídas com sucesso',
+    'Macros que foram finalizadas completamente'
   ];
 
   constructor(private companyService: CompanyService) {}
@@ -52,6 +51,10 @@ export class ModalCompanyDetailComponent implements OnInit {
 
   selectTab(tabIndex: number): void {
     this.selectedTab = tabIndex;
+  }
+
+  getTabDescription(): string {
+    return this.tabDescriptions[this.selectedTab] || '';
   }
 
   get currentTabProcesses(): Process[] {

@@ -5,31 +5,39 @@
   width: 100%;
   overflow: hidden;
 
+  .section-subtitle {
+    text-align: center;
+    font-size: 18px;
+    font-weight: 600;
+    color: $text-primary;
+    margin-bottom: 24px;
+    letter-spacing: 0.36px;
+  }
+
   .table-responsive {
     max-height: 600px;
     overflow-y: auto;
     overflow-x: auto;
     
     &::-webkit-scrollbar {
-      width: 8px;
+      width: 10px;
       height: 8px;
     }
     
     &::-webkit-scrollbar-track {
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: $border-radius-xs;
+      background: #2b2e31;
+      border-radius: 4px;
     }
     
     &::-webkit-scrollbar-thumb {
-      background: $border-color;
-      border-radius: $border-radius-xs;
+      background: #4a4d50;
+      border-radius: 4px;
       
       &:hover {
-        background: lighten($border-color, 10%);
+        background: lighten(#4a4d50, 10%);
       }
     }
 
-    // Virtual scrolling specific styles
     &.virtual-scroll-wrapper {
       .virtual-scroll-viewport {
         height: 600px;
@@ -42,223 +50,221 @@
     }
   }
 
-  .company-table {
-    width: 100%;
-    margin-bottom: 0;
+  .company-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .company-row {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-radius: 8px;
     background: transparent;
-    color: $text-primary;
-
-    thead {
-      position: sticky;
-      top: 0;
-      background: linear-gradient(135deg, $surface, lighten($surface, 3%));
-      backdrop-filter: blur(10px);
-      z-index: 10;
-
-      th {
-        padding: $spacing-md;
-        font-weight: $font-weight-semibold;
-        font-size: $font-size-small;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        border-bottom: 2px solid $border-color;
-        white-space: nowrap;
-        color: $text-secondary;
-        transition: color $transition-duration $transition-easing;
-        
-        &:hover {
-          color: $text-primary;
-        }
-      }
+    
+    &:hover {
+      background: rgba(255, 255, 255, 0.05);
     }
 
-    tbody {
-      tr.company-row {
-        cursor: pointer;
-        transition: all $transition-duration $transition-easing;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        position: relative;
-        
-        &::before {
-          content: '';
-          position: absolute;
-          left: 0;
-          top: 0;
-          width: 0;
-          height: 100%;
-          background: linear-gradient(90deg, rgba($primary-electric-blue, 0.1), transparent);
-          transition: width $transition-duration $transition-easing;
-        }
-
-        &:hover {
-          background: rgba(255, 255, 255, 0.05);
-          transform: translateX(4px);
-          
-          &::before {
-            width: 100%;
-          }
-          
-          @include reduced-motion {
-            transform: none;
-          }
-        }
-
-        &:focus {
-          @include focus-visible;
-        }
-
-        td {
-          padding: $spacing-md;
-          vertical-align: middle;
-          font-size: $font-size-small;
-
-          &.company-name {
-            font-weight: $font-weight-medium;
-            max-width: 250px;
-            @include text-truncate;
-          }
-
-          &.company-cnpj {
-            color: $text-secondary;
-            font-size: $font-size-small;
-          }
-        }
-      }
+    &:focus {
+      outline: 2px solid $primary-electric-blue;
+      outline-offset: 2px;
     }
   }
 
-  .health-indicator {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: $spacing-xs $spacing-sm;
-    border-radius: $border-radius;
-    font-weight: $font-weight-semibold;
-    font-size: $font-size-caption;
-    min-width: 60px;
-    transition: all $transition-duration $transition-easing;
+  .company-info {
+    flex: 0 0 180px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding-right: 16px;
 
-    &.health-success {
-      background: rgba($success-green, 0.2);
-      color: $success-green;
-      border: 1px solid rgba($success-green, 0.3);
-      
-      &:hover {
-        background: rgba($success-green, 0.3);
-      }
+    .company-name {
+      font-family: 'Urbanist', sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+      color: #eeeeee;
+      letter-spacing: 0.32px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 180px;
     }
 
-    &.health-warning {
-      background: rgba($warning-orange, 0.2);
-      color: $warning-orange;
-      border: 1px solid rgba($warning-orange, 0.3);
-      
-      &:hover {
-        background: rgba($warning-orange, 0.3);
-      }
-    }
-
-    &.health-danger {
-      background: rgba($error-red, 0.2);
-      color: $error-red;
-      border: 1px solid rgba($error-red, 0.3);
-      
-      &:hover {
-        background: rgba($error-red, 0.3);
-      }
+    .company-cnpj {
+      font-family: 'Urbanist', sans-serif;
+      font-weight: 400;
+      font-size: 14px;
+      color: #b2b2b2;
+      letter-spacing: 0.28px;
     }
   }
 
-  .kpi-score {
-    display: inline-flex;
+  .health-cell {
+    flex: 0 0 180px;
+    display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: center;
-    padding: $spacing-xs $spacing-sm;
-    border-radius: $border-radius-sm;
-    font-weight: $font-weight-medium;
-    font-size: $font-size-small;
-    min-width: 70px;
-    transition: all $transition-duration $transition-easing;
+    gap: 4px;
 
-    &.kpi-success {
-      color: $success-green;
-      
-      &:hover {
-        background: rgba($success-green, 0.1);
+    .mini-circular-progress {
+      width: 26px;
+      height: 26px;
+      position: relative;
+
+      .circular-chart {
+        width: 100%;
+        height: 100%;
+        transform: rotate(-90deg);
+      }
+
+      .circle-bg {
+        fill: none;
+        stroke: #3a3d40;
+        stroke-width: 3;
+      }
+
+      .circle {
+        fill: none;
+        stroke-width: 3;
+        stroke-linecap: round;
+        transition: stroke-dasharray 0.6s ease;
+      }
+
+      &.health-success .circle {
+        stroke: #37CC42;
+      }
+
+      &.health-warning .circle {
+        stroke: #f5a623;
+      }
+
+      &.health-danger .circle {
+        stroke: #C56685;
       }
     }
 
-    &.kpi-warning {
-      color: $warning-orange;
-      
-      &:hover {
-        background: rgba($warning-orange, 0.1);
+    .health-label {
+      font-family: 'Urbanist', sans-serif;
+      font-weight: 400;
+      font-size: 14px;
+      color: #b2b2b2;
+      letter-spacing: 0.28px;
+    }
+  }
+
+  .kpi-cell {
+    flex: 0 0 180px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+
+    .kpi-value {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+
+      .kpi-number {
+        font-family: 'Urbanist', sans-serif;
+        font-weight: 700;
+        font-size: 20px;
+        color: #eeeeee;
+        letter-spacing: 0.4px;
+      }
+
+      .kpi-icon {
+        font-size: 16px;
+        color: #f5a623;
       }
     }
 
-    &.kpi-danger {
-      color: $error-red;
-      
-      &:hover {
-        background: rgba($error-red, 0.1);
-      }
+    .kpi-label {
+      font-family: 'Urbanist', sans-serif;
+      font-weight: 400;
+      font-size: 14px;
+      color: #b2b2b2;
+      letter-spacing: 0.28px;
     }
   }
 
   .empty-state {
-    padding: $spacing-xxl;
+    padding: 48px;
     text-align: center;
     color: $text-secondary;
-    font-size: $font-size-body;
+    font-size: 16px;
     
-    .empty-icon {
-      font-size: 3rem;
-      margin-bottom: $spacing-md;
-      opacity: 0.5;
-    }
-    
-    .empty-text {
+    p {
       margin: 0;
     }
   }
 }
 
 // Responsive adjustments
-@include mobile-only {
+@media (max-width: 1024px) {
+  .company-table-container {
+    .company-row {
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .company-info {
+      flex: 1 1 100%;
+    }
+
+    .health-cell,
+    .kpi-cell {
+      flex: 1 1 calc(25% - 12px);
+    }
+  }
+}
+
+@media (max-width: 768px) {
   .company-table-container {
     .table-responsive {
       max-height: 400px;
     }
 
-    .company-table {
-      font-size: $font-size-small;
-
-      thead th,
-      tbody td {
-        padding: $spacing-sm;
-      }
-
+    .company-info {
       .company-name {
+        font-size: 14px;
         max-width: 150px;
       }
+
+      .company-cnpj {
+        font-size: 12px;
+      }
+    }
+
+    .health-cell,
+    .kpi-cell {
+      flex: 1 1 calc(50% - 8px);
+    }
+
+    .kpi-cell .kpi-value .kpi-number {
+      font-size: 16px;
     }
   }
 }
 
 // Accessibility
 .company-row {
-  @include focus-visible;
+  &:focus-visible {
+    outline: 2px solid $primary-electric-blue;
+    outline-offset: 2px;
+  }
 }
 
 // Reduced motion
-@include reduced-motion {
+@media (prefers-reduced-motion: reduce) {
   .company-row {
-    &:hover {
-      transform: none;
-    }
-    
-    &::before {
-      transition: none;
-    }
+    transition: none;
+  }
+  
+  .mini-circular-progress .circle {
+    transition: none;
   }
 }

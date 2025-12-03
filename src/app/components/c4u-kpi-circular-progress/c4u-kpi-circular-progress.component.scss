@@ -2,17 +2,34 @@
 
 :host {
   display: block;
+  width: 200px;
 }
 
 .kpi-circular-progress {
-  @include flexCenter;
+  display: flex;
   flex-direction: column;
-  gap: 12px;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
 }
 
 .kpi-label {
-  font-size: 14px;
-  font-weight: 600;
-  color: #333;
+  font-family: 'Urbanist', sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  color: #eeeeee;
   text-align: center;
+  letter-spacing: 0.36px;
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kpi-progress-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 120px;
+  height: 120px;
 }

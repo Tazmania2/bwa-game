@@ -1,21 +1,21 @@
 <c4u-modal [modalTitle]="company?.name || ''" *ngIf="company">
-  <!-- KPI Header Section -->
-  <div class="kpi-header" flex gap="24px" [marginBottom]="32">
-    <div class="kpi-item" flex direction="column" vAlign="center" hAlign="center">
+  <!-- KPI Header Section - Figma Design -->
+  <div class="kpi-header">
+    <div class="kpi-item">
       <c4u-kpi-circular-progress
         [label]="company.kpi1.label"
         [current]="company.kpi1.current"
         [target]="company.kpi1.target"
       ></c4u-kpi-circular-progress>
     </div>
-    <div class="kpi-item" flex direction="column" vAlign="center" hAlign="center">
+    <div class="kpi-item">
       <c4u-kpi-circular-progress
         [label]="company.kpi2.label"
         [current]="company.kpi2.current"
         [target]="company.kpi2.target"
       ></c4u-kpi-circular-progress>
     </div>
-    <div class="kpi-item" flex direction="column" vAlign="center" hAlign="center">
+    <div class="kpi-item">
       <c4u-kpi-circular-progress
         [label]="company.kpi3.label"
         [current]="company.kpi3.current"
@@ -24,19 +24,53 @@
     </div>
   </div>
 
-  <!-- Tab Navigation -->
-  <c4u-tabbar 
-    [items]="tabs" 
-    [(selected)]="selectedTab"
-    (selectedChange)="selectTab($event)"
-    [marginBottom]="24"
-  ></c4u-tabbar>
+  <!-- Tab Navigation - Figma Design -->
+  <div class="tabs-container">
+    <div 
+      class="tab-item" 
+      [class.active]="selectedTab === 0"
+      (click)="selectTab(0)"
+      role="tab"
+      [attr.aria-selected]="selectedTab === 0"
+      tabindex="0"
+      (keydown.enter)="selectTab(0)">
+      <i class="ri-checkbox-multiple-line tab-icon"></i>
+      <span class="tab-label">Macros incompletas</span>
+    </div>
+    <div 
+      class="tab-item" 
+      [class.active]="selectedTab === 1"
+      (click)="selectTab(1)"
+      role="tab"
+      [attr.aria-selected]="selectedTab === 1"
+      tabindex="0"
+      (keydown.enter)="selectTab(1)">
+      <i class="ri-checkbox-circle-line tab-icon"></i>
+      <span class="tab-label">Atividades finalizadas</span>
+    </div>
+    <div 
+      class="tab-item" 
+      [class.active]="selectedTab === 2"
+      (click)="selectTab(2)"
+      role="tab"
+      [attr.aria-selected]="selectedTab === 2"
+      tabindex="0"
+      (keydown.enter)="selectTab(2)">
+      <i class="ri-star-line tab-icon"></i>
+      <span class="tab-label">Macros finalizadas</span>
+    </div>
+  </div>
 
   <!-- Content Area -->
-  <div class="modal-content" flex scroll flexItem="1">
+  <div class="modal-content">
     <!-- Loading State -->
-    <div *ngIf="isLoading" flex vAlign="center" hAlign="center" flexItem="1">
+    <div *ngIf="isLoading" class="loading-container">
       <c4u-spinner></c4u-spinner>
+    </div>
+
+    <!-- Tab Description -->
+    <div *ngIf="!isLoading" class="tab-description">
+      <p>{{ getTabDescription() }}</p>
     </div>
 
     <!-- Process Accordion -->
@@ -47,12 +81,7 @@
     <!-- Empty State -->
     <div 
       *ngIf="!isLoading && currentTabProcesses.length === 0" 
-      class="empty-state"
-      flex 
-      vAlign="center" 
-      hAlign="center" 
-      flexItem="1"
-    >
+      class="empty-state">
       <p>Nenhum item encontrado para esta categoria</p>
     </div>
   </div>
