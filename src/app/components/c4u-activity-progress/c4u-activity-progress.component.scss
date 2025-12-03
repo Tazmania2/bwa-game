@@ -19,7 +19,7 @@
 .section-title {
   font-size: 16px;
   font-weight: 600;
-  color: #333;
+  color: #eeeeee;
   margin: 0;
 }
 
@@ -33,19 +33,21 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px;
-  background: #f8f9fa;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
 
   &:hover {
-    background: #e9ecef;
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.15);
   }
 }
 
 .metric-icon {
   font-size: 24px;
-  color: #6c757d;
+  color: #9ca3af;
 }
 
 .metric-content {
@@ -56,12 +58,12 @@
 
 .metric-label {
   font-size: 12px;
-  color: #6c757d;
+  color: #9ca3af;
   font-weight: 500;
 }
 
 .metric-value {
   font-size: 20px;
   font-weight: 700;
-  color: #333;
+  color: #eeeeee;
 }
