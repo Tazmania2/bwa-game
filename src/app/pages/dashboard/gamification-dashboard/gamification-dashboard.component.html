@@ -11,43 +11,45 @@
 
   <!-- Left Sidebar -->
   <aside class="dashboard-sidebar" [class.collapsed]="sidebarCollapsed" role="complementary" aria-label="Informações do jogador">
-    <div class="sidebar-content">
-      <!-- Season Level -->
-      <div class="sidebar-section">
-        <c4u-season-level
-          *ngIf="playerStatus"
-          [level]="playerStatus.seasonLevel"
-          [playerName]="playerStatus.name"
-          [metadata]="playerStatus.metadata">
-        </c4u-season-level>
+    <c4u-card class="sidebar-card">
+      <div class="sidebar-content">
+        <!-- Season Level -->
+        <div class="sidebar-section">
+          <c4u-season-level
+            *ngIf="playerStatus"
+            [level]="playerStatus.seasonLevel"
+            [playerName]="playerStatus.name"
+            [metadata]="playerStatus.metadata">
+          </c4u-season-level>
+          
+          <c4u-shimmer *ngIf="isLoadingPlayer && !playerStatus"></c4u-shimmer>
+        </div>
         
-        <c4u-shimmer *ngIf="isLoadingPlayer && !playerStatus"></c4u-shimmer>
-      </div>
-      
-      <!-- Point Wallet -->
-      <div class="sidebar-section">
-        <c4u-point-wallet
-          *ngIf="pointWallet"
-          [points]="pointWallet">
-        </c4u-point-wallet>
+        <!-- Point Wallet -->
+        <div class="sidebar-section">
+          <c4u-point-wallet
+            *ngIf="pointWallet"
+            [points]="pointWallet">
+          </c4u-point-wallet>
+          
+          <c4u-shimmer *ngIf="isLoadingPlayer && !pointWallet"></c4u-shimmer>
+        </div>
         
-        <c4u-shimmer *ngIf="isLoadingPlayer && !pointWallet"></c4u-shimmer>
+        <!-- Season Progress -->
+        <div class="sidebar-section">
+          <c4u-season-progress
+            *ngIf="seasonProgress"
+            [progress]="seasonProgress">
+          </c4u-season-progress>
+          
+          <c4u-shimmer *ngIf="isLoadingPlayer && !seasonProgress"></c4u-shimmer>
+        </div>
       </div>
-      
-      <!-- Season Progress -->
-      <div class="sidebar-section">
-        <c4u-season-progress
-          *ngIf="seasonProgress"
-          [progress]="seasonProgress">
-        </c4u-season-progress>
-        
-        <c4u-shimmer *ngIf="isLoadingPlayer && !seasonProgress"></c4u-shimmer>
-      </div>
-    </div>
+    </c4u-card>
     
-    <!-- Sidebar Toggle Button -->
+    <!-- Sidebar Toggle Button - Outside the card -->
     <button class="sidebar-toggle" (click)="toggleSidebar()" [attr.aria-label]="sidebarCollapsed ? 'Expandir menu' : 'Recolher menu'">
-      <i class="ri-arrow-left-s-line" [class.rotated]="sidebarCollapsed"></i>
+      <i class="icon-arrow_forward_ios" [class.invert]="!sidebarCollapsed"></i>
     </button>
   </aside>
   

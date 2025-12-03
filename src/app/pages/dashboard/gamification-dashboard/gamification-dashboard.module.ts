@@ -6,6 +6,7 @@ import { GamificationDashboardComponent } from './gamification-dashboard.compone
 import { SharedModule } from '@app/shared.module';
 
 // Import child components
+import { C4uCardModule } from '@components/c4u-card/c4u-card.module';
 import { C4uSeasonLevelModule } from '@components/c4u-season-level/c4u-season-level.module';
 import { C4uPointWalletModule } from '@components/c4u-point-wallet/c4u-point-wallet.module';
 import { C4uSeasonProgressModule } from '@components/c4u-season-progress/c4u-season-progress.module';
@@ -33,6 +34,7 @@ const routes: Routes = [
     SharedModule,
     RouterModule.forChild(routes),
     // Child component modules
+    C4uCardModule,
     C4uSeasonLevelModule,
     C4uPointWalletModule,
     C4uSeasonProgressModule,
