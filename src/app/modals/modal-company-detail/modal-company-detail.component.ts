@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter, OnInit, ViewChild } from '@angular/core';
 import { C4uModalComponent } from '@components/c4u-modal/c4u-modal.component';
-import { Company, CompanyDetails, Process } from '@model/gamification-dashboard.model';
+import { Company, CompanyDetails, Process, KPIData } from '@model/gamification-dashboard.model';
 import { CompanyService } from '@services/company.service';
 
 @Component({
@@ -83,6 +83,24 @@ export class ModalCompanyDetailComponent implements OnInit {
       default:
         return [];
     }
+  }
+
+  /**
+   * Get all KPIs for the company, supporting both new kpis array and legacy kpi1/kpi2/kpi3 properties
+   */
+  getCompanyKPIs(): KPIData[] {
+    if (!this.company) return [];
+    
+    // Prefer the new kpis array if available
+    if (this.company.kpis && this.company.kpis.length > 0) {
+      return this.company.kpis;
+    }
+    // Fallback to legacy kpi1/kpi2/kpi3 properties
+    const legacyKpis: KPIData[] = [];
+    if (this.company.kpi1) legacyKpis.push(this.company.kpi1);
+    if (this.company.kpi2) legacyKpis.push(this.company.kpi2);
+    if (this.company.kpi3) legacyKpis.push(this.company.kpi3);
+    return legacyKpis;
   }
 
   close(): void {

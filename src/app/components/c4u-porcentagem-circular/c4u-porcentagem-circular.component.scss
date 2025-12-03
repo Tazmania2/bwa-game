@@ -3,6 +3,7 @@
 :host {
   @include flexCenter;
   width: fit-content;
+  position: relative; // Required for absolute positioning of .centro
 }
 
 .svg {

@@ -45,31 +45,13 @@
             <span class="health-label">Saúde</span>
           </div>
           
-          <!-- KPI 1 -->
-          <div class="kpi-cell">
+          <!-- Dynamic KPIs -->
+          <div class="kpi-cell" *ngFor="let kpi of getCompanyKPIs(company)">
             <div class="kpi-value">
-              <span class="kpi-number">{{ formatKPIValue(company.kpi1.current, company.kpi1.target) }}</span>
+              <span class="kpi-number">{{ formatKPIValue(kpi.current, kpi.target) }}</span>
               <i class="ri-settings-3-line kpi-icon"></i>
             </div>
-            <span class="kpi-label">{{ company.kpi1.label }}</span>
-          </div>
-          
-          <!-- KPI 2 -->
-          <div class="kpi-cell">
-            <div class="kpi-value">
-              <span class="kpi-number">{{ formatKPIValue(company.kpi2.current, company.kpi2.target) }}</span>
-              <i class="ri-settings-3-line kpi-icon"></i>
-            </div>
-            <span class="kpi-label">{{ company.kpi2.label }}</span>
-          </div>
-          
-          <!-- KPI 3 -->
-          <div class="kpi-cell">
-            <div class="kpi-value">
-              <span class="kpi-number">{{ formatKPIValue(company.kpi3.current, company.kpi3.target) }}</span>
-              <i class="ri-settings-3-line kpi-icon"></i>
-            </div>
-            <span class="kpi-label">{{ company.kpi3.label }}</span>
+            <span class="kpi-label">{{ kpi.label }}</span>
           </div>
         </div>
       </div>
@@ -115,31 +97,13 @@
           <span class="health-label">Saúde</span>
         </div>
         
-        <!-- KPI 1 -->
-        <div class="kpi-cell">
+        <!-- Dynamic KPIs -->
+        <div class="kpi-cell" *ngFor="let kpi of getCompanyKPIs(company)">
           <div class="kpi-value">
-            <span class="kpi-number">{{ formatKPIValue(company.kpi1.current, company.kpi1.target) }}</span>
+            <span class="kpi-number">{{ formatKPIValue(kpi.current, kpi.target) }}</span>
             <i class="ri-settings-3-line kpi-icon"></i>
           </div>
-          <span class="kpi-label">{{ company.kpi1.label }}</span>
-        </div>
-        
-        <!-- KPI 2 -->
-        <div class="kpi-cell">
-          <div class="kpi-value">
-            <span class="kpi-number">{{ formatKPIValue(company.kpi2.current, company.kpi2.target) }}</span>
-            <i class="ri-settings-3-line kpi-icon"></i>
-          </div>
-          <span class="kpi-label">{{ company.kpi2.label }}</span>
-        </div>
-        
-        <!-- KPI 3 -->
-        <div class="kpi-cell">
-          <div class="kpi-value">
-            <span class="kpi-number">{{ formatKPIValue(company.kpi3.current, company.kpi3.target) }}</span>
-            <i class="ri-settings-3-line kpi-icon"></i>
-          </div>
-          <span class="kpi-label">{{ company.kpi3.label }}</span>
+          <span class="kpi-label">{{ kpi.label }}</span>
         </div>
       </div>
     </div>

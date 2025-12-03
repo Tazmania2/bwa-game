@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, Output, ChangeDetectionStrategy } from '@angular/core';
-import { Company } from '@model/gamification-dashboard.model';
+import { Company, KPIData } from '@model/gamification-dashboard.model';
 
 @Component({
   selector: 'c4u-company-table',
@@ -48,6 +48,22 @@ export class C4uCompanyTableComponent {
     if (target === 0) return '0.0';
     const score = (current / target) * 10;
     return score.toFixed(1);
+  }
+
+  /**
+   * Get all KPIs for a company, supporting both new kpis array and legacy kpi1/kpi2/kpi3 properties
+   */
+  getCompanyKPIs(company: Company): KPIData[] {
+    // Prefer the new kpis array if available
+    if (company.kpis && company.kpis.length > 0) {
+      return company.kpis;
+    }
+    // Fallback to legacy kpi1/kpi2/kpi3 properties
+    const legacyKpis: KPIData[] = [];
+    if (company.kpi1) legacyKpis.push(company.kpi1);
+    if (company.kpi2) legacyKpis.push(company.kpi2);
+    if (company.kpi3) legacyKpis.push(company.kpi3);
+    return legacyKpis;
   }
 
   trackByCompanyId(index: number, company: Company): string {

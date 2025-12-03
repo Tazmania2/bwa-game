@@ -20,6 +20,7 @@ export class KPIMapper {
 
   /**
    * Map array of KPI responses or object with KPI fields
+   * Dynamically extracts all KPIs from the API response
    */
   toKPIDataArray(apiResponses: any[] | any): KPIData[] {
     // If it's an array, map each item
@@ -33,67 +34,32 @@ export class KPIMapper {
     if (typeof apiResponses === 'object' && apiResponses !== null) {
       const kpis: KPIData[] = [];
       
-      // Map KPI fields from cnpj_performance__c
-      // The collection may have kpi1, kpi2, kpi3 or specific named fields
+      // Dynamically find all numbered KPIs (kpi1, kpi2, kpi3, kpi4, etc.)
+      const numberedKpiKeys = Object.keys(apiResponses)
+        .filter(key => /^kpi[_]?\d+$/i.test(key))
+        .sort((a, b) => {
+          const numA = parseInt(a.replace(/\D/g, ''), 10);
+          const numB = parseInt(b.replace(/\D/g, ''), 10);
+          return numA - numB;
+        });
       
-      // Check for numbered KPIs first (kpi1, kpi2, kpi3)
-      if ('kpi1' in apiResponses || 'kpi_1' in apiResponses) {
-        const kpi1Data = apiResponses.kpi1 || apiResponses.kpi_1;
-        if (typeof kpi1Data === 'object') {
+      for (const key of numberedKpiKeys) {
+        const kpiData = apiResponses[key];
+        const kpiNum = key.replace(/\D/g, '');
+        
+        if (typeof kpiData === 'object' && kpiData !== null) {
           kpis.push({
-            id: 'kpi1',
-            label: kpi1Data.label || 'KPI 1',
-            current: kpi1Data.current || kpi1Data.value || 0,
-            target: kpi1Data.target || 10,
-            unit: kpi1Data.unit || ''
+            id: key,
+            label: kpiData.label || `KPI ${kpiNum}`,
+            current: kpiData.current || kpiData.value || 0,
+            target: kpiData.target || 10,
+            unit: kpiData.unit || ''
           });
         } else {
           kpis.push({
-            id: 'kpi1',
-            label: 'KPI 1',
-            current: kpi1Data || 0,
-            target: 10,
-            unit: ''
-          });
-        }
-      }
-      
-      if ('kpi2' in apiResponses || 'kpi_2' in apiResponses) {
-        const kpi2Data = apiResponses.kpi2 || apiResponses.kpi_2;
-        if (typeof kpi2Data === 'object') {
-          kpis.push({
-            id: 'kpi2',
-            label: kpi2Data.label || 'KPI 2',
-            current: kpi2Data.current || kpi2Data.value || 0,
-            target: kpi2Data.target || 10,
-            unit: kpi2Data.unit || ''
-          });
-        } else {
-          kpis.push({
-            id: 'kpi2',
-            label: 'KPI 2',
-            current: kpi2Data || 0,
-            target: 10,
-            unit: ''
-          });
-        }
-      }
-      
-      if ('kpi3' in apiResponses || 'kpi_3' in apiResponses) {
-        const kpi3Data = apiResponses.kpi3 || apiResponses.kpi_3;
-        if (typeof kpi3Data === 'object') {
-          kpis.push({
-            id: 'kpi3',
-            label: kpi3Data.label || 'KPI 3',
-            current: kpi3Data.current || kpi3Data.value || 0,
-            target: kpi3Data.target || 10,
-            unit: kpi3Data.unit || ''
-          });
-        } else {
-          kpis.push({
-            id: 'kpi3',
-            label: 'KPI 3',
-            current: kpi3Data || 0,
+            id: key,
+            label: `KPI ${kpiNum}`,
+            current: kpiData || 0,
             target: 10,
             unit: ''
           });
@@ -102,44 +68,38 @@ export class KPIMapper {
       
       // If no numbered KPIs found, check for named KPIs
       if (kpis.length === 0) {
-        if ('nps' in apiResponses) {
-          kpis.push({
-            id: 'nps',
-            label: 'NPS',
-            current: apiResponses.nps || 0,
-            target: 10,
-            unit: 'pontos'
-          });
-        }
+        const namedKpis = ['nps', 'multas', 'eficiencia', 'prazo', 'qualidade', 'produtividade', 'satisfacao'];
+        const namedKpiLabels: { [key: string]: string } = {
+          nps: 'NPS',
+          multas: 'Multas',
+          eficiencia: 'Eficiência',
+          prazo: 'Prazo',
+          qualidade: 'Qualidade',
+          produtividade: 'Produtividade',
+          satisfacao: 'Satisfação'
+        };
         
-        if ('multas' in apiResponses) {
-          kpis.push({
-            id: 'multas',
-            label: 'Multas',
-            current: apiResponses.multas || 0,
-            target: 0,
-            unit: 'multas'
-          });
-        }
-        
-        if ('eficiencia' in apiResponses) {
-          kpis.push({
-            id: 'eficiencia',
-            label: 'Eficiência',
-            current: apiResponses.eficiencia || 0,
-            target: 10,
-            unit: 'pontos'
-          });
-        }
-        
-        if ('prazo' in apiResponses) {
-          kpis.push({
-            id: 'prazo',
-            label: 'Prazo',
-            current: apiResponses.prazo || 0,
-            target: 10,
-            unit: 'pontos'
-          });
+        for (const kpiName of namedKpis) {
+          if (kpiName in apiResponses) {
+            const kpiData = apiResponses[kpiName];
+            if (typeof kpiData === 'object' && kpiData !== null) {
+              kpis.push({
+                id: kpiName,
+                label: kpiData.label || namedKpiLabels[kpiName] || kpiName,
+                current: kpiData.current || kpiData.value || 0,
+                target: kpiData.target || 10,
+                unit: kpiData.unit || ''
+              });
+            } else {
+              kpis.push({
+                id: kpiName,
+                label: namedKpiLabels[kpiName] || kpiName,
+                current: kpiData || 0,
+                target: 10,
+                unit: ''
+              });
+            }
+          }
         }
       }
       

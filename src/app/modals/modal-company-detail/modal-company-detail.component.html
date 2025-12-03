@@ -1,25 +1,12 @@
 <c4u-modal [modalTitle]="company?.name || ''" *ngIf="company" (closed)="onModalClosed()">
   <!-- KPI Header Section - Figma Design -->
   <div class="kpi-header">
-    <div class="kpi-item">
+    <div class="kpi-item" *ngFor="let kpi of getCompanyKPIs(); let i = index">
       <c4u-kpi-circular-progress
-        [label]="company.kpi1.label"
-        [current]="company.kpi1.current"
-        [target]="company.kpi1.target"
-      ></c4u-kpi-circular-progress>
-    </div>
-    <div class="kpi-item">
-      <c4u-kpi-circular-progress
-        [label]="company.kpi2.label"
-        [current]="company.kpi2.current"
-        [target]="company.kpi2.target"
-      ></c4u-kpi-circular-progress>
-    </div>
-    <div class="kpi-item">
-      <c4u-kpi-circular-progress
-        [label]="company.kpi3.label"
-        [current]="company.kpi3.current"
-        [target]="company.kpi3.target"
+        [label]="kpi.label"
+        [current]="kpi.current"
+        [target]="kpi.target"
+        [colorIndex]="i"
       ></c4u-kpi-circular-progress>
     </div>
   </div>

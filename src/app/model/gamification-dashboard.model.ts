@@ -63,9 +63,11 @@ export interface Company {
   name: string;
   cnpj: string;
   healthScore: number;
-  kpi1: KPIData;
-  kpi2: KPIData;
-  kpi3: KPIData;
+  kpis: KPIData[]; // Dynamic array of KPIs
+  // Legacy support for fixed KPIs (deprecated, use kpis array instead)
+  kpi1?: KPIData;
+  kpi2?: KPIData;
+  kpi3?: KPIData;
 }
 
 export interface CompanyDetails extends Company {

@@ -31,6 +31,8 @@ export class CompanyMapper {
       name: apiResponse.name || `CNPJ ${apiResponse._id || apiResponse.cnpj || ''}`,
       cnpj: apiResponse.cnpj || apiResponse._id || '',
       healthScore,
+      kpis: kpis, // Dynamic array of all KPIs
+      // Legacy support
       kpi1: kpis[0] || this.kpiMapper.toKPIData({}, 'KPI 1'),
       kpi2: kpis[1] || this.kpiMapper.toKPIData({}, 'KPI 2'),
       kpi3: kpis[2] || this.kpiMapper.toKPIData({}, 'KPI 3')

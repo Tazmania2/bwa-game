@@ -8,19 +8,21 @@
 // KPI Header Section - Figma Design
 .kpi-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: flex-start;
+  flex-wrap: wrap;
   gap: 24px;
   margin-bottom: 40px;
   padding: 0 16px;
 
   .kpi-item {
-    flex: 1;
+    flex: 0 1 auto;
+    min-width: 100px;
+    max-width: 150px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    max-width: 200px;
   }
 }
 
