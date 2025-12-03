@@ -33,7 +33,7 @@ export class ActionLogService {
 
   /**
    * Get action log entries for a player
-   * Uses Basic Auth for database access
+   * Uses userId field to match the user's email
    */
   getPlayerActionLog(playerId: string): Observable<ActionLogEntry[]> {
     const cached = this.getCachedData(this.actionLogCache, playerId);
@@ -42,8 +42,9 @@ export class ActionLogService {
     }
 
     // Aggregate query to get action log for this player
+    // Uses userId field (not player)
     const aggregateBody = [
-      { $match: { player: playerId } },
+      { $match: { userId: playerId } },
       { $sort: { created: -1 } },
       { $limit: 100 } // Limit to last 100 actions
     ];
@@ -70,13 +71,17 @@ export class ActionLogService {
   /**
    * Get count of completed tasks (tarefas finalizadas) for a player
    * This is a simple count of all actions by the user in action_log
+   * Uses userId field (not player) to match the user's email
    */
   getCompletedTasksCount(playerId: string): Observable<number> {
     // Use aggregate to count all actions for this player
+    // The action_log uses userId field (not player)
     const aggregateBody = [
-      { $match: { player: playerId } },
+      { $match: { userId: playerId } },
       { $count: 'total' }
     ];
+
+    console.log('📊 Action log query:', JSON.stringify(aggregateBody));
 
     return this.funifierApi.post<any[]>(
       '/v3/database/action_log/aggregate?strict=true',

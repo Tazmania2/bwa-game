@@ -25,7 +25,7 @@ export class CompanyService {
 
   /**
    * Get companies with optional filtering
-   * Companies come from cnpj_performance__c collection filtered by player ID
+   * First gets player's companies from extra.companies, then fetches from cnpj_performance__c
    */
   getCompanies(playerId: string, filter?: { search?: string; minHealth?: number }): Observable<Company[]> {
     const cacheKey = `${playerId}_${JSON.stringify(filter || {})}`;
@@ -34,68 +34,81 @@ export class CompanyService {
       return cached;
     }
 
-    // First get the player's email/ID to filter companies
-    const request$ = this.funifierApi.get<any>(`/v3/player/${playerId}/status`).pipe(
-      map(response => {
-        // Get player email to use as filter
-        const playerEmail = response._id || response.email || '';
-        return playerEmail;
-      }),
-      catchError(error => {
-        console.error('Error fetching player status:', error);
-        return of(''); // Return empty string to continue with unfiltered query
-      }),
-      // Now fetch companies from cnpj_performance__c
-      map(playerEmail => {
-        return playerEmail;
-      })
-    );
-
-    // Query cnpj_performance__c collection
-    const companiesRequest$ = this.funifierApi.post<any[]>(
-      `/v3/database/cnpj_performance__c/aggregate?strict=true`,
-      [
-        { $sort: { name: 1 } }, // Sort by name
-        { $limit: 100 } // Limit results
-      ]
-    ).pipe(
-      map(response => {
-        console.log('📊 Companies from cnpj_performance__c:', response);
-        
-        if (!response || !Array.isArray(response)) {
-          console.warn('No companies found in cnpj_performance__c');
-          return [];
-        }
-        
-        // Map each company from the database
-        let companies = response.map((companyData: any) => this.mapper.toCompany(companyData));
-        
-        // Apply filters
-        if (filter) {
-          if (filter.search) {
-            const searchLower = filter.search.toLowerCase();
-            companies = companies.filter(c => 
-              c.name.toLowerCase().includes(searchLower) ||
-              c.cnpj.includes(filter.search!)
-            );
+    // Fetch player status, get company IDs, then fetch company data from cnpj_performance__c
+    const request$ = new Observable<Company[]>(subscriber => {
+      this.funifierApi.get<any>(`/v3/player/${playerId}/status`).subscribe({
+        next: (playerResponse) => {
+          const companiesStr = playerResponse?.extra?.companies || '';
+          const companyIds = companiesStr.split(/[;,]/)
+            .map((id: string) => id.trim())
+            .filter((id: string) => id.length > 0);
+          
+          console.log('📊 Player company IDs from extra.companies:', companyIds);
+          
+          if (companyIds.length === 0) {
+            subscriber.next([]);
+            subscriber.complete();
+            return;
           }
           
-          if (filter.minHealth !== undefined) {
-            companies = companies.filter(c => c.healthScore >= filter.minHealth!);
-          }
+          // Fetch company data from cnpj_performance__c using aggregate
+          // Query format: [{"$match":{"_id":{"$in":["1218","9654","1456"]}}}]
+          const aggregateBody = [
+            { $match: { _id: { $in: companyIds } } }
+          ];
+          
+          console.log('📊 Company aggregate query:', JSON.stringify(aggregateBody));
+          
+          this.funifierApi.post<any[]>(
+            `/v3/database/cnpj_performance__c/aggregate?strict=true`,
+            aggregateBody
+          ).subscribe({
+            next: (response) => {
+              console.log('📊 Companies from cnpj_performance__c:', response);
+              
+              if (!response || !Array.isArray(response)) {
+                subscriber.next([]);
+                subscriber.complete();
+                return;
+              }
+              
+              let companies = response.map((companyData: any) => this.mapper.toCompany(companyData));
+              
+              // Apply filters
+              if (filter) {
+                if (filter.search) {
+                  const searchLower = filter.search.toLowerCase();
+                  companies = companies.filter(c => 
+                    c.name.toLowerCase().includes(searchLower) ||
+                    c.cnpj.includes(filter.search!)
+                  );
+                }
+                
+                if (filter.minHealth !== undefined) {
+                  companies = companies.filter(c => c.healthScore >= filter.minHealth!);
+                }
+              }
+              
+              subscriber.next(companies);
+              subscriber.complete();
+            },
+            error: (error) => {
+              console.error('Error fetching companies from cnpj_performance__c:', error);
+              subscriber.error(error);
+            }
+          });
+        },
+        error: (error) => {
+          console.error('Error fetching player status:', error);
+          subscriber.error(error);
         }
-        
-        return companies;
-      }),
-      catchError(error => {
-        console.error('Error fetching companies from cnpj_performance__c:', error);
-        return throwError(() => error);
-      }),
+      });
+    }).pipe(
       shareReplay({ bufferSize: 1, refCount: true, windowTime: this.CACHE_DURATION })
     );
 
-    this.setCachedData(this.companiesCache, cacheKey, companiesRequest$);
-    return companiesRequest$;
+    this.setCachedData(this.companiesCache, cacheKey, request$);
+    return request$;
   }
 
   /**

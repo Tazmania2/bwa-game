@@ -39,11 +39,13 @@ export class KPIMapper {
       const addedIds = new Set<string>();
       
       // Named KPIs to look for (check these first as they have meaningful labels)
-      const namedKpis = ['nps', 'multas', 'eficiencia', 'prazo', 'qualidade', 'produtividade', 'satisfacao', 'saude'];
+      // Based on cnpj_performance__c structure: nps, multas, eficiencia, extra, prazo
+      const namedKpis = ['nps', 'multas', 'eficiencia', 'extra', 'prazo', 'qualidade', 'produtividade', 'satisfacao', 'saude'];
       const namedKpiLabels: { [key: string]: string } = {
         nps: 'NPS',
         multas: 'Multas',
         eficiencia: 'Eficiência',
+        extra: 'Extra',
         prazo: 'Prazo',
         qualidade: 'Qualidade',
         produtividade: 'Produtividade',

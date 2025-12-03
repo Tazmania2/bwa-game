@@ -49,26 +49,43 @@ export class PlayerMapper {
   /**
    * Map Funifier API response to PointWallet model
    * API fields: locked_points -> Bloqueados, points -> Desbloqueados, coins -> Moedas
+   * 
+   * The API response can have different structures:
+   * 1. pointCategories.locked_points, pointCategories.points, pointCategories.coins
+   * 2. point_categories.locked_points, point_categories.points, point_categories.coins
+   * 3. Direct fields: locked_points, points, coins
    */
   toPointWallet(apiResponse: any): PointWallet {
-    console.log('📊 Point wallet mapping - FULL API response:', JSON.stringify(apiResponse, null, 2));
+    console.log('📊 Point wallet mapping - FULL API response keys:', Object.keys(apiResponse || {}));
     
-    // Use pointCategories (camelCase) as per actual API response
-    // The API returns both point_categories and pointCategories - use either
-    const pointCategories = apiResponse.pointCategories || apiResponse.point_categories || {};
+    // Try multiple possible locations for point data
+    const pointCategories = apiResponse?.pointCategories || apiResponse?.point_categories || {};
     
-    console.log('📊 Point wallet mapping - pointCategories object:', pointCategories);
-    console.log('📊 Point wallet mapping - locked_points value:', pointCategories.locked_points);
-    console.log('📊 Point wallet mapping - points value:', pointCategories.points);
-    console.log('📊 Point wallet mapping - coins value:', pointCategories.coins);
+    console.log('📊 Point wallet mapping - pointCategories:', JSON.stringify(pointCategories));
     
-    // Map according to Funifier API structure:
-    // - locked_points -> Bloqueados
-    // - points -> Desbloqueados  
-    // - coins -> Moedas
-    const bloqueados = Number(pointCategories.locked_points) || 0;
-    const desbloqueados = Number(pointCategories.points) || 0;
-    const moedas = Number(pointCategories.coins) || 0;
+    // Check for nested structure first, then direct fields
+    let bloqueados = 0;
+    let desbloqueados = 0;
+    let moedas = 0;
+    
+    // Try pointCategories object
+    if (pointCategories && typeof pointCategories === 'object') {
+      bloqueados = Number(pointCategories.locked_points) || Number(pointCategories.lockedPoints) || 0;
+      desbloqueados = Number(pointCategories.points) || 0;
+      moedas = Number(pointCategories.coins) || 0;
+    }
+    
+    // If still zero, try direct fields on response
+    if (bloqueados === 0 && desbloqueados === 0 && moedas === 0) {
+      bloqueados = Number(apiResponse?.locked_points) || Number(apiResponse?.lockedPoints) || 0;
+      desbloqueados = Number(apiResponse?.points) || 0;
+      moedas = Number(apiResponse?.coins) || 0;
+    }
+    
+    // Also check for total_points as fallback for desbloqueados
+    if (desbloqueados === 0) {
+      desbloqueados = Number(apiResponse?.total_points) || Number(apiResponse?.totalPoints) || 0;
+    }
     
     console.log('📊 Point wallet FINAL result:', { bloqueados, desbloqueados, moedas });
     
