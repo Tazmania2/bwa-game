@@ -182,7 +182,10 @@ export class SessaoProvider {
         this._usuario = user;
     }
 
-    async logout() {
+    /**
+     * @param redirectTo destino após limpar a sessão. Use `false` para não navegar.
+     */
+    async logout(redirectTo: string | false = '/login') {
         console.log('🔐 Logout initiated - clearing all caches...');
         
         // Clear all application caches
@@ -195,8 +198,12 @@ export class SessaoProvider {
         this._usuario = null;
         delete this.loginResponse;
         sessionStorage.removeItem(TKN_KEY);
+
+        if (redirectTo === false) {
+            return;
+        }
         
-        return this.router.navigate(['/login']);
+        return this.router.navigate([redirectTo]);
     }
 
     public isAdmin() {

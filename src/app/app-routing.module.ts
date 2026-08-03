@@ -20,6 +20,15 @@ const routes: Routes = [
     }]
   },
   {
+    path: 'login-admin',
+    data: { adminLogin: true },
+    children: [{
+      path: '',
+      loadChildren: () => import('./layout/login/login.module').then(m => m.LoginModule),
+      data: { adminLogin: true }
+    }]
+  },
+  {
     path: 'dashboard',
     component: MainComponent,
     children: [{
