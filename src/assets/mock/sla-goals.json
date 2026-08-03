@@ -1,0 +1,36 @@
+{
+  "_comment": "MOCK — metas de SLA por tipo de empresa crítica (sprint/moco-01, feature 5). Nao ha fonte real ainda: nenhuma coluna de meta por segmento existe na API nem nos marts. Os campos aqui espelham o cadastro pedido (Nome / Meta / Supermeta / Modificador) para que a troca por dado real seja substituicao de fonte, nao renomeacao. O segmento mapeia 1:1 com as tags Acessorias ja usadas nos marts 12/13.",
+  "_source": "mock",
+  "goals": [
+    {
+      "id": "on-time-g4",
+      "segment": "clients_acessorias_g4",
+      "nome": "% no prazo clientes G4",
+      "meta": 95,
+      "supermeta": 100,
+      "modificador": 1,
+      "unit": "%",
+      "current": 91.4
+    },
+    {
+      "id": "on-time-onboarding",
+      "segment": "clients_acessorias_onboarding",
+      "nome": "% no prazo clientes em onboarding",
+      "meta": 90,
+      "supermeta": 100,
+      "modificador": 1,
+      "unit": "%",
+      "current": 86.2
+    },
+    {
+      "id": "on-time-risco",
+      "segment": "clients_acessorias_risco_de_churn",
+      "nome": "% no prazo clientes em risco",
+      "meta": 97,
+      "supermeta": 100,
+      "modificador": 1.5,
+      "unit": "%",
+      "current": 98.1
+    }
+  ]
+}

@@ -6121,7 +6121,7 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
             .getPlayerKPIs(collaboratorId, this.selectedMonth, this.actionLogService, scope)
             .pipe(takeUntil(this.destroy$))
         );
-        this.teamKPIs = this.kpiService.applyOnTimeDeliveryGoalToKpis(kpis || [], this.selectedMonth);
+        this.teamKPIs = await this.kpiService.applyTeamGoals(kpis || [], this.selectedMonth);
       } else {
         const panelId = this.getPanelPlayerId();
         if (!panelId) {
@@ -6132,7 +6132,7 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
               .getPlayerKPIs(panelId, this.selectedMonth, this.actionLogService, scope)
               .pipe(takeUntil(this.destroy$))
           );
-          this.teamKPIs = this.kpiService.applyOnTimeDeliveryGoalToKpis(kpis || [], this.selectedMonth);
+          this.teamKPIs = await this.kpiService.applyTeamGoals(kpis || [], this.selectedMonth);
         }
         console.log('✅ Team KPIs (mesmo fluxo que gamificação individual, cache por team_id):', this.teamKPIs.length);
       }

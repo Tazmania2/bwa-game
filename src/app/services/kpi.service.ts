@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Observable, throwError, of } from 'rxjs';
+import { Observable, throwError, of, firstValueFrom } from 'rxjs';
 import { map, catchError, shareReplay } from 'rxjs/operators';
 import { getOnTimeDeliveryGoalForMonth } from '@app/constants/on-time-delivery-goal';
 import { BackendApiService } from './backend-api.service';
@@ -7,6 +7,7 @@ import { KPIMapper } from './kpi-mapper.service';
 import { KPIData } from '@model/gamification-dashboard.model';
 import { SessaoProvider } from '@providers/sessao/sessao.provider';
 import { PlayerService } from './player.service';
+import { SlaGoalsService } from './sla-goals.service';
 
 interface CacheEntry<T> {
   data: Observable<T>;
@@ -35,7 +36,8 @@ export class KPIService {
     private backendApi: BackendApiService,
     private mapper: KPIMapper,
     private playerService: PlayerService,
-    private sessao: SessaoProvider
+    private sessao: SessaoProvider,
+    private slaGoals: SlaGoalsService
   ) {}
 
   /**
@@ -288,6 +290,44 @@ export class KPIService {
         color: kpi.isMissing ? 'gray' : this.getKPIColorByGoals(kpi.current, goal, superTarget)
       };
     });
+  }
+
+  /**
+   * Metas do painel de EQUIPE: a meta vigente de «entregas-prazo» mais os tres
+   * marcadores de SLA por tipo de empresa critica (feature 5).
+   *
+   * Existe separado de `applyOnTimeDeliveryGoalToKpis` de proposito. Aquele
+   * metodo e chamado pelos DOIS paineis — equipe (team-management) e individual
+   * (gamification) — e as metas de SLA foram pedidas so para "Metas da Equipe".
+   * Acrescentar la faria os tres aneis aparecerem tambem no painel do jogador.
+   *
+   * Os marcadores entram no mesmo array `teamKPIs`, entao sao renderizados pelo
+   * `*ngFor` que ja existe no template — nenhum componente ou markup novo.
+   *
+   * Nunca rejeita: se as metas de SLA falharem, devolve os KPIs originais. Um
+   * acrescimo nao pode derrubar os medidores que ja funcionavam.
+   */
+  async applyTeamGoals(kpis: KPIData[], selectedMonth?: Date | null): Promise<KPIData[]> {
+    const base = this.applyOnTimeDeliveryGoalToKpis(kpis, selectedMonth);
+
+    try {
+      const config = await firstValueFrom(this.slaGoals.loadConfig());
+      if (!config.length) {
+        return base;
+      }
+
+      const slaKpis = this.slaGoals.toKpiData(config, (current, target, superTarget) =>
+        this.getKPIColorByGoals(current, target, superTarget),
+      );
+
+      // Idempotente: uma segunda passada (troca de mes, troca de colaborador)
+      // substitui os marcadores em vez de duplica-los.
+      const withoutSla = base.filter(kpi => !SlaGoalsService.SLA_KPI_IDS.includes(kpi.id));
+      return [...withoutSla, ...slaKpis];
+    } catch (err) {
+      console.warn('[KPIService] metas de SLA indisponiveis, seguindo sem elas:', err);
+      return base;
+    }
   }
 
   /**
