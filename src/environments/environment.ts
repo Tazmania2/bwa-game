@@ -37,6 +37,25 @@ export const environment = {
       .trim()
       .toLowerCase() !== 'false',
   
+  /**
+   * Drill-down por tag (G4 / Onboarding / Risco de churn) e por "Clientes
+   * atendidos" no dashboard organizacional.
+   *
+   * PADRAO `false`, e isso NAO e conservadorismo gratuito: o drill-down foi
+   * desligado de proposito por performance. O relatorio hierarquico e servido
+   * do Snowflake DENTRO do request — medido em producao 2026-08-03 em 12.558 ms
+   * com depth=1, a chamada mais leve possivel. Ligar isto antes de o espelho em
+   * Postgres estar no ar (g4u-mvp-api, branch feat/org-hierarchy-postgres-cache-master)
+   * reintroduz exatamente a lentidao que motivou o desligamento.
+   *
+   * Ligar com ORG_HIERARCHY_TAG_DRILLDOWN=true depois que o espelho estiver
+   * deployado e medido.
+   */
+  orgHierarchyTagDrilldown:
+    String(process.env['ORG_HIERARCHY_TAG_DRILLDOWN'] ?? process.env['org_hierarchy_tag_drilldown'] ?? 'false')
+      .trim()
+      .toLowerCase() === 'true',
+
   // Logo Configuration
   logoUrl: '', // Empty string means use default logo
   
