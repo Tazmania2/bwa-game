@@ -223,6 +223,14 @@
           [color]="monthlyPointsGoalColor">
         </c4u-monthly-points-goal-progress>
         <!--
+          Feature 7: quebra da meta do mes em 10/20/20/50. Recebe o MESMO
+          `target` do anel acima para que os dois nao possam discordar na tela.
+        -->
+        <c4u-weekly-goal-breakdown
+          [monthTarget]="monthlyPointsProgressData.target"
+          [isLoading]="isLoadingKPIs || isLoadingProgress || isLoadingMonthlyGoal">
+        </c4u-weekly-goal-breakdown>
+        <!--
           KPI circular "Clientes na Carteira" (id numero-empresas) — meta de empresas na carteira:
           mantido comentado; a meta visível de pontos do mês é o c4u-monthly-points-goal-progress acima.
           <ng-container *ngFor="let kpi of playerKPIs; let i = index; trackBy: trackByKpiId">

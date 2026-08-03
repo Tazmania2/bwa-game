@@ -1,0 +1,43 @@
+<div class="weekly-goal" *ngIf="monthTarget > 0 || isLoading">
+  <p class="weekly-goal__title">{{ label }}</p>
+
+  <ng-container *ngIf="!isLoading; else weeklySkeleton">
+    <ul class="weekly-goal__list">
+      <li class="weekly-goal__row" *ngFor="let slice of slices; trackBy: trackByWeek">
+        <div class="weekly-goal__row-head">
+          <span class="weekly-goal__week">
+            {{ slice.week }}ª semana
+            <span class="weekly-goal__weight">{{ slice.weightPct }}%</span>
+          </span>
+          <span class="weekly-goal__numbers">
+            {{ slice.achievedPoints | number: '1.0-0':'pt-BR' }}
+            <span class="weekly-goal__sep">/</span>
+            {{ slice.targetPoints | number: '1.0-0':'pt-BR' }}
+          </span>
+        </div>
+        <div
+          class="weekly-goal__bar"
+          role="progressbar"
+          [attr.aria-valuenow]="slice.progressPct | number: '1.0-0'"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          [attr.aria-label]="slice.week + 'ª semana: ' + (slice.achievedPoints | number: '1.0-0':'pt-BR') + ' de ' + (slice.targetPoints | number: '1.0-0':'pt-BR') + ' pontos'">
+          <div
+            class="weekly-goal__bar-fill"
+            [class.weekly-goal__bar-fill--complete]="slice.progressPct >= 100"
+            [style.width.%]="slice.progressPct">
+          </div>
+        </div>
+      </li>
+    </ul>
+  </ng-container>
+
+  <ng-template #weeklySkeleton>
+    <ul class="weekly-goal__list" aria-hidden="true">
+      <li class="weekly-goal__row" *ngFor="let slot of [1, 2, 3, 4]">
+        <span class="weekly-goal__shimmer weekly-goal__shimmer--head"></span>
+        <span class="weekly-goal__shimmer weekly-goal__shimmer--bar"></span>
+      </li>
+    </ul>
+  </ng-template>
+</div>
