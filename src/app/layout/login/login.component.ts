@@ -15,6 +15,7 @@ import { SessionTimeoutService } from '@services/session-timeout.service';
 import { CampaignService } from '@services/campaign.service';
 import { Subscription } from 'rxjs';
 import { parseFragmentParams } from '../../utils/url-fragment-params';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-login',
@@ -29,6 +30,9 @@ export class LoginComponent implements OnInit, OnDestroy {
   loadingText: string = 'Entrando...';
   systemParams: SystemParams | null = null;
   bwaLogoUrl: string;
+
+  /** Substitui o formulário de login quando a plataforma está em manutenção. */
+  readonly isLoginUnderMaintenance = !!environment.showMaintenanceBanner;
 
   private loadingTexts: string[] = [
     'Entrando...',
