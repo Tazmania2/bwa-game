@@ -1,4 +1,10 @@
-import { ChangeDetectionStrategy, Component, OnDestroy, OnInit } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  OnDestroy,
+  OnInit,
+} from '@angular/core';
 import { Subject, takeUntil } from 'rxjs';
 import {
   EconomyIndicator,
@@ -31,17 +37,33 @@ export class C4uOrgEconomyCardsComponent implements OnInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
 
-  constructor(private economy: EconomyIndicatorsService) {}
+  constructor(
+    private economy: EconomyIndicatorsService,
+    private cdr: ChangeDetectorRef,
+  ) {}
 
   ngOnInit(): void {
     this.economy
       .load()
       .pipe(takeUntil(this.destroy$))
-      .subscribe(payload => {
-        this.indicators = payload.indicators;
-        this.currency = payload.currency;
-        this.isMock = payload.isMock;
-        this.isLoading = false;
+      .subscribe({
+        next: payload => {
+          this.indicators = payload.indicators;
+          this.currency = payload.currency;
+          this.isMock = payload.isMock;
+          this.isLoading = false;
+          // OBRIGATORIO com OnPush: a resposta chega fora de qualquer evento
+          // que dispare deteccao de mudanca neste componente. Sem isto os
+          // campos acima mudam na classe e a view fica no esqueleto para
+          // sempre — foi exatamente o que aconteceu.
+          this.cdr.markForCheck();
+        },
+        // `load()` ja converte falha em payload vazio, mas se algum erro
+        // escapar o esqueleto nao pode ficar girando eternamente.
+        error: () => {
+          this.isLoading = false;
+          this.cdr.markForCheck();
+        },
       });
   }
 

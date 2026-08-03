@@ -434,6 +434,7 @@
                 <c4u-kpi-circular-progress
                   *ngFor="let kpi of onTimeKpis; let i = index; trackBy: trackByKpiId"
                   size="small"
+                  [hideValue]="true"
                   [label]="kpi.label"
                   [current]="kpi.id === 'entregas-prazo' ? getKpiCurrentValue(kpi) : roundValue(getKpiCurrentValue(kpi))"
                   [target]="roundValue(getKpiTargetValue(kpi))"

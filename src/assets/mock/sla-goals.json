@@ -15,7 +15,7 @@
     {
       "id": "on-time-onboarding",
       "segment": "clients_acessorias_onboarding",
-      "nome": "Clientes Onboarding no prazo",
+      "nome": "Onboarding no prazo",
       "meta": 90,
       "supermeta": 100,
       "modificador": 1,
@@ -25,7 +25,7 @@
     {
       "id": "on-time-risco",
       "segment": "clients_acessorias_risco_de_churn",
-      "nome": "Clientes em risco no prazo",
+      "nome": "Clientes risco no prazo",
       "meta": 97,
       "supermeta": 100,
       "modificador": 1.5,

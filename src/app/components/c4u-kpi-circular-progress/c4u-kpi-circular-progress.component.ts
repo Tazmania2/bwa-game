@@ -19,6 +19,16 @@ export class C4uKpiCircularProgressComponent {
   @Input() isPending = false;
   /** Só o valor percentual visível (sem rótulo, meta nem status) — ex.: entregas no prazo. */
   @Input() compactPercentOnly = false;
+
+  /**
+   * Esconde o numero repetido ABAIXO do anel (`.kpi-value`), mantendo o
+   * percentual que ja aparece dentro do anel.
+   *
+   * Existe para os marcadores de "no prazo", onde os dois mostram exatamente o
+   * mesmo valor e a repeticao so ocupa altura. Opcional e `false` por padrao —
+   * nenhum painel existente muda.
+   */
+  @Input() hideValue = false;
   /** Quando preenchido, substitui o texto de ajuda do botão de informação. */
   @Input() helpDescription = '';
   

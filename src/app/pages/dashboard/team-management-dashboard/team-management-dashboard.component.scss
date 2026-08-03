@@ -943,19 +943,118 @@
         }
       }
 
-      // Segunda linha: os quatro marcadores "no prazo". Gap menor que o da
-      // primeira linha para os quatro caberem lado a lado num laptop; eles ja
-      // vem em size="small" do template.
+      // Segunda linha: os quatro marcadores "no prazo", em size="small".
+      //
+      // A largura precisa ser reposta aqui. `:host.size-small` fixa 80px, o que
+      // e estreito demais para rotulos como "Clientes Onboarding no prazo" — a
+      // 80px eles quebravam em "Clien / tes / Onbo / ardin". 168px cabe o rotulo
+      // em duas linhas legiveis e ainda deixa os quatro lado a lado num laptop
+      // (4 x 168 + 3 x 24 = 744px).
+      // GRID, nao flex. Duas tentativas com flex + largura fixa quebraram a
+      // linha porque a largura real do container foi estimada, nao medida — e
+      // item de flex tem `min-width: auto`, entao com `white-space: nowrap` ele
+      // se recusa a encolher abaixo do rotulo inteiro e ignora o `width`
+      // declarado.
+      //
+      // `repeat(4, minmax(0, 1fr))` remove as duas fragilidades de uma vez: sao
+      // sempre QUATRO colunas, dividindo a largura que existir, e o `minmax(0,
+      // ...)` permite que a coluna fique menor que o proprio conteudo. Nao ha
+      // largura estimada em lugar nenhum, entao nao ha o que errar.
       &--on-time {
-        gap: $spacing-lg;
-        margin-top: $spacing-xl;
+        display: grid;
+        gap: $spacing-sm;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        margin-top: $spacing-xxl;
 
-        @include tablet-only {
-          gap: $spacing-md;
+        c4u-kpi-circular-progress {
+          width: 100%;
+
+          // Anel reduzido de 96px para 80px, como pedido. Menor tambem ajuda o
+          // conjunto: sobra mais largura por coluna para o rotulo de uma linha.
+          ::ng-deep .kpi-progress-wrapper {
+            height: 80px;
+            width: 80px;
+          }
+
+          ::ng-deep .valor {
+            font-size: 20px;
+          }
+
+          // 11px mantem o rotulo mais longo ("Clientes risco no prazo") em
+          // ~180px, dentro de qualquer coluna razoavel.
+          ::ng-deep .kpi-label {
+            font-size: 11px;
+            white-space: nowrap;
+          }
         }
 
+        // Ecra largo (1920 e afins): ha espaco de sobra, entao os quatro voltam
+        // ao mesmo tamanho dos aneis semanais — todos os marcadores do painel
+        // iguais.
+        //
+        // 1440px e nao o mixin `desktop-up`: aquele comeca em 1024px, largura
+        // em que quatro colunas com anel de 96px ficariam apertadas de novo.
+        @media (min-width: 1440px) {
+          gap: $spacing-md;
+
+          c4u-kpi-circular-progress {
+            ::ng-deep .kpi-progress-wrapper {
+              height: 96px;
+              width: 96px;
+            }
+
+            ::ng-deep .valor {
+              font-size: 24px;
+            }
+
+            ::ng-deep .kpi-label {
+              font-size: 12px;
+            }
+          }
+        }
+
+        @include tablet-only {
+          gap: $spacing-xs;
+
+          c4u-kpi-circular-progress {
+            ::ng-deep .kpi-progress-wrapper {
+              height: 68px;
+              width: 68px;
+            }
+
+            ::ng-deep .valor {
+              font-size: 17px;
+            }
+
+            ::ng-deep .kpi-label {
+              font-size: 10px;
+            }
+          }
+        }
+
+        // No telemovel viram 2x2 — quatro colunas numa tela estreita deixaria
+        // cada anel do tamanho de uma moeda. Aqui a quebra de linha do rotulo
+        // volta a ser permitida: forcar uma linha numa coluna estreita cortaria
+        // o texto.
         @include mobile-only {
-          gap: $spacing-sm;
+          gap: $spacing-md;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+
+          c4u-kpi-circular-progress {
+            ::ng-deep .kpi-progress-wrapper {
+              height: 72px;
+              width: 72px;
+            }
+
+            ::ng-deep .kpi-label {
+              font-size: 11px;
+              white-space: normal;
+            }
+
+            ::ng-deep .valor {
+              font-size: 18px;
+            }
+          }
         }
       }
     }

@@ -204,10 +204,48 @@
     width: 60px;
     height: 60px;
   }
-  
+
   :host.size-large & {
     width: 160px;
     height: 160px;
+  }
+
+  // O anel em si e outro componente (c4u-porcentagem-circular) e o SVG dele tem
+  // width="130px" height="130px" FIXOS no markup, sem input de tamanho. Sem
+  // forcar aqui, `size-small` encolhia so a caixa: o anel continuava com 130px,
+  // transbordava a caixa de 60px e sobrepunha o marcador vizinho.
+  //
+  // Escopado a size-small/size-large de proposito. O tamanho medio e o que
+  // todas as telas ja usam hoje, e la a caixa (120px) tambem e menor que o SVG
+  // (130px) — mexer nisso mudaria a aparencia de paineis que ninguem pediu para
+  // mudar.
+  //
+  // O SVG tem viewBox="0 0 130 130", entao 100% escala proporcional e mantem o
+  // circulo redondo.
+  :host.size-small &,
+  :host.size-large & {
+    ::ng-deep svg {
+      display: block;
+      height: 100%;
+      width: 100%;
+    }
+  }
+
+  // O percentual DENTRO do anel e um div absoluto (`.valor`) do
+  // c4u-porcentagem-circular, com font-size fixo de 28px. Como e absoluto, nao
+  // encolhe junto com o SVG — num anel de 60px ele ocupava quase o diametro
+  // inteiro. Tambem escopado a size-small/size-large: no medio, 28px e o
+  // tamanho que todos os paineis ja usam.
+  :host.size-small & {
+    ::ng-deep .valor {
+      font-size: 15px;
+    }
+  }
+
+  :host.size-large & {
+    ::ng-deep .valor {
+      font-size: 34px;
+    }
   }
 }
 

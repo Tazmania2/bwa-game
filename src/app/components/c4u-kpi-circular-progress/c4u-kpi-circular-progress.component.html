@@ -24,7 +24,7 @@
       [theme]="progressColor">
     </c4u-porcentagem-circular>
   </div>
-  <div class="kpi-value" aria-hidden="true">
+  <div class="kpi-value" *ngIf="!hideValue" aria-hidden="true">
     <span *ngIf="isPending" class="loading-dots loading-dots--lg" aria-hidden="true">
       <span>.</span><span>.</span><span>.</span>
     </span>

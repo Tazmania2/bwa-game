@@ -3,14 +3,21 @@
 // visual (rotulo pequeno, valor grande, pilula de delta) e deliberadamente a
 // mesma dos cartoes hero para que a secao nao pareca enxertada.
 
+// Respiro acima e abaixo para a secao nao encostar nos cartoes hero (acima) nem
+// no bloco de ritmo (abaixo) — sao tres blocos seguidos de cartoes escuros e sem
+// isto leem como um so.
 .economy-section {
-  margin-top: 1.5rem;
+  margin-bottom: 2rem;
+  margin-top: 2rem;
 }
 
 .section-header--compact {
   align-items: center;
   display: flex;
   gap: 0.75rem;
+  // Separa o titulo e a pilha "dados simulados" do topo dos cartoes; colados,
+  // a pilha parecia rotulo do primeiro cartao em vez de rotulo da secao.
+  margin-bottom: 1rem;
 }
 
 .economy-mock-badge {

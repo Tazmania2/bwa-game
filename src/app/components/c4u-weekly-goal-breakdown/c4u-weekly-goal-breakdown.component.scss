@@ -21,12 +21,54 @@
     align-items: flex-start;
     display: flex;
     flex-wrap: wrap;
-    gap: 0.85rem;
+    gap: 1.25rem;
     justify-content: center;
+
+    // Repoe a largura do host: `:host.size-small` fixa 80px, estreito demais
+    // ate para "1ª sem" + "Meta: 14.240 pts", que quebrava feio. 112px cabe os
+    // dois e mantem os quatro aneis lado a lado.
+    c4u-kpi-circular-progress {
+      width: 112px;
+
+      // Os 15px do size-small ficavam visivelmente menores que os 20px dos
+      // marcadores "no prazo", com aneis de diametro parecido. Igualado aqui
+      // para que o par de linhas leia como um conjunto so.
+      ::ng-deep .valor {
+        font-size: 20px;
+      }
+    }
+
+    // Ecra largo: mesmo tamanho dos marcadores "no prazo" da segunda linha,
+    // para que todos os aneis do painel tenham o mesmo diametro. Ver a nota
+    // equivalente em team-management-dashboard.component.scss.
+    @media (min-width: 1440px) {
+      gap: 1.5rem;
+
+      c4u-kpi-circular-progress {
+        width: 132px;
+
+        ::ng-deep .kpi-progress-wrapper {
+          height: 96px;
+          width: 96px;
+        }
+
+        ::ng-deep .valor {
+          font-size: 24px;
+        }
+
+        ::ng-deep .kpi-label {
+          font-size: 12px;
+        }
+      }
+    }
 
     // Em telas estreitas os quatro aneis quebram em 2x2 em vez de espremer.
     @media (max-width: 480px) {
-      gap: 0.6rem;
+      gap: 0.75rem;
+
+      c4u-kpi-circular-progress {
+        width: 100px;
+      }
     }
   }
 
