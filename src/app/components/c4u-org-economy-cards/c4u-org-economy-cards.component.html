@@ -1,0 +1,49 @@
+<section
+  class="dashboard-section economy-section"
+  aria-labelledby="economy-kpis-heading"
+  *ngIf="isLoading || indicators.length > 0">
+  <div class="section-header section-header--compact">
+    <h2 id="economy-kpis-heading" class="section-eyebrow">Economia</h2>
+    <!--
+      O aviso de dado simulado e deliberado e nao deve ser removido enquanto a
+      fonte de custo nao existir. Um cartao de custo sem procedencia e pior que
+      cartao nenhum: ele parece um numero de gestao.
+    -->
+    <span class="economy-mock-badge" *ngIf="isMock" title="Ainda não há fonte de custo no data lake">
+      dados simulados
+    </span>
+  </div>
+
+  <div class="economy-grid" *ngIf="!isLoading; else economySkeleton">
+    <article class="economy-kpi" *ngFor="let indicator of indicators; trackBy: trackById">
+      <p class="economy-kpi__label">{{ indicator.label }}</p>
+      <p class="economy-kpi__value">
+        {{ indicator.mtd_value | currency: currency }}
+      </p>
+      <div class="economy-kpi__delta">
+        <span
+          class="delta-pill"
+          [class.delta-pill--positive]="deltaTone(indicator) === 'positive'"
+          [class.delta-pill--negative]="deltaTone(indicator) === 'negative'">
+          {{ deltaLabel(indicator) }}
+        </span>
+        <span class="economy-kpi__hint">
+          vs mês anterior
+          <ng-container *ngIf="indicator.prev_mtd_value != null">
+            ({{ indicator.prev_mtd_value | currency: currency }})
+          </ng-container>
+        </span>
+      </div>
+    </article>
+  </div>
+
+  <ng-template #economySkeleton>
+    <div class="economy-grid" aria-hidden="true">
+      <article class="economy-kpi economy-kpi--skeleton" *ngFor="let slot of [1, 2, 3]">
+        <span class="economy-kpi__shimmer economy-kpi__shimmer--label"></span>
+        <span class="economy-kpi__shimmer economy-kpi__shimmer--value"></span>
+        <span class="economy-kpi__shimmer economy-kpi__shimmer--delta"></span>
+      </article>
+    </div>
+  </ng-template>
+</section>

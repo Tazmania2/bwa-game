@@ -314,6 +314,14 @@
             </div>
           </section>
 
+          <!--
+            Economia (feature 10). Secao propria, fora de "Indicadores
+            principais": aqueles cartoes sao contagens operacionais, estes sao
+            reais. O componente carrega a propria fonte e se esconde sozinho
+            quando nao ha indicadores.
+          -->
+          <c4u-org-economy-cards></c4u-org-economy-cards>
+
           <c4u-card *ngIf="showPaceSection" class="dashboard-section pace-section" aria-labelledby="pace-heading">
             <div class="pace-section__header">
               <div>
