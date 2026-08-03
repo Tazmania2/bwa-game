@@ -1,0 +1,54 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.login-maintenance {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 0.25rem 0.25rem;
+  text-align: center;
+  color: #fff;
+  font-family: Urbanist, system-ui, sans-serif;
+}
+
+.login-maintenance__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 0.875rem;
+  background: rgba(255, 226, 132, 0.12);
+  border: 1px solid rgba(255, 226, 132, 0.28);
+  color: #ffe284;
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.login-maintenance__title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: 0.01em;
+  color: #ffe284;
+}
+
+.login-maintenance__message {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.login-maintenance__footnote {
+  margin: 0.25rem 0 0;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.62);
+}
