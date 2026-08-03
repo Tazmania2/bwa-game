@@ -6395,6 +6395,37 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
     return this.kpiService.getKPIColorByGoals(current, target, superGoal);
   }
 
+  /**
+   * Segunda linha de "Metas da Equipe": a familia "no prazo".
+   *
+   * Ordem FIXA e declarada aqui, nao herdada da ordem de chegada em `teamKPIs`,
+   * porque "Entregas no prazo" vem do fluxo de KPIs e os tres de SLA vem do
+   * SlaGoalsService — deixar a ordem ao acaso faria os marcadores trocarem de
+   * lugar entre carregamentos.
+   */
+  private static readonly ON_TIME_KPI_ORDER: readonly string[] = [
+    'entregas-prazo',
+    'on-time-g4',
+    'on-time-onboarding',
+    'on-time-risco',
+  ];
+
+  get onTimeKpis(): KPIData[] {
+    const order = TeamManagementDashboardComponent.ON_TIME_KPI_ORDER;
+    return order
+      .map(id => this.teamKPIs.find(kpi => kpi.id === id))
+      .filter((kpi): kpi is KPIData => !!kpi);
+  }
+
+  /** Marcadores que nao pertencem a nenhuma das duas linhas declaradas. */
+  get otherTeamKpis(): KPIData[] {
+    const known = new Set<string>([
+      ...TeamManagementDashboardComponent.ON_TIME_KPI_ORDER,
+      'numero-empresas',
+    ]);
+    return this.teamKPIs.filter(kpi => !known.has(kpi.id));
+  }
+
   get monthlyPointsProgressLabel(): string {
     return this.selectedCollaborator ? 'Pontos no mês' : 'Pontos no mês (equipe)';
   }

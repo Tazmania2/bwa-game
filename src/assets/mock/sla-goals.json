@@ -5,7 +5,7 @@
     {
       "id": "on-time-g4",
       "segment": "clients_acessorias_g4",
-      "nome": "% no prazo clientes G4",
+      "nome": "Clientes G4 no prazo",
       "meta": 95,
       "supermeta": 100,
       "modificador": 1,
@@ -15,7 +15,7 @@
     {
       "id": "on-time-onboarding",
       "segment": "clients_acessorias_onboarding",
-      "nome": "% no prazo clientes em onboarding",
+      "nome": "Clientes Onboarding no prazo",
       "meta": 90,
       "supermeta": 100,
       "modificador": 1,
@@ -25,7 +25,7 @@
     {
       "id": "on-time-risco",
       "segment": "clients_acessorias_risco_de_churn",
-      "nome": "% no prazo clientes em risco",
+      "nome": "Clientes em risco no prazo",
       "meta": 97,
       "supermeta": 100,
       "modificador": 1.5,

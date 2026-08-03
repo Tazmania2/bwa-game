@@ -922,6 +922,42 @@
       @include mobile-only {
         gap: $spacing-md;
       }
+
+      // Primeira linha: pontos do mes a esquerda, quebra semanal a direita.
+      // `space-between` em vez de `center` porque as duas metades tem pesos
+      // visuais diferentes — centralizado, o anel unico da esquerda ficava
+      // deslocado para o meio e a relacao "meta / quebra da meta" se perdia.
+      &--headline {
+        align-items: center;
+        justify-content: space-between;
+        gap: $spacing-xl;
+
+        c4u-weekly-goal-breakdown {
+          flex: 0 1 auto;
+        }
+
+        // Abaixo de tablet vira empilhado e volta a centralizar, senao as duas
+        // metades ficam grudadas nas bordas opostas de uma tela estreita.
+        @include mobile-only {
+          justify-content: center;
+        }
+      }
+
+      // Segunda linha: os quatro marcadores "no prazo". Gap menor que o da
+      // primeira linha para os quatro caberem lado a lado num laptop; eles ja
+      // vem em size="small" do template.
+      &--on-time {
+        gap: $spacing-lg;
+        margin-top: $spacing-xl;
+
+        @include tablet-only {
+          gap: $spacing-md;
+        }
+
+        @include mobile-only {
+          gap: $spacing-sm;
+        }
+      }
     }
 
     // Tab Content

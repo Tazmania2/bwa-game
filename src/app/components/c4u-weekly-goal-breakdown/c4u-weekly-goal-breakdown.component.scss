@@ -1,11 +1,11 @@
-// Componente irmao do anel de "Pontos do mes". Estilo sobrio de proposito: ele
-// acompanha o anel, nao disputa atencao com ele.
+// Bloco da direita na primeira linha de "Metas da Equipe". Os quatro aneis
+// semanais usam o proprio c4u-kpi-circular-progress em size="small", entao aqui
+// so ha o titulo e o arranjo — nenhuma pintura de anel propria.
 
 .weekly-goal {
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
-  min-width: min(100%, 15rem);
+  gap: 0.75rem;
 
   &__title {
     color: var(--c4u-text-muted, rgba(255, 255, 255, 0.65));
@@ -13,91 +13,30 @@
     font-weight: 600;
     letter-spacing: 0.01em;
     margin: 0;
+    text-align: center;
     text-transform: uppercase;
   }
 
-  &__list {
+  &__markers {
+    align-items: flex-start;
     display: flex;
-    flex-direction: column;
-    gap: 0.55rem;
-    list-style: none;
-    margin: 0;
-    padding: 0;
-  }
+    flex-wrap: wrap;
+    gap: 0.85rem;
+    justify-content: center;
 
-  &__row {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-  }
-
-  &__row-head {
-    align-items: baseline;
-    display: flex;
-    gap: 0.5rem;
-    justify-content: space-between;
-  }
-
-  &__week {
-    align-items: baseline;
-    color: var(--c4u-text, rgba(255, 255, 255, 0.88));
-    display: flex;
-    font-size: 0.8rem;
-    gap: 0.35rem;
-  }
-
-  &__weight {
-    color: var(--c4u-text-muted, rgba(255, 255, 255, 0.5));
-    font-size: 0.7rem;
-  }
-
-  &__numbers {
-    color: var(--c4u-text, rgba(255, 255, 255, 0.88));
-    font-size: 0.8rem;
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
-  }
-
-  &__sep {
-    color: var(--c4u-text-muted, rgba(255, 255, 255, 0.4));
-    margin: 0 0.1rem;
-  }
-
-  &__bar {
-    background: rgba(255, 255, 255, 0.08);
-    border-radius: 100px;
-    height: 0.35rem;
-    overflow: hidden;
-    width: 100%;
-  }
-
-  &__bar-fill {
-    background: #f97316;
-    border-radius: 100px;
-    height: 100%;
-    transition: width 240ms ease-out;
-
-    &--complete {
-      background: #22c55e;
+    // Em telas estreitas os quatro aneis quebram em 2x2 em vez de espremer.
+    @media (max-width: 480px) {
+      gap: 0.6rem;
     }
   }
 
   &__shimmer {
     animation: weekly-goal-shimmer 1.4s ease-in-out infinite;
     background: rgba(255, 255, 255, 0.08);
-    border-radius: 0.35rem;
+    border-radius: 50%;
     display: block;
-
-    &--head {
-      height: 0.8rem;
-      width: 65%;
-    }
-
-    &--bar {
-      height: 0.35rem;
-      margin-top: 0.25rem;
-      width: 100%;
-    }
+    height: 3.25rem;
+    width: 3.25rem;
   }
 }
 
@@ -113,10 +52,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .weekly-goal__bar-fill {
-    transition: none;
-  }
-
   .weekly-goal__shimmer {
     animation: none;
   }

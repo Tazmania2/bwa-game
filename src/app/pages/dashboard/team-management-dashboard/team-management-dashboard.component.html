@@ -365,9 +365,14 @@
                 [kpiCount]="kpiLoadingSlots.length + 1">
               </c4u-dashboard-goals-skeleton>
               
+              <!--
+                Primeira linha: pontos do mes a esquerda, meta por semana a
+                direita. As duas coisas falam da MESMA meta mensal — a segunda e
+                a quebra da primeira — entao ficam lado a lado.
+              -->
               <div
                 *ngIf="!(isLoadingKPIs || isLoadingMonthlyPointsProgress)"
-                class="kpi-grid"
+                class="kpi-grid kpi-grid--headline"
                 role="group"
                 aria-labelledby="kpi-section-title">
                 <c4u-monthly-points-goal-progress
@@ -403,20 +408,42 @@
                     </c4u-kpi-circular-progress>
                   </ng-container>
                 -->
-                <ng-container *ngFor="let kpi of teamKPIs; let i = index; trackBy: trackByKpiId">
+                <ng-container *ngFor="let kpi of otherTeamKpis; let i = index; trackBy: trackByKpiId">
                   <c4u-kpi-circular-progress
-                    *ngIf="kpi.id !== 'numero-empresas'"
                     [label]="kpi.label"
-                    [current]="kpi.id === 'entregas-prazo' ? getKpiCurrentValue(kpi) : roundValue(getKpiCurrentValue(kpi))"
+                    [current]="roundValue(getKpiCurrentValue(kpi))"
                     [target]="roundValue(getKpiTargetValue(kpi))"
                     [superTarget]="kpi.superTarget ? roundValue(kpi.superTarget) : undefined"
                     [color]="kpi.color"
                     [unit]="kpi.unit"
                     [colorIndex]="i"
-                    [isPending]="isEntregasPrazoCircularPending(kpi)"
                     [isMissing]="getKpiCircularIsMissing(kpi)">
                   </c4u-kpi-circular-progress>
                 </ng-container>
+              </div>
+
+              <!--
+                Segunda linha: a familia "no prazo". size="small" para os quatro
+                caberem lado a lado num laptop sem quebrar.
+              -->
+              <div
+                *ngIf="!(isLoadingKPIs || isLoadingMonthlyPointsProgress) && onTimeKpis.length"
+                class="kpi-grid kpi-grid--on-time"
+                role="group"
+                aria-label="Metas de entregas no prazo">
+                <c4u-kpi-circular-progress
+                  *ngFor="let kpi of onTimeKpis; let i = index; trackBy: trackByKpiId"
+                  size="small"
+                  [label]="kpi.label"
+                  [current]="kpi.id === 'entregas-prazo' ? getKpiCurrentValue(kpi) : roundValue(getKpiCurrentValue(kpi))"
+                  [target]="roundValue(getKpiTargetValue(kpi))"
+                  [superTarget]="kpi.superTarget ? roundValue(kpi.superTarget) : undefined"
+                  [color]="kpi.color"
+                  [unit]="kpi.unit"
+                  [colorIndex]="i"
+                  [isPending]="isEntregasPrazoCircularPending(kpi)"
+                  [isMissing]="getKpiCircularIsMissing(kpi)">
+                </c4u-kpi-circular-progress>
               </div>
             </section>
             
