@@ -58,6 +58,11 @@ module.exports = {
                 SUPABASE_COMPANIES_TABLE: getEnv('SUPABASE_COMPANIES_TABLE', 'companies'),
                 SUPABASE_DB_SCHEMA: getEnv('SUPABASE_DB_SCHEMA', 'public'),
                 SUPABASE_USE_MOCK: getEnv('SUPABASE_USE_MOCK', ''),
+                // Sem esta linha a flag NAO existe no bundle: o DefinePlugin
+                // substitui `process.env` por este objeto literal, entao
+                // qualquer chave ausente vira `undefined` e o valor do .env e
+                // ignorado em silencio.
+                ORG_HIERARCHY_TAG_DRILLDOWN: getEnv('ORG_HIERARCHY_TAG_DRILLDOWN', ''),
                 SUPABASE_MOCK_FEED_ALL_USERS: getEnv('SUPABASE_MOCK_FEED_ALL_USERS', ''),
                 // Lowercase (Vercel compatibility)
                 backend_url_base: backendUrlBase,
