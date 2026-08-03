@@ -23,14 +23,18 @@
     <h1 class="hidden md:!block">Ligando o Modo Turbo.</h1>
   </div>
 
-  <!-- Maintenance notice replaces login inputs -->
+  <!-- Maintenance notice replaces login inputs (exceto /login-admin) -->
   <c4u-card *ngIf="isLoginUnderMaintenance" title="Em manutenção" align="center">
     <c4u-login-maintenance></c4u-login-maintenance>
   </c4u-card>
 
   <ng-container *ngIf="!isLoginUnderMaintenance">
     <!-- Login Form -->
-    <c4u-card *ngIf="resetFlow === 'login'" [title]="'LABEL_LOGIN_SUBTITLE' | translate" align="center">
+    <c4u-card
+      *ngIf="resetFlow === 'login'"
+      [title]="isAdminLoginRoute ? 'Acesso administrativo' : ('LABEL_LOGIN_SUBTITLE' | translate)"
+      align="center"
+    >
       <div class="login-form-container">
         <!-- Session Expired Message -->
         <div *ngIf="sessionExpiredMessage" class="session-expired-message">
