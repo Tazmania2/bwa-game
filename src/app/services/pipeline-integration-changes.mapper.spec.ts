@@ -71,8 +71,8 @@ describe('pipeline-integration-changes.mapper', () => {
   it('flattens rows for spreadsheet export with before_json and after_json', () => {
     const [row] = flattenPipelineIntegrationChangesForExport([promoteRow]);
     expect(row['Tipo ação']).toBe('PROMOTE_MANAGER');
-    expect(row.before_json).toContain('GESTOR');
-    expect(row.after_json).toContain('GERENTE');
+    expect(row['before_json']).toContain('GESTOR');
+    expect(row['after_json']).toContain('GERENTE');
     expect(String(row['Campos alterados'])).toContain('target_role');
   });
 });

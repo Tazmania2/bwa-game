@@ -41,7 +41,7 @@ describe('org-hierarchy-kpi-compare.mapper monthly history', () => {
       { cache_month: '2026-06-01' }
     );
 
-    expect(history).toHaveLength(2);
+    expect(history).toHaveSize(2);
     expect(history[0].mtdValue).toBeNull();
     expect(history[0].fullValue).toBe(36000);
     expect(history[1].mtdValue).toBe(9000);

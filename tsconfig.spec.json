@@ -9,6 +9,9 @@
       "@angular/localize"
     ]
   },
+  "files": [
+    "src/test-env-shim.ts"
+  ],
   "include": [
     "src/**/*.spec.ts",
     "src/**/*.pbt.spec.ts",
