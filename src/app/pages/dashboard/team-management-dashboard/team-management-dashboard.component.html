@@ -389,6 +389,8 @@
                 -->
                 <c4u-weekly-goal-breakdown
                   [monthTarget]="monthlyPointsProgressData.target"
+                  [dailyRows]="weeklyGoalDailyRows"
+                  [monthRef]="selectedMonth ?? null"
                   [isLoading]="isLoadingMonthlyPointsProgress">
                 </c4u-weekly-goal-breakdown>
                 <!--

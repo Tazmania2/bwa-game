@@ -1,4 +1,8 @@
-<div class="weekly-goal" *ngIf="monthTarget > 0 || isLoading">
+<!--
+  `hasAchievedSource` primeiro: sem serie diaria nao ha realizado, e um
+  medidor com meta e sem realizado mostra quatro zeros — pior que nao existir.
+-->
+<div class="weekly-goal" *ngIf="hasAchievedSource && (monthTarget > 0 || isLoading)">
   <p class="weekly-goal__title">{{ label }}</p>
 
   <ng-container *ngIf="!isLoading; else weeklySkeleton">

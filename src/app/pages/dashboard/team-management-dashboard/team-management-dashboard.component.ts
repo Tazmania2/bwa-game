@@ -1858,7 +1858,8 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
           this.loadSidebarData(seasonRange),
           this.loadCollaborators(),
           this.loadGoalsData(monthRange),
-          this.loadMonthlyPointsBreakdown()
+          this.loadMonthlyPointsBreakdown(),
+          this.loadWeeklyGoalDailyRows()
         ]);
 
         // Productivity charts are loaded only when the user clicks the tab.
@@ -1908,7 +1909,8 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
         this.loadCollaboratorSidebarData(collaboratorId, dateRange),
         this.loadCollaborators(), // Still load collaborators list
         this.loadCollaboratorGoalsData(collaboratorId, dateRange),
-        this.loadMonthlyPointsBreakdown(collaboratorId)
+        this.loadMonthlyPointsBreakdown(collaboratorId),
+        this.loadWeeklyGoalDailyRows(collaboratorId)
       ];
 
       // Productivity charts are loaded only when the user clicks the tab.
@@ -2835,6 +2837,52 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
     this.pointsByCollaboratorGraphData = [];
     this.pointsByCollaboratorDatasets = [];
     this.pointsByCollaboratorLabels = [];
+  }
+
+  /**
+   * Serie diaria de `/daily-finished-stats` para a quebra semanal da meta
+   * (feature 7). `null` = sem fonte; o `c4u-weekly-goal-breakdown` esconde-se
+   * em vez de mostrar quatro zeros.
+   *
+   * Escopo de EQUIPA/gestao apenas. Com um colaborador selecionado fica `null`
+   * de proposito: o endpoint aceita `email`, mas `collaboratorId` neste
+   * componente e um userId e nao um email, e mostrar o realizado da equipa
+   * inteira sob o nome de uma pessoa seria pior do que nao mostrar nada.
+   */
+  weeklyGoalDailyRows: TeamDailyFinishedStatsRow[] | null = null;
+
+  /**
+   * Carrega a serie diaria do mes selecionado para a quebra semanal.
+   *
+   * Chamada propria em vez de reaproveitar as linhas ja lidas pela aba de
+   * Produtividade: aquelas seguem o intervalo escolhido pelo utilizador
+   * naquela aba, e o medidor tem de bater com o anel de "Pontos do mes" ao
+   * lado, que e sempre `calculateDateRange()` do mes selecionado.
+   */
+  private async loadWeeklyGoalDailyRows(collaboratorId?: string): Promise<void> {
+    if (collaboratorId) {
+      this.weeklyGoalDailyRows = null;
+      this.cdr.markForCheck();
+      return;
+    }
+
+    const teamId =
+      this.getGame4uReportTeamId() ??
+      this.getGame4uTeamScopeId() ??
+      TeamManagementDashboardComponent.MANAGEMENT_OVERVIEW_TEAM_ID;
+
+    try {
+      this.weeklyGoalDailyRows = await this.fetchTeamDailyFinishedStatsRows(
+        teamId,
+        this.calculateDateRange()
+      );
+    } catch (error) {
+      // Falhar aqui nao pode derrubar o painel: a quebra semanal e um
+      // acrescimo ao anel de pontos, nao um pre-requisito dele.
+      console.error('Error loading weekly goal daily stats:', error);
+      this.weeklyGoalDailyRows = null;
+    }
+    this.cdr.markForCheck();
   }
 
   private async fetchTeamDailyFinishedStatsRows(
@@ -5267,6 +5315,7 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
         this.loadSidebarData(seasonRange),
         this.loadGoalsData(monthRange),
         this.loadMonthlyPointsBreakdown(),
+        this.loadWeeklyGoalDailyRows(),
         // KPI «Entregas no Prazo» (circular): scaffold via `kpiService.getPlayerKPIs` e em seguida
         // `syncEntregasPrazoKpiFromParticipacao` aplica `manager.month_on_time_delivery_pct` do cache.
         this.loadTeamKPIs(),
