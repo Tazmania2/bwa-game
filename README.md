@@ -92,8 +92,9 @@ The build artifacts will be stored in the `dist/` directory.
 > ⚠️ **The unit suite runs but does not pass.** 378 known failures and a run
 > that dies before reaching 577 of its specs. Read
 > [`docs/TEST_SUITE_STATE_AND_WARNINGS.md`](docs/TEST_SUITE_STATE_AND_WARNINGS.md)
-> before drawing any conclusion from a red — or a green — result here. CI on
-> `master` is red for this reason and has been since before `sprint/moco-01`.
+> before drawing any conclusion from a red — or a green — result here. Note
+> that `ci-cd.yml` has **never run** — it triggers on `main`/`develop`/`staging`
+> and this repo has none of them — so nothing catches this automatically.
 > Scope `--include` to the files you are touching and it is fast and green.
 
 ### Unit Tests

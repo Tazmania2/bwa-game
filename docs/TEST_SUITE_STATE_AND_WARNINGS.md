@@ -184,20 +184,52 @@ that never ran.
 
 ## CI implications
 
-`.github/workflows/ci-cd.yml` runs:
+`.github/workflows/ci-cd.yml` contains a unit-test step:
 
 ```yaml
 npm run test -- --watch=false --browsers=ChromeHeadless --code-coverage
 ```
 
-That step exits 1 today. **CI on `master` is red for this reason**, and was red
-before `sprint/moco-01` was cut — verified against a clean worktree of
-`origin/master`. Do not attribute it to a feature branch.
+**It has never executed. Not once.** The workflow triggers are:
 
-Until the suite is repaired, treat the unit-test job as **known-red** and gate
-on the build instead (`ng build --configuration=production` exits 0). Do not
-delete or `continue-on-error` the job without recording the decision — a
-silently skipped test job is worse than a visibly red one.
+```yaml
+on:
+  push:        branches: [ main, develop, staging ]
+  pull_request: branches: [ main, develop ]
+```
+
+This repository has **no `main`, no `develop`, no `staging`**. Its default
+branch — and its only integration branch — is `master`. So no push and no pull
+request in this repo has ever matched a trigger. Confirmed with
+`gh run list`: the only workflow that has ever run is the scheduled weekly
+`Security Scan`.
+
+> An earlier revision of this document stated that CI on `master` was red
+> because of the suite. That was wrong. What was verified is that `ng test`
+> fails on a clean worktree of `origin/master`; the CI consequence was
+> inferred and never checked. The job is not red — it does not run. Corrected
+> 2026-08-04.
+
+So the practical position is worse than a red pipeline, and quieter:
+**this repository has no automated verification of any kind on any branch.**
+No unit tests, no build check, no lint. The only signal on a PR is the Vercel
+preview deploy, which proves the app compiles for preview and nothing else.
+
+Two separate decisions follow, and they should not be conflated:
+
+1. **Point the workflow at the branches that exist** (`master`, and feature
+   branches via `pull_request`). This is a one-line change and is what makes
+   any of the rest matter.
+2. **Decide what the pipeline gates on before you do (1).** Enabling it as
+   written turns every PR red immediately, because the unit-test step exits 1.
+   The honest interim is to gate on the build
+   (`ng build --configuration=production`, which exits 0 today) and to run the
+   unit step with `continue-on-error: true` **with a comment pointing at this
+   document**, until the suite is repaired.
+
+Do not silently drop the unit step. A skipped job that nobody remembers is how
+this repo arrived at a suite that could not compile for months without anyone
+noticing.
 
 ---
 
