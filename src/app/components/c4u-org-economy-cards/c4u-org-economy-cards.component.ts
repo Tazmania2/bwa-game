@@ -10,6 +10,7 @@ import {
   EconomyIndicator,
   EconomyIndicatorsService,
 } from '@app/services/economy-indicators.service';
+import { environment } from '../../../environments/environment';
 
 /**
  * Cartoes de economia do dashboard organizacional (feature 10).
@@ -30,6 +31,13 @@ import {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class C4uOrgEconomyCardsComponent implements OnInit, OnDestroy {
+  /**
+   * `ORG_ECONOMY_CARDS`, false por defeito. A guarda vive AQUI e nao no
+   * template de quem inclui o componente: assim qualquer futuro ponto de uso
+   * herda a protecao em vez de a ter de repetir.
+   */
+  readonly enabled = environment.orgEconomyCards;
+
   indicators: EconomyIndicator[] = [];
   currency = 'BRL';
   isMock = true;
@@ -43,6 +51,14 @@ export class C4uOrgEconomyCardsComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    // Desligado por defeito enquanto os numeros vierem do fixture. Sai aqui e
+    // nao so no template: sem isto o fixture era pedido de qualquer maneira, e
+    // `isLoading` ficava true para sempre num componente que ninguem ve.
+    if (!this.enabled) {
+      this.isLoading = false;
+      return;
+    }
+
     this.economy
       .load()
       .pipe(takeUntil(this.destroy$))

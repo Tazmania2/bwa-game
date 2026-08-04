@@ -8,6 +8,7 @@ import { KPIData } from '@model/gamification-dashboard.model';
 import { SessaoProvider } from '@providers/sessao/sessao.provider';
 import { PlayerService } from './player.service';
 import { SlaGoalsService } from './sla-goals.service';
+import { environment } from '../../environments/environment';
 
 interface CacheEntry<T> {
   data: Observable<T>;
@@ -309,6 +310,12 @@ export class KPIService {
    */
   async applyTeamGoals(kpis: KPIData[], selectedMonth?: Date | null): Promise<KPIData[]> {
     const base = this.applyOnTimeDeliveryGoalToKpis(kpis, selectedMonth);
+
+    // Desligado por defeito: as metas ainda saem de um fixture. Sai antes de
+    // tocar no servico para nem sequer pedir o mock quando a flag esta a false.
+    if (!environment.slaGoalsMarkers) {
+      return base;
+    }
 
     try {
       const config = await firstValueFrom(this.slaGoals.loadConfig());

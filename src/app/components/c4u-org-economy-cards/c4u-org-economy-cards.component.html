@@ -1,7 +1,7 @@
 <section
   class="dashboard-section economy-section"
   aria-labelledby="economy-kpis-heading"
-  *ngIf="isLoading || indicators.length > 0">
+  *ngIf="enabled && (isLoading || indicators.length > 0)">
   <div class="section-header section-header--compact">
     <h2 id="economy-kpis-heading" class="section-eyebrow">Economia</h2>
     <!--
