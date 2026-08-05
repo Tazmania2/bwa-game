@@ -15,6 +15,9 @@ import { SessionTimeoutService } from '@services/session-timeout.service';
 import { CampaignService } from '@services/campaign.service';
 import { Subscription } from 'rxjs';
 import { parseFragmentParams } from '../../utils/url-fragment-params';
+import { environment } from '../../../environments/environment';
+import { UserProfileService } from '@services/user-profile.service';
+import { canAccessAdminLogin } from '@utils/admin-login-access';
 
 @Component({
   selector: 'app-login',
@@ -29,6 +32,12 @@ export class LoginComponent implements OnInit, OnDestroy {
   loadingText: string = 'Entrando...';
   systemParams: SystemParams | null = null;
   bwaLogoUrl: string;
+
+  /** Rota `/login-admin`: formulário disponível mesmo em manutenção. */
+  readonly isAdminLoginRoute: boolean;
+
+  /** Substitui o formulário de login quando a plataforma está em manutenção. */
+  readonly isLoginUnderMaintenance: boolean;
 
   private loadingTexts: string[] = [
     'Entrando...',
@@ -55,9 +64,27 @@ export class LoginComponent implements OnInit, OnDestroy {
     private loginLogService: LoginLogService,
     private logoService: LogoService,
     private sessionTimeoutService: SessionTimeoutService,
-    private campaignService: CampaignService
+    private campaignService: CampaignService,
+    private userProfileService: UserProfileService
   ) {
     this.bwaLogoUrl = this.logoService.getLogoUrl();
+    this.isAdminLoginRoute = this.resolveAdminLoginRoute();
+    this.isLoginUnderMaintenance =
+      !!environment.showMaintenanceBanner && !this.isAdminLoginRoute;
+  }
+
+  private resolveAdminLoginRoute(): boolean {
+    if (this.route.snapshot.data['adminLogin'] === true) {
+      return true;
+    }
+    let current = this.route.snapshot.parent;
+    while (current) {
+      if (current.data['adminLogin'] === true) {
+        return true;
+      }
+      current = current.parent;
+    }
+    return this.router.url.split('?')[0].includes('/login-admin');
   }
 
   // Estado do fluxo: 'login' | 'reset-request' | 'reset-confirm' | 'reset-from-email'
@@ -230,6 +257,14 @@ export class LoginComponent implements OnInit, OnDestroy {
       try {
         let user = await this.sessao.login(this.username, this.password);
         if (user) {
+          if (this.isAdminLoginRoute && !this.hasAdminLoginAccess()) {
+            await this.sessao.logout(false);
+            this.toastService.error(
+              'Acesso restrito a administradores e diretores.'
+            );
+            return;
+          }
+
           // Track login event in Vercel Analytics (non-blocking)
           this.loginLogService.logLogin(this.username).catch(error => {
             // Silently fail - don't block login if tracking fails
@@ -266,6 +301,14 @@ export class LoginComponent implements OnInit, OnDestroy {
     } else {
       console.warn('🔐 Form invalid or missing credentials');
     }
+  }
+
+  private hasAdminLoginAccess(): boolean {
+    return canAccessAdminLogin({
+      isAdmin: this.sessao.isAdmin(),
+      userProfile: this.userProfileService.getCurrentUserProfile(),
+      roles: this.sessao.usuario?.roles,
+    });
   }
 
   private handleInvalidCredentials() {

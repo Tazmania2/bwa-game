@@ -158,7 +158,7 @@ export const environment = {
     ).toLowerCase() === 'true',
 
   /**
-   * Aviso fixo de manutenção (canto inferior direito, estilo toast).
+   * Modo manutenção: substitui os inputs de login pelo aviso de manutenção.
    * Desligar no build: SHOW_MAINTENANCE_BANNER=false
    */
   showMaintenanceBanner:

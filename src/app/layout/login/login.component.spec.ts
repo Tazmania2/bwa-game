@@ -14,6 +14,11 @@ import { ToastService } from '@services/toast.service';
 import { SystemParamsService } from '@services/system-params.service';
 import { AuthProvider } from '@providers/auth/auth.provider';
 import { LoginLogService } from '@services/login-log.service';
+import { UserProfileService } from '@services/user-profile.service';
+import { SessionTimeoutService } from '@services/session-timeout.service';
+import { CampaignService } from '@services/campaign.service';
+import { of } from 'rxjs';
+import { UserProfile } from '@utils/user-profile';
 
 /**
  * Unit tests for LoginComponent logo integration
@@ -68,6 +73,15 @@ describe('LoginComponent - Logo Integration', () => {
     // Create mock for LoadingProvider
     loadingProviderMock = jasmine.createSpyObj('LoadingProvider', ['show', 'hide']);
 
+    const userProfileServiceMock = jasmine.createSpyObj('UserProfileService', ['getCurrentUserProfile']);
+    userProfileServiceMock.getCurrentUserProfile.and.returnValue(UserProfile.JOGADOR);
+
+    const sessionTimeoutServiceMock = jasmine.createSpyObj('SessionTimeoutService', ['initialize', 'endSession'], {
+      sessionExpired$: of()
+    });
+
+    const campaignServiceMock = jasmine.createSpyObj('CampaignService', ['prefetchCampaign']);
+
     await TestBed.configureTestingModule({
       imports: [
         RouterTestingModule,
@@ -83,7 +97,10 @@ describe('LoginComponent - Logo Integration', () => {
         { provide: SystemParamsService, useValue: systemParamsServiceMock },
         { provide: AuthProvider, useValue: authProviderMock },
         { provide: LoginLogService, useValue: loginLogServiceMock },
-        { provide: LoadingProvider, useValue: loadingProviderMock }
+        { provide: LoadingProvider, useValue: loadingProviderMock },
+        { provide: UserProfileService, useValue: userProfileServiceMock },
+        { provide: SessionTimeoutService, useValue: sessionTimeoutServiceMock },
+        { provide: CampaignService, useValue: campaignServiceMock }
       ],
       schemas: [CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA]
     }).compileComponents();

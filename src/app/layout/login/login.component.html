@@ -23,87 +23,98 @@
     <h1 class="hidden md:!block">Ligando o Modo Turbo.</h1>
   </div>
 
-  <!-- Login Form -->
-  <c4u-card *ngIf="resetFlow === 'login'" [title]="'LABEL_LOGIN_SUBTITLE' | translate" align="center">
-    <div class="login-form-container">
-      <!-- Session Expired Message -->
-      <div *ngIf="sessionExpiredMessage" class="session-expired-message">
-        <i class="ri-time-line"></i>
-        <span>{{ sessionExpiredMessage }}</span>
+  <!-- Maintenance notice replaces login inputs (exceto /login-admin) -->
+  <c4u-card *ngIf="isLoginUnderMaintenance" title="Em manutenção" align="center">
+    <c4u-login-maintenance></c4u-login-maintenance>
+  </c4u-card>
+
+  <ng-container *ngIf="!isLoginUnderMaintenance">
+    <!-- Login Form -->
+    <c4u-card
+      *ngIf="resetFlow === 'login'"
+      [title]="isAdminLoginRoute ? 'Acesso administrativo' : ('LABEL_LOGIN_SUBTITLE' | translate)"
+      align="center"
+    >
+      <div class="login-form-container">
+        <!-- Session Expired Message -->
+        <div *ngIf="sessionExpiredMessage" class="session-expired-message">
+          <i class="ri-time-line"></i>
+          <span>{{ sessionExpiredMessage }}</span>
+        </div>
+        
+        <form class="login-form" (ngSubmit)="submit()" [formGroup]="form">
+          <input type="text" placeholder="Login" formControlName="username" />
+          <input type="password" placeholder="Senha" formControlName="password" />
+          <div *ngIf="isLoading" class="loading-content">
+            <c4u-spinner></c4u-spinner>
+            <span>{{loadingText}}</span>
+          </div>
+          <div class="actions">
+            <button class="login-btn" type="submit" [disabled]="isLoading || !form.valid">
+              <span *ngIf="!isLoading">Entrar</span>
+            </button>
+            <button type="button" class="forgot-password-link" (click)="startPasswordReset()" [disabled]="isLoading">
+              {{ 'LABEL_FORGOT_PASSWORD' | translate }}
+            </button>
+          </div>
+        </form>
       </div>
-      
-      <form class="login-form" (ngSubmit)="submit()" [formGroup]="form">
-        <input type="text" placeholder="Login" formControlName="username" />
-        <input type="password" placeholder="Senha" formControlName="password" />
-        <div *ngIf="isLoading" class="loading-content">
-          <c4u-spinner></c4u-spinner>
-          <span>{{loadingText}}</span>
-        </div>
-        <div class="actions">
-          <button class="login-btn" type="submit" [disabled]="isLoading || !form.valid">
-            <span *ngIf="!isLoading">Entrar</span>
-          </button>
-          <button type="button" class="forgot-password-link" (click)="startPasswordReset()" [disabled]="isLoading">
-            {{ 'LABEL_FORGOT_PASSWORD' | translate }}
-          </button>
-        </div>
-      </form>
-    </div>
-  </c4u-card>
+    </c4u-card>
 
-  <!-- Reset Request Form -->
-  <c4u-card *ngIf="resetFlow === 'reset-request'" [title]="'LABEL_PASSWORD_RESET' | translate" align="center">
-    <div class="login-form-container">
-      <form class="login-form" (ngSubmit)="requestResetCode()" [formGroup]="resetRequestForm">
-        <p class="reset-instructions">{{ 'LABEL_PASSWORD_RESET_EMAIL_INSTRUCTIONS' | translate }}</p>
-        <input type="email" [placeholder]="'LABEL_EMAIL_PLACEHOLDER' | translate" formControlName="email" />
-        <div *ngIf="resetRequestForm.get('email')?.invalid && resetRequestForm.get('email')?.touched" class="error-message">
-          <span *ngIf="resetRequestForm.get('email')?.errors?.['required']">{{ 'LABEL_EMAIL_REQUIRED' | translate }}</span>
-          <span *ngIf="resetRequestForm.get('email')?.errors?.['email']">{{ 'LABEL_EMAIL_INVALID' | translate }}</span>
-        </div>
-        <div *ngIf="isLoading" class="loading-content">
-          <c4u-spinner></c4u-spinner>
-          <span>{{loadingText}}</span>
-        </div>
-        <div class="actions">
-          <button class="login-btn" type="submit" [disabled]="isLoading || !resetRequestForm.valid">
-            <span *ngIf="!isLoading">{{ 'LABEL_SEND_RESET_EMAIL' | translate }}</span>
-          </button>
-          <button type="button" class="back-link" (click)="backToLogin()" [disabled]="isLoading">
-            {{ 'LABEL_BACK_TO_LOGIN' | translate }}
-          </button>
-        </div>
-      </form>
-    </div>
-  </c4u-card>
+    <!-- Reset Request Form -->
+    <c4u-card *ngIf="resetFlow === 'reset-request'" [title]="'LABEL_PASSWORD_RESET' | translate" align="center">
+      <div class="login-form-container">
+        <form class="login-form" (ngSubmit)="requestResetCode()" [formGroup]="resetRequestForm">
+          <p class="reset-instructions">{{ 'LABEL_PASSWORD_RESET_EMAIL_INSTRUCTIONS' | translate }}</p>
+          <input type="email" [placeholder]="'LABEL_EMAIL_PLACEHOLDER' | translate" formControlName="email" />
+          <div *ngIf="resetRequestForm.get('email')?.invalid && resetRequestForm.get('email')?.touched" class="error-message">
+            <span *ngIf="resetRequestForm.get('email')?.errors?.['required']">{{ 'LABEL_EMAIL_REQUIRED' | translate }}</span>
+            <span *ngIf="resetRequestForm.get('email')?.errors?.['email']">{{ 'LABEL_EMAIL_INVALID' | translate }}</span>
+          </div>
+          <div *ngIf="isLoading" class="loading-content">
+            <c4u-spinner></c4u-spinner>
+            <span>{{loadingText}}</span>
+          </div>
+          <div class="actions">
+            <button class="login-btn" type="submit" [disabled]="isLoading || !resetRequestForm.valid">
+              <span *ngIf="!isLoading">{{ 'LABEL_SEND_RESET_EMAIL' | translate }}</span>
+            </button>
+            <button type="button" class="back-link" (click)="backToLogin()" [disabled]="isLoading">
+              {{ 'LABEL_BACK_TO_LOGIN' | translate }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </c4u-card>
 
-  <!-- Reset From Email Link Form -->
-  <c4u-card *ngIf="resetFlow === 'reset-from-email'" [title]="'LABEL_SET_NEW_PASSWORD' | translate" align="center">
-    <div class="login-form-container">
-      <form class="login-form" (ngSubmit)="confirmResetFromEmail()" [formGroup]="resetFromEmailForm">
-        <p class="reset-instructions">{{ 'LABEL_ENTER_NEW_PASSWORD' | translate }}</p>
-        <input type="password" [placeholder]="'LABEL_NEW_PASSWORD_PLACEHOLDER' | translate" formControlName="newPassword" />
-        <div *ngIf="resetFromEmailForm.get('newPassword')?.invalid && resetFromEmailForm.get('newPassword')?.touched" class="error-message">
-          <span *ngIf="resetFromEmailForm.get('newPassword')?.errors?.['required']">{{ 'LABEL_PASSWORD_REQUIRED' | translate }}</span>
-          <span *ngIf="resetFromEmailForm.get('newPassword')?.errors?.['minlength']">{{ 'LABEL_PASSWORD_MIN_LENGTH' | translate }}</span>
-        </div>
-        <input type="password" [placeholder]="'LABEL_CONFIRM_PASSWORD_PLACEHOLDER' | translate" formControlName="confirmPassword" />
-        <div *ngIf="resetFromEmailForm.get('confirmPassword')?.touched && resetFromEmailForm.hasError('passwordMismatch')" class="error-message">
-          {{ 'LABEL_PASSWORDS_DONT_MATCH' | translate }}
-        </div>
-        <div *ngIf="isLoading" class="loading-content">
-          <c4u-spinner></c4u-spinner>
-          <span>{{loadingText}}</span>
-        </div>
-        <div class="actions">
-          <button class="login-btn" type="submit" [disabled]="isLoading || !resetFromEmailForm.valid || resetFromEmailForm.hasError('passwordMismatch')">
-            <span *ngIf="!isLoading">{{ 'LABEL_RESET_PASSWORD' | translate }}</span>
-          </button>
-          <button type="button" class="back-link" (click)="backToLogin()" [disabled]="isLoading">
-            {{ 'LABEL_BACK_TO_LOGIN' | translate }}
-          </button>
-        </div>
-      </form>
-    </div>
-  </c4u-card>
+    <!-- Reset From Email Link Form -->
+    <c4u-card *ngIf="resetFlow === 'reset-from-email'" [title]="'LABEL_SET_NEW_PASSWORD' | translate" align="center">
+      <div class="login-form-container">
+        <form class="login-form" (ngSubmit)="confirmResetFromEmail()" [formGroup]="resetFromEmailForm">
+          <p class="reset-instructions">{{ 'LABEL_ENTER_NEW_PASSWORD' | translate }}</p>
+          <input type="password" [placeholder]="'LABEL_NEW_PASSWORD_PLACEHOLDER' | translate" formControlName="newPassword" />
+          <div *ngIf="resetFromEmailForm.get('newPassword')?.invalid && resetFromEmailForm.get('newPassword')?.touched" class="error-message">
+            <span *ngIf="resetFromEmailForm.get('newPassword')?.errors?.['required']">{{ 'LABEL_PASSWORD_REQUIRED' | translate }}</span>
+            <span *ngIf="resetFromEmailForm.get('newPassword')?.errors?.['minlength']">{{ 'LABEL_PASSWORD_MIN_LENGTH' | translate }}</span>
+          </div>
+          <input type="password" [placeholder]="'LABEL_CONFIRM_PASSWORD_PLACEHOLDER' | translate" formControlName="confirmPassword" />
+          <div *ngIf="resetFromEmailForm.get('confirmPassword')?.touched && resetFromEmailForm.hasError('passwordMismatch')" class="error-message">
+            {{ 'LABEL_PASSWORDS_DONT_MATCH' | translate }}
+          </div>
+          <div *ngIf="isLoading" class="loading-content">
+            <c4u-spinner></c4u-spinner>
+            <span>{{loadingText}}</span>
+          </div>
+          <div class="actions">
+            <button class="login-btn" type="submit" [disabled]="isLoading || !resetFromEmailForm.valid || resetFromEmailForm.hasError('passwordMismatch')">
+              <span *ngIf="!isLoading">{{ 'LABEL_RESET_PASSWORD' | translate }}</span>
+            </button>
+            <button type="button" class="back-link" (click)="backToLogin()" [disabled]="isLoading">
+              {{ 'LABEL_BACK_TO_LOGIN' | translate }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </c4u-card>
+  </ng-container>
 </div>
