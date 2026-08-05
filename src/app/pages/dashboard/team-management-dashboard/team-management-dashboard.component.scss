@@ -923,54 +923,19 @@
         gap: $spacing-md;
       }
 
-      // Primeira linha: pontos do mes a esquerda, quebra semanal a direita.
-      // `space-between` em vez de `center` porque as duas metades tem pesos
-      // visuais diferentes — centralizado, o anel unico da esquerda ficava
-      // deslocado para o meio e a relacao "meta / quebra da meta" se perdia.
-      &--headline {
-        align-items: center;
-        justify-content: space-between;
-        gap: $spacing-xl;
-
-        c4u-weekly-goal-breakdown {
-          flex: 0 1 auto;
-        }
-
-        // Abaixo de tablet vira empilhado e volta a centralizar, senao as duas
-        // metades ficam grudadas nas bordas opostas de uma tela estreita.
-        @include mobile-only {
-          justify-content: center;
-        }
-      }
-
-      // Segunda linha: os quatro marcadores "no prazo", em size="small".
-      //
-      // A largura precisa ser reposta aqui. `:host.size-small` fixa 80px, o que
-      // e estreito demais para rotulos como "Clientes Onboarding no prazo" — a
-      // 80px eles quebravam em "Clien / tes / Onbo / ardin". 168px cabe o rotulo
-      // em duas linhas legiveis e ainda deixa os quatro lado a lado num laptop
-      // (4 x 168 + 3 x 24 = 744px).
-      // GRID, nao flex. Duas tentativas com flex + largura fixa quebraram a
-      // linha porque a largura real do container foi estimada, nao medida — e
-      // item de flex tem `min-width: auto`, entao com `white-space: nowrap` ele
-      // se recusa a encolher abaixo do rotulo inteiro e ignora o `width`
-      // declarado.
-      //
-      // `repeat(4, minmax(0, 1fr))` remove as duas fragilidades de uma vez: sao
-      // sempre QUATRO colunas, dividindo a largura que existir, e o `minmax(0,
-      // ...)` permite que a coluna fique menor que o proprio conteudo. Nao ha
-      // largura estimada em lugar nenhum, entao nao ha o que errar.
-      &--on-time {
+      &--goals-row {
         display: grid;
+        align-items: start;
+        justify-items: center;
         gap: $spacing-sm;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        margin-top: $spacing-xxl;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
 
+        c4u-monthly-points-goal-progress,
         c4u-kpi-circular-progress {
           width: 100%;
+          max-width: 100%;
+          min-width: 0;
 
-          // Anel reduzido de 96px para 80px, como pedido. Menor tambem ajuda o
-          // conjunto: sobra mais largura por coluna para o rotulo de uma linha.
           ::ng-deep .kpi-progress-wrapper {
             height: 80px;
             width: 80px;
@@ -980,23 +945,23 @@
             font-size: 20px;
           }
 
-          // 11px mantem o rotulo mais longo ("Clientes risco no prazo") em
-          // ~180px, dentro de qualquer coluna razoavel.
           ::ng-deep .kpi-label {
             font-size: 11px;
             white-space: nowrap;
           }
         }
 
-        // Ecra largo (1920 e afins): ha espaco de sobra, entao os quatro voltam
-        // ao mesmo tamanho dos aneis semanais — todos os marcadores do painel
-        // iguais.
-        //
-        // 1440px e nao o mixin `desktop-up`: aquele comeca em 1024px, largura
-        // em que quatro colunas com anel de 96px ficariam apertadas de novo.
+        c4u-monthly-points-goal-progress {
+          ::ng-deep c4u-kpi-circular-progress {
+            width: 100%;
+            max-width: 100%;
+          }
+        }
+
         @media (min-width: 1440px) {
           gap: $spacing-md;
 
+          c4u-monthly-points-goal-progress,
           c4u-kpi-circular-progress {
             ::ng-deep .kpi-progress-wrapper {
               height: 96px;
@@ -1014,8 +979,10 @@
         }
 
         @include tablet-only {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
           gap: $spacing-xs;
 
+          c4u-monthly-points-goal-progress,
           c4u-kpi-circular-progress {
             ::ng-deep .kpi-progress-wrapper {
               height: 68px;
@@ -1032,14 +999,11 @@
           }
         }
 
-        // No telemovel viram 2x2 — quatro colunas numa tela estreita deixaria
-        // cada anel do tamanho de uma moeda. Aqui a quebra de linha do rotulo
-        // volta a ser permitida: forcar uma linha numa coluna estreita cortaria
-        // o texto.
         @include mobile-only {
           gap: $spacing-md;
           grid-template-columns: repeat(2, minmax(0, 1fr));
 
+          c4u-monthly-points-goal-progress,
           c4u-kpi-circular-progress {
             ::ng-deep .kpi-progress-wrapper {
               height: 72px;

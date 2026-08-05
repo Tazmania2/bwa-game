@@ -36,7 +36,13 @@ describe('GamificationDashboardComponent - Accessibility', () => {
       'usesGame4uWalletFromStats'
     ]);
     playerServiceSpy.usesGame4uWalletFromStats.and.returnValue(false);
-    const kpiServiceSpy = jasmine.createSpyObj('KPIService', ['getPlayerKPIs']);
+    const kpiServiceSpy = jasmine.createSpyObj('KPIService', [
+      'getPlayerKPIs',
+      'applyOnTimeSegmentGoals',
+      'applyOnTimeDeliveryGoalToKpis'
+    ]);
+    kpiServiceSpy.applyOnTimeSegmentGoals.and.callFake((kpis: unknown) => kpis || []);
+    kpiServiceSpy.applyOnTimeDeliveryGoalToKpis.and.callFake((kpis: unknown) => kpis || []);
     const toastServiceSpy = jasmine.createSpyObj('ToastService', ['error', 'alert']);
 
     const actionLogServiceSpy = jasmine.createSpyObj('ActionLogService', [

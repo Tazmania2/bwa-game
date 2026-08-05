@@ -57,21 +57,6 @@ export const environment = {
       .toLowerCase() === 'true',
 
   /**
-   * Marcadores de SLA por tipo de empresa critica (feature 5).
-   *
-   * PADRAO `false` porque os valores vem de `assets/mock/sla-goals.json` — nao
-   * existe fonte real de meta por segmento, nem na API nem nos marts 12/13. Um
-   * medidor de "% no prazo" com numero inventado num painel de gestao e lido
-   * como medicao, nao como maquete.
-   *
-   * Ligar so quando `SlaGoalsService.loadConfig()` deixar de ler o fixture.
-   */
-  slaGoalsMarkers:
-    String(process.env['SLA_GOALS_MARKERS'] ?? process.env['sla_goals_markers'] ?? 'false')
-      .trim()
-      .toLowerCase() === 'true',
-
-  /**
    * Cartoes de economia do dashboard organizacional (feature 10).
    *
    * PADRAO `false` pela mesma razao, agravada: nao existe NENHUMA coluna de

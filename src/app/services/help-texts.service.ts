@@ -31,6 +31,9 @@ export class HelpTextsService {
     'clientes-na-carteira': 'Número total de clientes na sua carteira. Este valor representa a quantidade de clientes únicos que você atende. O atingimento desta meta aplica bônus na conversão de pontos desbloqueados em moedas.',
     'empresas-na-carteira': 'Número total de clientes na sua carteira. Este valor representa a quantidade de clientes únicos que você atende. O atingimento desta meta aplica bônus na conversão de pontos desbloqueados em moedas.', // Deprecated: use clientes-na-carteira
     'entregas-no-prazo': buildEntregasNoPrazoHelpText(),
+    'entregas-no-prazo-g4': 'Percentual de entregas no prazo em clientes Acessórias com tag G4. Entregas justificadas não entram nesta meta.',
+    'entregas-no-prazo-onboarding': 'Percentual de entregas no prazo em clientes Acessórias em onboarding. Entregas justificadas não entram nesta meta.',
+    'entregas-no-prazo-risco': 'Percentual de entregas no prazo em clientes Acessórias com risco de churn. Entregas justificadas não entram nesta meta.',
     'bloqueados': 'Pontos que ainda não foram desbloqueados e não podem ser utilizados. Eles serão liberados conforme você atinge determinadas metas.',
     'pontos': 'Pontos que foram desbloqueados indicam valor entregue aos clientes. Estes pontos são concernentes a entregas 100% finalizadas ou justificadas.',
     'desbloqueados': 'Pontos que foram desbloqueados e estão disponíveis para uso. Estes pontos são concernentes a processos 100% finalizados. Você pode utilizá-los para trocar por recompensas. A conversão destes pontos em moedas é afetada pelo desempenho nos KPIs, podendo receber bônus ou penalidades.',

@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  HostBinding,
   Input,
   OnChanges,
   SimpleChanges,
@@ -54,13 +55,28 @@ export class C4uWeeklyGoalBreakdownComponent implements OnChanges {
   @Input() isLoading = false;
   @Input() label = 'Meta por semana';
 
+  /**
+   * Oculto em todos os paineis enquanto o bloco nao volta a ser prioridade.
+   * Religue para `true` para reexibir sem mexer nos templates.
+   */
+  readonly isEnabled = false;
+
   slices: WeeklyGoalSlice[] = [];
 
   constructor(private weeklyGoal: WeeklyGoalService) {}
 
+  /**
+   * Sem isto o host vazio ainda entra na grade CSS e abre um buraco
+   * entre "Pontos no mes" e "Entregas no prazo".
+   */
+  @HostBinding('style.display')
+  get hostDisplay(): 'none' | 'block' {
+    return this.isEnabled ? 'block' : 'none';
+  }
+
   /** Ha fonte de realizado? Sem ela nao se mostra nada. */
   get hasAchievedSource(): boolean {
-    return this.dailyRows !== null;
+    return this.isEnabled && this.dailyRows !== null;
   }
 
   ngOnChanges(changes: SimpleChanges): void {

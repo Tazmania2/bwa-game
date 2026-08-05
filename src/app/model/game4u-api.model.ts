@@ -377,6 +377,21 @@ export interface PlayerDashboardCachedResponse {
   month_clients_served: number;
   /** % de entregas no prazo no mês (0–100). */
   month_on_time_delivery_pct?: number | null;
+  /** Meta de % no prazo no mês (0–100). */
+  month_on_time_delivery_goal_pct?: number | null;
+  month_on_time_pct_acessorias_g4?: number | null;
+  month_on_time_pct_acessorias_onboarding?: number | null;
+  month_on_time_pct_acessorias_risco_de_churn?: number | null;
+  month_on_time_goal_pct_acessorias_g4?: number | null;
+  month_on_time_goal_pct_acessorias_onboarding?: number | null;
+  month_on_time_goal_pct_acessorias_risco_de_churn?: number | null;
+  month_has_pending_acessorias_g4?: boolean | null;
+  month_has_pending_acessorias_onboarding?: boolean | null;
+  month_has_pending_acessorias_risco_de_churn?: boolean | null;
+  /** Alias sem prefixo `month_`. */
+  on_time_pct_acessorias_g4?: number | null;
+  on_time_pct_acessorias_onboarding?: number | null;
+  on_time_pct_acessorias_risco_de_churn?: number | null;
   refresh_error?: string | null;
 }
 
@@ -399,6 +414,19 @@ export interface SupervisionTeamDashboardCached {
   month_finished_tasks_count: number;
   month_clients_served: number;
   month_on_time_delivery_pct?: number | null;
+  month_on_time_delivery_goal_pct?: number | null;
+  month_on_time_pct_acessorias_g4?: number | null;
+  month_on_time_pct_acessorias_onboarding?: number | null;
+  month_on_time_pct_acessorias_risco_de_churn?: number | null;
+  month_on_time_goal_pct_acessorias_g4?: number | null;
+  month_on_time_goal_pct_acessorias_onboarding?: number | null;
+  month_on_time_goal_pct_acessorias_risco_de_churn?: number | null;
+  month_has_pending_acessorias_g4?: boolean | null;
+  month_has_pending_acessorias_onboarding?: boolean | null;
+  month_has_pending_acessorias_risco_de_churn?: boolean | null;
+  on_time_pct_acessorias_g4?: number | null;
+  on_time_pct_acessorias_onboarding?: number | null;
+  on_time_pct_acessorias_risco_de_churn?: number | null;
   refresh_error?: string | null;
 }
 

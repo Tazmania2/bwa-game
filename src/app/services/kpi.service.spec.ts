@@ -140,4 +140,32 @@ describe('KPIService', () => {
       });
     });
   });
+
+  describe('applyOnTimeSegmentGoals', () => {
+    it('appends G4, onboarding and churn rings from API percents', () => {
+      const base = [
+        {
+          id: 'entregas-prazo',
+          label: 'Entregas no Prazo',
+          current: 88,
+          target: 80,
+          superTarget: 100,
+          unit: '%',
+          color: 'red' as const
+        }
+      ];
+      const kpis = service.applyOnTimeSegmentGoals(base, new Date(2026, 6, 1), {
+        g4: { current: 96, goal: 100 },
+        onboarding: { current: null, goal: 100 },
+        riscoDeChurn: { current: 98, goal: 100 }
+      });
+      expect(kpis.find(k => k.id === 'entregas-prazo')?.target).toBe(95);
+      expect(kpis.find(k => k.id === 'on-time-g4')?.current).toBe(96);
+      expect(kpis.find(k => k.id === 'on-time-g4')?.target).toBe(100);
+      expect(kpis.find(k => k.id === 'on-time-g4')?.superTarget).toBe(100);
+      expect(kpis.find(k => k.id === 'on-time-onboarding')?.isMissing).toBeTrue();
+      expect(kpis.find(k => k.id === 'on-time-risco')?.current).toBe(98);
+      expect(kpis.find(k => k.id === 'on-time-g4')?.isDisabled).toBeFalsy();
+    });
+  });
 });

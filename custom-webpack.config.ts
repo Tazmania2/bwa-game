@@ -80,9 +80,8 @@ module.exports = {
                 SUPABASE_GAME_DELIVERIES_TABLE: getEnv('SUPABASE_GAME_DELIVERIES_TABLE', ''),
                 SUPABASE_GAME_TEAM_FILTER_COLUMN: getEnv('SUPABASE_GAME_TEAM_FILTER_COLUMN', ''),
                 SUPABASE_GAME_USER_EMAIL_COLUMN: getEnv('SUPABASE_GAME_USER_EMAIL_COLUMN', ''),
-                // Flags do sprint/moco-01, ambas false por defeito enquanto os
+                // Flag do sprint/moco-01, false por defeito enquanto os
                 // dados forem fixture. Ver environment.ts.
-                SLA_GOALS_MARKERS: getEnv('SLA_GOALS_MARKERS', ''),
                 ORG_ECONOMY_CARDS: getEnv('ORG_ECONOMY_CARDS', ''),
                 // NAO acrescentar SUPABASE_SERVICE_ROLE_KEY nem
                 // SUPABASE_SERVICE_ROLE_SECRET. environment.ts le-as, mas uma
@@ -116,7 +115,6 @@ module.exports = {
                 supabase_game_deliveries_table: getEnv('supabase_game_deliveries_table', ''),
                 supabase_game_team_filter_column: getEnv('supabase_game_team_filter_column', ''),
                 supabase_game_user_email_column: getEnv('supabase_game_user_email_column', ''),
-                sla_goals_markers: getEnv('sla_goals_markers', ''),
                 org_economy_cards: getEnv('org_economy_cards', ''),
                 // Same values on all keys so bracket/dot access and CI mirrors all resolve.
                 GAMIFICACAO_API_URL: gamificacaoApiUrl,

@@ -108,7 +108,7 @@
           <div class="compact-item" [title]="kpiSidebarTitle(kpi)">
             <i class="ri-time-line compact-icon entregas" *ngIf="kpi.id === 'entregas-prazo'"></i>
             <i class="ri-building-line compact-icon clientes" *ngIf="kpi.id === 'numero-empresas'"></i>
-            <span class="compact-value">{{ kpiSidebarValue(kpi) }}</span>
+            <span class="compact-value">{{ kpi.isDisabled ? 'na' : kpiSidebarValue(kpi) }}</span>
           </div>
         </ng-container>
         
@@ -213,7 +213,7 @@
       
       <div
         *ngIf="!(isLoadingKPIs || isLoadingProgress || isLoadingMonthlyGoal)"
-        class="kpi-grid"
+        class="kpi-grid kpi-grid--goals-row"
         role="group"
         aria-labelledby="kpi-section-title">
         <c4u-monthly-points-goal-progress
@@ -222,53 +222,39 @@
           [isLoading]="isLoadingKPIs || isLoadingProgress || isLoadingMonthlyGoal"
           [color]="monthlyPointsGoalColor">
         </c4u-monthly-points-goal-progress>
-        <!--
-          Feature 7: quebra da meta do mes em 10/20/20/50. Recebe o MESMO
-          `target` do anel acima para que os dois nao possam discordar na tela.
-        -->
-        <!--
-          SEM `[dailyRows]` o componente nao renderiza, e isso e o estado
-          correto hoje: `/game/reports/team/daily-finished-stats` exige
-          `team_id` e este painel so tem `team_name` na sessao, nunca o id.
-          Adivinhar o id pelo nome e o tipo de heuristica que produz o numero
-          errado sem dar erro. Ate haver serie diaria com escopo de jogador, a
-          quebra semanal existe so no painel de equipa.
-        -->
         <c4u-weekly-goal-breakdown
           [monthTarget]="monthlyPointsProgressData.target"
           [isLoading]="isLoadingKPIs || isLoadingProgress || isLoadingMonthlyGoal">
         </c4u-weekly-goal-breakdown>
-        <!--
-          KPI circular "Clientes na Carteira" (id numero-empresas) — meta de empresas na carteira:
-          mantido comentado; a meta visível de pontos do mês é o c4u-monthly-points-goal-progress acima.
-          <ng-container *ngFor="let kpi of playerKPIs; let i = index; trackBy: trackByKpiId">
-            <c4u-kpi-circular-progress
-              *ngIf="kpi.id === 'numero-empresas'"
-              [label]="kpi.label"
-              [current]="roundValue(getKpiCurrentValue(kpi))"
-              [target]="roundValue(kpi.target)"
-              [superTarget]="kpi.superTarget ? roundValue(kpi.superTarget) : undefined"
-              [color]="kpi.color"
-              [unit]="kpi.unit"
-              [colorIndex]="i"
-              [isMissing]="!!kpi.isMissing">
-            </c4u-kpi-circular-progress>
-          </ng-container>
-        -->
-        <ng-container *ngFor="let kpi of playerKPIs; let i = index; trackBy: trackByKpiId">
+        <ng-container *ngFor="let kpi of otherPlayerKpis; let i = index; trackBy: trackByKpiId">
           <c4u-kpi-circular-progress
-            *ngIf="kpi.id !== 'numero-empresas'"
+            size="small"
+            [hideValue]="true"
             [label]="kpi.label"
-            [current]="kpi.id === 'entregas-prazo' ? getKpiCurrentValue(kpi) : roundValue(getKpiCurrentValue(kpi))"
+            [current]="roundValue(getKpiCurrentValue(kpi))"
             [target]="roundValue(getKpiTargetValue(kpi))"
             [superTarget]="kpi.superTarget ? roundValue(kpi.superTarget) : undefined"
             [color]="kpi.color"
             [unit]="kpi.unit"
             [colorIndex]="i"
-            [isPending]="isEntregasPrazoCircularPending(kpi)"
             [isMissing]="getKpiCircularIsMissing(kpi)">
           </c4u-kpi-circular-progress>
         </ng-container>
+        <c4u-kpi-circular-progress
+          *ngFor="let kpi of onTimeKpis; let i = index; trackBy: trackByKpiId"
+          size="small"
+          [hideValue]="true"
+          [label]="kpi.label"
+          [current]="kpi.id === 'entregas-prazo' ? getKpiCurrentValue(kpi) : roundValue(getKpiCurrentValue(kpi))"
+          [target]="roundValue(getKpiTargetValue(kpi))"
+          [superTarget]="kpi.superTarget ? roundValue(kpi.superTarget) : undefined"
+          [color]="kpi.color"
+          [unit]="kpi.unit"
+          [colorIndex]="i"
+          [isPending]="isEntregasPrazoCircularPending(kpi)"
+          [isMissing]="getKpiCircularIsMissing(kpi)"
+          [isDisabled]="!!kpi.isDisabled">
+        </c4u-kpi-circular-progress>
       </div>
     </section>
     

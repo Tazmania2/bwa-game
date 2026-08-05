@@ -26,12 +26,6 @@ export const environment = {
       .trim()
       .toLowerCase() === 'true',
 
-  /** Ver environment.ts. FALSE: os valores sao mock, nao ha fonte de meta por segmento. */
-  slaGoalsMarkers:
-    String(process.env['SLA_GOALS_MARKERS'] ?? process.env['sla_goals_markers'] ?? 'false')
-      .trim()
-      .toLowerCase() === 'true',
-
   /** Ver environment.ts. FALSE: nao existe coluna de custo no data lake. */
   orgEconomyCards:
     String(process.env['ORG_ECONOMY_CARDS'] ?? process.env['org_economy_cards'] ?? 'false')

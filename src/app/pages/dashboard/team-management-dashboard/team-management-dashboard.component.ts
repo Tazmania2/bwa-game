@@ -6,6 +6,11 @@ import { Subject, of, firstValueFrom, lastValueFrom, Observable, forkJoin } from
 import { takeUntil, finalize, map, take, mergeMap, last } from 'rxjs/operators';
 import { PONTOS_POR_ATIVIDADE_FINALIZADA_ACTION_LOG } from '@app/constants/pontos-por-atividade-action-log';
 import { getOnTimeDeliveryGoalForMonth } from '@app/constants/on-time-delivery-goal';
+import { SlaGoalsService } from '@services/sla-goals.service';
+import {
+  EMPTY_ON_TIME_SEGMENT_PERCENTS,
+  type OnTimeSegmentPercents
+} from '@utils/on-time-pct.util';
 import { dateFromMonthFilterOffset, MONTH_FILTER_TODA_TEMPORADA } from '@utils/month-filter-offset.util';
 import { ModalTeamManagementFaqComponent } from '@modals/modal-team-management-faq/modal-team-management-faq.component';
 import {
@@ -426,8 +431,10 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
   teamDashboardCachedParams: PlayerDashboardCachedParams | null = null;
   /** % entregas no prazo no mês (`month_on_time_delivery_pct`), 0–100 — vista equipe/gestão. */
   teamMonthOnTimeDeliveryPct: number | null = null;
+  teamOnTimeSegmentPercents: OnTimeSegmentPercents = { ...EMPTY_ON_TIME_SEGMENT_PERCENTS };
   /** % entregas no prazo do colaborador (`month_on_time_delivery_pct` em `dashboard/cached`). */
   collaboratorMonthOnTimeDeliveryPct: number | null = null;
+  collaboratorOnTimeSegmentPercents: OnTimeSegmentPercents = { ...EMPTY_ON_TIME_SEGMENT_PERCENTS };
   /** Bundle aplicado na vista equipe agregada (evita re-fetch na mesma carga). */
   private teamSupervisionBundle: SupervisionTeamDashboardCachedBundle | null = null;
 
@@ -1837,6 +1844,7 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
         console.log('👥 Loading team aggregated data');
         this.teamSupervisionBundle = null;
         this.collaboratorMonthOnTimeDeliveryPct = null;
+        this.collaboratorOnTimeSegmentPercents = { ...EMPTY_ON_TIME_SEGMENT_PERCENTS };
         if (this.playerService.usesGame4uWalletFromStats()) {
           await this.loadTeamDashboardFromCache();
         } else {
@@ -1844,6 +1852,7 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
           this.teamDashboardRefreshedAt = null;
           this.teamDashboardCachedParams = null;
           this.teamMonthOnTimeDeliveryPct = null;
+          this.teamOnTimeSegmentPercents = { ...EMPTY_ON_TIME_SEGMENT_PERCENTS };
         }
         // First, reload team members data to recalculate points for the selected month
         // This is important when the month changes, as points need to be recalculated
@@ -2034,6 +2043,7 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
       this.monthlyPointsGoalTarget = null;
       this.teamSidebarDeliveryStatsTotal = undefined;
       this.collaboratorMonthOnTimeDeliveryPct = null;
+      this.collaboratorOnTimeSegmentPercents = { ...EMPTY_ON_TIME_SEGMENT_PERCENTS };
       
       console.log('📊 Loading sidebar data for collaborator:', collaboratorId);
       
@@ -2065,6 +2075,10 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
           this.monthlyPointsGoalTarget = g > 0 ? g : null;
           this.collaboratorMonthOnTimeDeliveryPct =
             this.selectedMonth != null ? bundle.monthOnTimeDeliveryPct : null;
+          this.collaboratorOnTimeSegmentPercents =
+            this.selectedMonth != null
+              ? bundle.onTimeSegmentPercents
+              : { ...EMPTY_ON_TIME_SEGMENT_PERCENTS };
           const pts = bundle.seasonWalletPoints;
           snap = {
             wallet: { moedas: 0, bloqueados: 0, desbloqueados: pts },
@@ -2172,6 +2186,7 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
       this.hasSidebarError = true;
       this.sidebarErrorMessage = 'Erro ao carregar dados da barra lateral';
       this.collaboratorMonthOnTimeDeliveryPct = null;
+      this.collaboratorOnTimeSegmentPercents = { ...EMPTY_ON_TIME_SEGMENT_PERCENTS };
       this.isLoadingSidebar = false;
       this.isLoadingMonthlyPointsProgress = false;
       this.cdr.markForCheck();
@@ -2202,6 +2217,7 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
     this.teamDashboardRefreshedAt = null;
     this.teamDashboardCachedParams = null;
     this.teamMonthOnTimeDeliveryPct = null;
+    this.teamOnTimeSegmentPercents = { ...EMPTY_ON_TIME_SEGMENT_PERCENTS };
     this.teamSupervisionBundle = null;
 
     if (month == null) {
@@ -2229,12 +2245,14 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
       this.teamDashboardRefreshedAt = refreshed && !Number.isNaN(refreshed.getTime()) ? refreshed : null;
       this.teamDashboardCachedParams = bundle.params;
       this.teamMonthOnTimeDeliveryPct = bundle.monthOnTimeDeliveryPct;
+      this.teamOnTimeSegmentPercents = bundle.onTimeSegmentPercents;
       this.teamSupervisionCacheMissing = false;
       this.isLoadingMonthlyPointsProgress = false;
     } catch (error) {
       console.error('Error loading management/dashboard/cached/overview:', error);
       this.teamSupervisionCacheMissing = month != null;
       this.teamMonthOnTimeDeliveryPct = null;
+      this.teamOnTimeSegmentPercents = { ...EMPTY_ON_TIME_SEGMENT_PERCENTS };
     }
   }
 
@@ -2248,6 +2266,7 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
     this.teamDashboardRefreshedAt = null;
     this.teamDashboardCachedParams = null;
     this.teamMonthOnTimeDeliveryPct = null;
+    this.teamOnTimeSegmentPercents = { ...EMPTY_ON_TIME_SEGMENT_PERCENTS };
     this.teamSupervisionBundle = null;
 
     if (!scope || month == null) {
@@ -2275,12 +2294,14 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
       this.teamDashboardRefreshedAt = refreshed && !Number.isNaN(refreshed.getTime()) ? refreshed : null;
       this.teamDashboardCachedParams = bundle.params;
       this.teamMonthOnTimeDeliveryPct = bundle.monthOnTimeDeliveryPct;
+      this.teamOnTimeSegmentPercents = bundle.onTimeSegmentPercents;
       this.teamSupervisionCacheMissing = false;
       this.isLoadingMonthlyPointsProgress = false;
     } catch (error) {
       console.error('Error loading supervision/dashboard/cached:', error);
       this.teamSupervisionCacheMissing = month != null;
       this.teamMonthOnTimeDeliveryPct = null;
+      this.teamOnTimeSegmentPercents = { ...EMPTY_ON_TIME_SEGMENT_PERCENTS };
     }
   }
 
@@ -6170,7 +6191,11 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
             .getPlayerKPIs(collaboratorId, this.selectedMonth, this.actionLogService, scope)
             .pipe(takeUntil(this.destroy$))
         );
-        this.teamKPIs = await this.kpiService.applyTeamGoals(kpis || [], this.selectedMonth);
+        this.teamKPIs = this.kpiService.applyOnTimeSegmentGoals(
+          kpis || [],
+          this.selectedMonth,
+          this.getActiveOnTimeSegmentPercents()
+        );
       } else {
         const panelId = this.getPanelPlayerId();
         if (!panelId) {
@@ -6181,7 +6206,11 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
               .getPlayerKPIs(panelId, this.selectedMonth, this.actionLogService, scope)
               .pipe(takeUntil(this.destroy$))
           );
-          this.teamKPIs = await this.kpiService.applyTeamGoals(kpis || [], this.selectedMonth);
+          this.teamKPIs = this.kpiService.applyOnTimeSegmentGoals(
+            kpis || [],
+            this.selectedMonth,
+            this.getActiveOnTimeSegmentPercents()
+          );
         }
         console.log('✅ Team KPIs (mesmo fluxo que gamificação individual, cache por team_id):', this.teamKPIs.length);
       }
@@ -6224,7 +6253,11 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
     const fromCache = this.getEntregasPrazoPercentFromSupervisionCache();
     if (fromCache !== null) {
       this.applyTeamEntregasPrazoKpiValue(idx, fromCache);
-      this.teamKPIs = this.kpiService.applyOnTimeDeliveryGoalToKpis(this.teamKPIs, this.selectedMonth);
+      this.teamKPIs = this.kpiService.applyOnTimeSegmentGoals(
+        this.teamKPIs,
+        this.selectedMonth,
+        this.getActiveOnTimeSegmentPercents()
+      );
       return;
     }
 
@@ -6252,7 +6285,11 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
     }
 
     this.applyTeamEntregasPrazoKpiValue(idx, avg);
-    this.teamKPIs = this.kpiService.applyOnTimeDeliveryGoalToKpis(this.teamKPIs, this.selectedMonth);
+    this.teamKPIs = this.kpiService.applyOnTimeSegmentGoals(
+      this.teamKPIs,
+      this.selectedMonth,
+      this.getActiveOnTimeSegmentPercents()
+    );
   }
 
   private applyTeamEntregasPrazoKpiValue(idx: number, avg: number): void {
@@ -6444,35 +6481,23 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
     return this.kpiService.getKPIColorByGoals(current, target, superGoal);
   }
 
-  /**
-   * Segunda linha de "Metas da Equipe": a familia "no prazo".
-   *
-   * Ordem FIXA e declarada aqui, nao herdada da ordem de chegada em `teamKPIs`,
-   * porque "Entregas no prazo" vem do fluxo de KPIs e os tres de SLA vem do
-   * SlaGoalsService — deixar a ordem ao acaso faria os marcadores trocarem de
-   * lugar entre carregamentos.
-   */
-  private static readonly ON_TIME_KPI_ORDER: readonly string[] = [
-    'entregas-prazo',
-    'on-time-g4',
-    'on-time-onboarding',
-    'on-time-risco',
-  ];
-
   get onTimeKpis(): KPIData[] {
-    const order = TeamManagementDashboardComponent.ON_TIME_KPI_ORDER;
-    return order
+    return SlaGoalsService.ON_TIME_KPI_ORDER
       .map(id => this.teamKPIs.find(kpi => kpi.id === id))
       .filter((kpi): kpi is KPIData => !!kpi);
   }
 
   /** Marcadores que nao pertencem a nenhuma das duas linhas declaradas. */
   get otherTeamKpis(): KPIData[] {
-    const known = new Set<string>([
-      ...TeamManagementDashboardComponent.ON_TIME_KPI_ORDER,
-      'numero-empresas',
-    ]);
+    const known = new Set<string>([...SlaGoalsService.ON_TIME_KPI_ORDER, 'numero-empresas']);
     return this.teamKPIs.filter(kpi => !known.has(kpi.id));
+  }
+
+  private getActiveOnTimeSegmentPercents(): OnTimeSegmentPercents {
+    if (this.selectedCollaborator != null) {
+      return this.collaboratorOnTimeSegmentPercents;
+    }
+    return this.teamOnTimeSegmentPercents;
   }
 
   get monthlyPointsProgressLabel(): string {

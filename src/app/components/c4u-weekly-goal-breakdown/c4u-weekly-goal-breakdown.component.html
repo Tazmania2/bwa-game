@@ -2,7 +2,7 @@
   `hasAchievedSource` primeiro: sem serie diaria nao ha realizado, e um
   medidor com meta e sem realizado mostra quatro zeros — pior que nao existir.
 -->
-<div class="weekly-goal" *ngIf="hasAchievedSource && (monthTarget > 0 || isLoading)">
+<div class="weekly-goal" *ngIf="isEnabled && hasAchievedSource && (monthTarget > 0 || isLoading)">
   <p class="weekly-goal__title">{{ label }}</p>
 
   <ng-container *ngIf="!isLoading; else weeklySkeleton">

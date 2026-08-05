@@ -217,8 +217,9 @@
           <div class="compact-item" [title]="kpiSidebarTitle(kpi)">
             <i class="ri-time-line compact-icon entregas" *ngIf="kpi.id === 'entregas-prazo'"></i>
             <i class="ri-building-line compact-icon clientes" *ngIf="kpi.id === 'numero-empresas'"></i>
-            <span class="compact-value" *ngIf="!getKpiCircularIsMissing(kpi)">{{ kpiSidebarValue(kpi) }}</span>
-            <span class="compact-value" *ngIf="getKpiCircularIsMissing(kpi)">?</span>
+            <span class="compact-value" *ngIf="kpi.isDisabled">na</span>
+            <span class="compact-value" *ngIf="!kpi.isDisabled && !getKpiCircularIsMissing(kpi)">{{ kpiSidebarValue(kpi) }}</span>
+            <span class="compact-value" *ngIf="!kpi.isDisabled && getKpiCircularIsMissing(kpi)">?</span>
           </div>
         </ng-container>
 
@@ -365,14 +366,9 @@
                 [kpiCount]="kpiLoadingSlots.length + 1">
               </c4u-dashboard-goals-skeleton>
               
-              <!--
-                Primeira linha: pontos do mes a esquerda, meta por semana a
-                direita. As duas coisas falam da MESMA meta mensal — a segunda e
-                a quebra da primeira — entao ficam lado a lado.
-              -->
               <div
                 *ngIf="!(isLoadingKPIs || isLoadingMonthlyPointsProgress)"
-                class="kpi-grid kpi-grid--headline"
+                class="kpi-grid kpi-grid--goals-row"
                 role="group"
                 aria-labelledby="kpi-section-title">
                 <c4u-monthly-points-goal-progress
@@ -383,35 +379,16 @@
                   [isLoading]="isLoadingMonthlyPointsProgress"
                   [color]="monthlyPointsGoalColor">
                 </c4u-monthly-points-goal-progress>
-                <!--
-                  Feature 7: quebra da meta do mes em 10/20/20/50. Mesmo
-                  `target` do anel acima, pelo mesmo motivo.
-                -->
                 <c4u-weekly-goal-breakdown
                   [monthTarget]="monthlyPointsProgressData.target"
                   [dailyRows]="weeklyGoalDailyRows"
                   [monthRef]="selectedMonth ?? null"
                   [isLoading]="isLoadingMonthlyPointsProgress">
                 </c4u-weekly-goal-breakdown>
-                <!--
-                  KPI "Clientes na Carteira" (numero-empresas) — meta de empresas na carteira: comentado;
-                  meta de pontos do período no componente acima.
-                  <ng-container *ngFor="let kpi of teamKPIs; let i = index; trackBy: trackByKpiId">
-                    <c4u-kpi-circular-progress
-                      *ngIf="kpi.id === 'numero-empresas'"
-                      [label]="kpi.label"
-                      [current]="roundValue(kpi.current)"
-                      [target]="roundValue(kpi.target)"
-                      [superTarget]="kpi.superTarget ? roundValue(kpi.superTarget) : undefined"
-                      [color]="kpi.color"
-                      [unit]="kpi.unit"
-                      [colorIndex]="i"
-                      [isMissing]="!!kpi.isMissing">
-                    </c4u-kpi-circular-progress>
-                  </ng-container>
-                -->
                 <ng-container *ngFor="let kpi of otherTeamKpis; let i = index; trackBy: trackByKpiId">
                   <c4u-kpi-circular-progress
+                    size="small"
+                    [hideValue]="true"
                     [label]="kpi.label"
                     [current]="roundValue(getKpiCurrentValue(kpi))"
                     [target]="roundValue(getKpiTargetValue(kpi))"
@@ -422,17 +399,6 @@
                     [isMissing]="getKpiCircularIsMissing(kpi)">
                   </c4u-kpi-circular-progress>
                 </ng-container>
-              </div>
-
-              <!--
-                Segunda linha: a familia "no prazo". size="small" para os quatro
-                caberem lado a lado num laptop sem quebrar.
-              -->
-              <div
-                *ngIf="!(isLoadingKPIs || isLoadingMonthlyPointsProgress) && onTimeKpis.length"
-                class="kpi-grid kpi-grid--on-time"
-                role="group"
-                aria-label="Metas de entregas no prazo">
                 <c4u-kpi-circular-progress
                   *ngFor="let kpi of onTimeKpis; let i = index; trackBy: trackByKpiId"
                   size="small"
@@ -445,7 +411,8 @@
                   [unit]="kpi.unit"
                   [colorIndex]="i"
                   [isPending]="isEntregasPrazoCircularPending(kpi)"
-                  [isMissing]="getKpiCircularIsMissing(kpi)">
+                  [isMissing]="getKpiCircularIsMissing(kpi)"
+                  [isDisabled]="!!kpi.isDisabled">
                 </c4u-kpi-circular-progress>
               </div>
             </section>

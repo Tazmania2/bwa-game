@@ -26,6 +26,10 @@
   &.size-large {
     width: 320px;
   }
+
+  &.is-disabled {
+    opacity: 0.48;
+  }
 }
 
 @keyframes kpi-loading-dot {
@@ -119,6 +123,10 @@
 .kpi-circular-progress--pending .kpi-progress-wrapper {
   opacity: 0.72;
   transition: opacity 0.25s ease;
+}
+
+.kpi-circular-progress--disabled .kpi-progress-wrapper {
+  opacity: 0.55;
 }
 
 .kpi-label-wrapper {

@@ -1,3 +1,16 @@
+:host {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+}
+
 .monthly-points-goal-root {
-  flex: 0 0 auto;
+  width: 100%;
+  max-width: 100%;
+
+  c4u-kpi-circular-progress {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+  }
 }

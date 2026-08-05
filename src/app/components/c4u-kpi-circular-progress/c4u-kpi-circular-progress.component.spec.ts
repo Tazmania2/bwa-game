@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { C4uKpiCircularProgressComponent } from './c4u-kpi-circular-progress.component';
 import { C4uPorcentagemCircularModule } from '../c4u-porcentagem-circular/c4u-porcentagem-circular.module';
+import { C4uInfoButtonModule } from '../c4u-info-button/c4u-info-button.module';
 
 describe('C4uKpiCircularProgressComponent', () => {
   let component: C4uKpiCircularProgressComponent;
@@ -9,7 +10,7 @@ describe('C4uKpiCircularProgressComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       declarations: [C4uKpiCircularProgressComponent],
-      imports: [C4uPorcentagemCircularModule]
+      imports: [C4uPorcentagemCircularModule, C4uInfoButtonModule]
     }).compileComponents();
 
     fixture = TestBed.createComponent(C4uKpiCircularProgressComponent);
@@ -19,6 +20,19 @@ describe('C4uKpiCircularProgressComponent', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('disables the ring when there are no pending clients', () => {
+    component.label = 'Clientes G4 no prazo';
+    component.current = 100;
+    component.target = 100;
+    component.unit = '%';
+    component.isDisabled = true;
+
+    expect(component.percentage).toBe(0);
+    expect(component.progressColor).toBe('gray');
+    expect(component.goalStatus).toBe('Sem clientes pendentes');
+    expect(component.hostClasses).toContain('is-disabled');
   });
 
   describe('percentage calculation', () => {
@@ -54,40 +68,35 @@ describe('C4uKpiCircularProgressComponent', () => {
   });
 
   describe('color determination', () => {
-    it('should return green color for 80%+ completion', () => {
+    it('should return red when current is below target', () => {
       component.current = 40;
       component.target = 50;
-      expect(component.progressColor).toBe('green');
+      expect(component.progressColor).toBe('red');
     });
 
-    it('should return green color for exactly 80% completion', () => {
-      component.current = 80;
-      component.target = 100;
-      expect(component.progressColor).toBe('green');
-    });
-
-    it('should return gold color for 50-79% completion', () => {
-      component.current = 60;
+    it('should return gold when the goal is reached', () => {
+      component.current = 100;
       component.target = 100;
       expect(component.progressColor).toBe('gold');
     });
 
-    it('should return gold color for exactly 50% completion', () => {
-      component.current = 50;
-      component.target = 100;
-      expect(component.progressColor).toBe('gold');
-    });
-
-    it('should return red color for <50% completion', () => {
+    it('should return red for low completion', () => {
       component.current = 20;
       component.target = 50;
       expect(component.progressColor).toBe('red');
     });
 
-    it('should return red color for 0% completion', () => {
+    it('should return red for 0% completion', () => {
       component.current = 0;
       component.target = 100;
       expect(component.progressColor).toBe('red');
+    });
+
+    it('should return gray when disabled', () => {
+      component.current = 100;
+      component.target = 100;
+      component.isDisabled = true;
+      expect(component.progressColor).toBe('gray');
     });
   });
 
