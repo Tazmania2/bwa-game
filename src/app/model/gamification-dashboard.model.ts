@@ -63,6 +63,8 @@ export interface KPIData {
   color?: 'red' | 'yellow' | 'green' | 'gray';
     percentage?: number;
   isMissing?: boolean; // When true, display "?" instead of the value
+  /** Sem cliente pendente com a tag no mês: anel desligado. */
+  isDisabled?: boolean;
 }
 
 // Company Models

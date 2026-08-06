@@ -967,7 +967,7 @@ describe('game4u-game-mapper', () => {
       ] as Game4uUserActionModel[];
       const rankings = aggregateExecutiveHierarchyRankings(actions, 'gerente');
 
-      expect(rankings).toHaveLength(2);
+      expect(rankings).toHaveSize(2);
       expect(rankings.find(r => r.email === 'gerente@bwa.global')).toEqual(
         jasmine.objectContaining({
           name: 'Gerente A',

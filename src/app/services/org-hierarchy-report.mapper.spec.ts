@@ -1,4 +1,4 @@
-import { OrgHierarchyNode } from '@model/game4u-api.model';
+import { OrgHierarchyNode, OrgHierarchyNodeType } from '@model/game4u-api.model';
 import {
   getHighlightGerenciaLabel,
   getHighlightTeamLabel,
@@ -33,6 +33,22 @@ import {
   mapOrgPipelineLegendSegments,
   orgPipelineSegmentsTotal
 } from './org-hierarchy-report.mapper';
+
+/**
+ * `node_type` cru, como a API o envia.
+ *
+ * A API usa sinonimos que o contrato normalizado do front NAO modela —
+ * `team`/`time` viram `supervisao` e `area` vira `segmentacao` em
+ * `normalizeOrgHierarchyNodeType` (org-hierarchy-segmentation.mapper.ts:75).
+ * Os testes abaixo existem precisamente para provar que o mapper tolera esses
+ * sinonimos, entao trocar o valor pelo ja-normalizado apagaria o que eles
+ * testam.
+ *
+ * O cast e sintoma, nao causa: o defeito real e `OrgHierarchyNode.node_type`
+ * estar tipado com a uniao NORMALIZADA enquanto carrega o valor CRU. Corrigir
+ * isso e mexer no contrato e fica para uma mudanca propria.
+ */
+const rawApiNodeType = (value: string): OrgHierarchyNodeType => value as OrgHierarchyNodeType;
 
 describe('org-hierarchy-report.mapper highlights', () => {
   const root: OrgHierarchyNode = {
@@ -199,10 +215,16 @@ describe('org-hierarchy-report.mapper highlights', () => {
     };
 
     const { destaque } = getDerivedHighlightsForTab(metricsRoot, 'player');
-    expect(destaque).toHaveLength(1);
+    expect(destaque).toHaveSize(1);
     expect(destaque[0].mtd?.points_delivered).toBe(1324988);
     expect(destaque[0].mtd?.clients_onboarding).toBe(1923);
-    expect(formatHighlightMtdCell(destaque[0], ORG_HIGHLIGHT_MTD_COLUMNS[0])).toBe('86,7%');
+    // `86%`, nao `86,7%`: a coluna `pct` usa `Math.trunc` desde que
+    // `formatHighlightMtdMetricValue` foi introduzida (PR #68), e a tabela de
+    // destaques mostra percentagens inteiras de proposito. A expectativa
+    // anterior descrevia uma implementacao que nunca existiu — e passou
+    // despercebida porque este ficheiro nunca chegou a compilar, logo o teste
+    // nunca correu. Alinhado ao comportamento em producao, nao o contrario.
+    expect(formatHighlightMtdCell(destaque[0], ORG_HIGHLIGHT_MTD_COLUMNS[0])).toBe('86%');
   });
 
   it('does not repeat the same node between destaque and atencao', () => {
@@ -236,7 +258,7 @@ describe('org-hierarchy-report.mapper highlights', () => {
     const { destaque, atencao } = getDerivedHighlightsForTab(manyPlayersRoot, 'player');
     const idsD = new Set(destaque.map(i => i.node_id));
     const overlap = atencao.filter(i => idsD.has(i.node_id));
-    expect(overlap).toHaveLength(0);
+    expect(overlap).toHaveSize(0);
   });
 
   it('returns a single ranking list for diretorias (no atencao)', () => {
@@ -299,7 +321,7 @@ describe('org-hierarchy-report.mapper highlights', () => {
     };
 
     const directorates = collectOrgHierarchyNodesByType(dirsRoot, 'diretoria');
-    expect(directorates).toHaveLength(4);
+    expect(directorates).toHaveSize(4);
     expect(directorates.map(d => d.label)).toEqual(['Dir 1', 'Dir 2', 'Dir 3', 'Dir 4']);
   });
 
@@ -327,7 +349,7 @@ describe('org-hierarchy-report.mapper highlights', () => {
           compare: {},
           children: [
             {
-              node_type: 'team',
+              node_type: rawApiNodeType('team'),
               node_id: 'team-1',
               label: 'Fiscal - Apuração SP',
               players_count: 5,
@@ -345,7 +367,7 @@ describe('org-hierarchy-report.mapper highlights', () => {
 
     expect(highlightViewTabHasNodes(teamRoot, 'supervisao')).toBe(true);
     const { destaque } = getDerivedHighlightsForTab(teamRoot, 'supervisao');
-    expect(destaque).toHaveLength(1);
+    expect(destaque).toHaveSize(1);
     expect(destaque[0].label).toBe('Fiscal - Apuração SP');
   });
 
@@ -362,7 +384,7 @@ describe('org-hierarchy-report.mapper highlights', () => {
       compare: {},
       children: [
         {
-          node_type: 'area',
+          node_type: rawApiNodeType('area'),
           node_id: 'area-fiscal',
           label: 'Fiscal',
           players_count: 1,
@@ -434,10 +456,14 @@ describe('org-hierarchy-report.mapper access', () => {
       { dow: 1, access_days: 10, access_sessions: 15 },
       { dow: 5, access_days: 20, access_sessions: 25 }
     ]);
-    expect(stats).toHaveLength(7);
-    expect(stats[0]).toMatchObject({ dow: 1, shortLabel: 'Seg', accessDays: 10, accessSessions: 15 });
-    expect(stats[4]).toMatchObject({ dow: 5, shortLabel: 'Sex', accessDays: 20, accessSessions: 25 });
-    expect(stats[6]).toMatchObject({ dow: 7, accessDays: 0, accessSessions: 0 });
+    expect(stats).toHaveSize(7);
+    expect(stats[0]).toEqual(
+      jasmine.objectContaining({ dow: 1, shortLabel: 'Seg', accessDays: 10, accessSessions: 15 })
+    );
+    expect(stats[4]).toEqual(
+      jasmine.objectContaining({ dow: 5, shortLabel: 'Sex', accessDays: 20, accessSessions: 25 })
+    );
+    expect(stats[6]).toEqual(jasmine.objectContaining({ dow: 7, accessDays: 0, accessSessions: 0 }));
   });
 
   it('computes max access days for heatmap scaling', () => {
@@ -498,7 +524,7 @@ describe('org-hierarchy-report.mapper access', () => {
     } as any;
 
     const rows = mapPlayerAccessRows(root);
-    expect(rows).toHaveLength(2);
+    expect(rows).toHaveSize(2);
     expect(rows[0].label).toBe('Bob');
     expect(rows[0].accessSessions).toBe(12);
     expect(rows[1].accessDays).toBe(3);

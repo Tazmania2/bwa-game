@@ -13,6 +13,11 @@ import {
   ProcessMetrics
 } from '@model/gamification-dashboard.model';
 import { PONTOS_POR_ATIVIDADE_FINALIZADA_ACTION_LOG } from '@app/constants/pontos-por-atividade-action-log';
+import {
+  readOnTimePctNumber,
+  readOnTimeSegmentPercents,
+  type OnTimeSegmentPercents
+} from '@utils/on-time-pct.util';
 import { isGame4uDataEnabled, normalizeOrganizationHierarchyDeliveriesResponse, type Game4uReportsUserActionsQuery } from '@model/game4u-api.model';
 import { normalizeOrganizationHierarchyKpiDetailResponse } from '@services/org-hierarchy-client-lists.mapper';
 import type {
@@ -209,6 +214,7 @@ export interface GamificationDashboardCachedBundle {
   seasonClientsTotal: number;
   /** % entregas no prazo no mês (`month_on_time_delivery_pct`), 0–100; `null` se ausente. */
   monthOnTimeDeliveryPct: number | null;
+  onTimeSegmentPercents: OnTimeSegmentPercents;
   refreshError?: string | null;
 }
 
@@ -227,6 +233,7 @@ export interface SupervisionTeamDashboardCachedBundle {
   seasonTasksFinished: number;
   seasonClientsTotal: number;
   monthOnTimeDeliveryPct: number | null;
+  onTimeSegmentPercents: OnTimeSegmentPercents;
   refreshError?: string | null;
 }
 
@@ -237,18 +244,7 @@ export function readMonthOnTimeDeliveryPct(
     'month_on_time_delivery_pct'
   >
 ): number | null {
-  const raw = dash.month_on_time_delivery_pct;
-  if (raw == null || (typeof raw === 'string' && String(raw).trim() === '')) {
-    return null;
-  }
-  let n = Number(raw);
-  if (!Number.isFinite(n)) {
-    return null;
-  }
-  if (n > 0 && n <= 1) {
-    n = n * 100;
-  }
-  return Math.min(100, Math.max(0, Math.round(n * 100) / 100));
+  return readOnTimePctNumber(dash.month_on_time_delivery_pct);
 }
 
 export interface ClienteListItem {
@@ -744,6 +740,7 @@ export class ActionLogService {
           seasonTasksFinished: Math.floor(Number(dash.season_tasks_finished_total) || 0),
           seasonClientsTotal: Math.floor(Number(dash.season_clients_total) || 0),
           monthOnTimeDeliveryPct: readMonthOnTimeDeliveryPct(dash),
+          onTimeSegmentPercents: readOnTimeSegmentPercents(dash),
           refreshError: dash.refresh_error ?? null
         };
       })
@@ -1395,6 +1392,7 @@ export class ActionLogService {
       seasonTasksFinished: Math.floor(Number(manager.season_tasks_finished_total) || 0),
       seasonClientsTotal: Math.floor(Number(manager.season_clients_total) || 0),
       monthOnTimeDeliveryPct: readMonthOnTimeDeliveryPct(manager),
+      onTimeSegmentPercents: readOnTimeSegmentPercents(manager),
       refreshError: manager.refresh_error ?? null
     };
   }
@@ -1465,6 +1463,7 @@ export class ActionLogService {
           seasonTasksFinished: Math.floor(Number(dash.season_tasks_finished_total) || 0),
           seasonClientsTotal: Math.floor(Number(dash.season_clients_total) || 0),
           monthOnTimeDeliveryPct: readMonthOnTimeDeliveryPct(dash),
+          onTimeSegmentPercents: readOnTimeSegmentPercents(dash),
           refreshError: dash.refresh_error ?? null
         };
       })

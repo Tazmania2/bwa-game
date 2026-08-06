@@ -1,0 +1,100 @@
+// Bloco da direita na primeira linha de "Metas da Equipe". Os quatro aneis
+// semanais usam o proprio c4u-kpi-circular-progress em size="small", entao aqui
+// so ha o titulo e o arranjo — nenhuma pintura de anel propria.
+
+.weekly-goal {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+
+  &__title {
+    color: var(--c4u-text-muted, rgba(255, 255, 255, 0.65));
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    margin: 0;
+    text-align: center;
+    text-transform: uppercase;
+  }
+
+  &__markers {
+    align-items: flex-start;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    justify-content: center;
+
+    // Repoe a largura do host: `:host.size-small` fixa 80px, estreito demais
+    // ate para "1ª sem" + "Meta: 14.240 pts", que quebrava feio. 112px cabe os
+    // dois e mantem os quatro aneis lado a lado.
+    c4u-kpi-circular-progress {
+      width: 112px;
+
+      // Os 15px do size-small ficavam visivelmente menores que os 20px dos
+      // marcadores "no prazo", com aneis de diametro parecido. Igualado aqui
+      // para que o par de linhas leia como um conjunto so.
+      ::ng-deep .valor {
+        font-size: 20px;
+      }
+    }
+
+    // Ecra largo: mesmo tamanho dos marcadores "no prazo" da segunda linha,
+    // para que todos os aneis do painel tenham o mesmo diametro. Ver a nota
+    // equivalente em team-management-dashboard.component.scss.
+    @media (min-width: 1440px) {
+      gap: 1.5rem;
+
+      c4u-kpi-circular-progress {
+        width: 132px;
+
+        ::ng-deep .kpi-progress-wrapper {
+          height: 96px;
+          width: 96px;
+        }
+
+        ::ng-deep .valor {
+          font-size: 24px;
+        }
+
+        ::ng-deep .kpi-label {
+          font-size: 12px;
+        }
+      }
+    }
+
+    // Em telas estreitas os quatro aneis quebram em 2x2 em vez de espremer.
+    @media (max-width: 480px) {
+      gap: 0.75rem;
+
+      c4u-kpi-circular-progress {
+        width: 100px;
+      }
+    }
+  }
+
+  &__shimmer {
+    animation: weekly-goal-shimmer 1.4s ease-in-out infinite;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 50%;
+    display: block;
+    height: 3.25rem;
+    width: 3.25rem;
+  }
+}
+
+@keyframes weekly-goal-shimmer {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+
+  50% {
+    opacity: 0.9;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .weekly-goal__shimmer {
+    animation: none;
+  }
+}

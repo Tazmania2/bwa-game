@@ -374,6 +374,13 @@ describe('Game4uApiService', () => {
       month_finished_tasks_count: 28,
       month_clients_served: 8,
       month_on_time_delivery_pct: 92.5,
+      month_on_time_delivery_goal_pct: 95,
+      month_on_time_pct_acessorias_g4: 91.4,
+      month_on_time_pct_acessorias_onboarding: 86.2,
+      month_on_time_pct_acessorias_risco_de_churn: 98.1,
+      month_on_time_goal_pct_acessorias_g4: 100,
+      month_on_time_goal_pct_acessorias_onboarding: 100,
+      month_on_time_goal_pct_acessorias_risco_de_churn: 100,
       refresh_error: null
     });
   });
@@ -417,6 +424,13 @@ describe('Game4uApiService', () => {
       month_finished_tasks_count: 55,
       month_clients_served: 8,
       month_on_time_delivery_pct: 88,
+      month_on_time_delivery_goal_pct: 95,
+      month_on_time_pct_acessorias_g4: 90,
+      month_on_time_pct_acessorias_onboarding: 80,
+      month_on_time_pct_acessorias_risco_de_churn: 97,
+      month_on_time_goal_pct_acessorias_g4: 100,
+      month_on_time_goal_pct_acessorias_onboarding: 100,
+      month_on_time_goal_pct_acessorias_risco_de_churn: 100,
       refresh_error: null
     });
   });
@@ -461,6 +475,13 @@ describe('Game4uApiService', () => {
         month_finished_tasks_count: 88,
         month_clients_served: 40,
         month_on_time_delivery_pct: 82.5,
+        month_on_time_delivery_goal_pct: 95,
+        month_on_time_pct_acessorias_g4: 84,
+        month_on_time_pct_acessorias_onboarding: 79,
+        month_on_time_pct_acessorias_risco_de_churn: 93,
+        month_on_time_goal_pct_acessorias_g4: 100,
+        month_on_time_goal_pct_acessorias_onboarding: 100,
+        month_on_time_goal_pct_acessorias_risco_de_churn: 100,
         refresh_error: null
       },
       teams: [

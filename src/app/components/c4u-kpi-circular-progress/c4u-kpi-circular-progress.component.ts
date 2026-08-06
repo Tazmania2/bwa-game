@@ -15,17 +15,30 @@ export class C4uKpiCircularProgressComponent {
   @Input() unit?: string = '';
   @Input() size: 'small' | 'medium' | 'large' = 'medium';
   @Input() isMissing: boolean = false;
+  /** Sem cliente pendente com a tag: anel inativo, sem medir a meta. */
+  @Input() isDisabled = false;
   /** Carregamento em curso: anel neutro + reticências animadas no valor/meta/status. */
   @Input() isPending = false;
   /** Só o valor percentual visível (sem rótulo, meta nem status) — ex.: entregas no prazo. */
   @Input() compactPercentOnly = false;
+
+  /**
+   * Esconde o numero repetido ABAIXO do anel (`.kpi-value`), mantendo o
+   * percentual que ja aparece dentro do anel.
+   *
+   * Existe para os marcadores de "no prazo", onde os dois mostram exatamente o
+   * mesmo valor e a repeticao so ocupa altura. Opcional e `false` por padrao —
+   * nenhum painel existente muda.
+   */
+  @Input() hideValue = false;
   /** Quando preenchido, substitui o texto de ajuda do botão de informação. */
   @Input() helpDescription = '';
   
   @HostBinding('class')
   get hostClasses(): string {
     const compact = this.compactPercentOnly ? ' compact-percent-only' : '';
-    return `size-${this.size}${compact}`;
+    const disabled = this.isDisabled ? ' is-disabled' : '';
+    return `size-${this.size}${compact}${disabled}`;
   }
 
   // Color palette for different KPIs (fallback)
@@ -34,7 +47,7 @@ export class C4uKpiCircularProgressComponent {
   ];
 
   get percentage(): number {
-    if (this.isMissing || this.isPending) {
+    if (this.isMissing || this.isPending || this.isDisabled) {
       return 0;
     }
     
@@ -52,7 +65,7 @@ export class C4uKpiCircularProgressComponent {
   }
 
   get progressColor(): 'green' | 'blue' | 'purple' | 'gold' | 'red' | 'gray' {
-    if (this.isMissing || this.isPending) {
+    if (this.isMissing || this.isPending || this.isDisabled) {
       return 'gray';
     }
     
@@ -98,6 +111,9 @@ export class C4uKpiCircularProgressComponent {
   get displayValue(): string {
     if (this.isPending) {
       return '';
+    }
+    if (this.isDisabled) {
+      return 'na';
     }
     if (this.isMissing) {
       return '?';
@@ -162,7 +178,7 @@ export class C4uKpiCircularProgressComponent {
 
   /** Classe do badge inferior (neutro durante carregamento ou dado em falta). */
   get statusBadgeClass(): string {
-    if (this.isPending || this.isMissing) {
+    if (this.isPending || this.isMissing || this.isDisabled) {
       return 'status-gray';
     }
     const c = this.color ?? 'green';
@@ -172,6 +188,9 @@ export class C4uKpiCircularProgressComponent {
   get goalStatus(): string {
     if (this.isPending) {
       return '';
+    }
+    if (this.isDisabled) {
+      return 'Sem clientes pendentes';
     }
     if (this.isMissing) {
       return 'Dado indisponível';
@@ -194,7 +213,7 @@ export class C4uKpiCircularProgressComponent {
    * Check if goal is achieved (current >= target)
    */
   get isGoalAchieved(): boolean {
-    if (this.isPending || this.isMissing) {
+    if (this.isPending || this.isMissing || this.isDisabled) {
       return false;
     }
     return this.current >= this.target;
@@ -210,6 +229,12 @@ export class C4uKpiCircularProgressComponent {
       return 'clientes-na-carteira';
     } else if (labelLower.includes('pontos') && labelLower.includes('mês')) {
       return 'pontos-no-mes';
+    } else if (labelLower.includes('g4') && labelLower.includes('prazo')) {
+      return 'entregas-no-prazo-g4';
+    } else if (labelLower.includes('onboarding') && labelLower.includes('prazo')) {
+      return 'entregas-no-prazo-onboarding';
+    } else if (labelLower.includes('risco') && labelLower.includes('prazo')) {
+      return 'entregas-no-prazo-risco';
     } else if (labelLower.includes('entregas') && labelLower.includes('prazo')) {
       return 'entregas-no-prazo';
     }
@@ -232,9 +257,19 @@ export class C4uKpiCircularProgressComponent {
     const key = this.helpTextKey;
     
     // Only add custom text for these specific KPIs
-    if (key === 'clientes-na-carteira' || key === 'entregas-no-prazo' || key === 'pontos-no-mes') {
+    if (
+      key === 'clientes-na-carteira' ||
+      key === 'entregas-no-prazo' ||
+      key === 'entregas-no-prazo-g4' ||
+      key === 'entregas-no-prazo-onboarding' ||
+      key === 'entregas-no-prazo-risco' ||
+      key === 'pontos-no-mes'
+    ) {
       if (this.isPending) {
         return 'A carregar dados…';
+      }
+      if (this.isDisabled) {
+        return 'Não há clientes pendentes com esta tag no período. A meta não se aplica.';
       }
       if (this.isMissing) {
         return 'Dado não disponível';
@@ -257,6 +292,9 @@ export class C4uKpiCircularProgressComponent {
     if (this.isPending) {
       return `${this.label}: a carregar`;
     }
+    if (this.isDisabled) {
+      return `${this.label}: sem clientes pendentes`;
+    }
     if (this.isMissing) {
       return `${this.label}: dado indisponível`;
     }
@@ -273,6 +311,9 @@ export class C4uKpiCircularProgressComponent {
   get ariaValueText(): string {
     if (this.isPending) {
       return 'a carregar';
+    }
+    if (this.isDisabled) {
+      return 'sem clientes pendentes';
     }
     return `${this.percentage}% da meta`;
   }

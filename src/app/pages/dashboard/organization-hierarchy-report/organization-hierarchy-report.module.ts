@@ -16,6 +16,7 @@ import { C4uInfoButtonModule } from '@components/c4u-info-button/c4u-info-button
 import { SharedModule } from '../../../shared.module';
 import { ModalOrganizationHierarchyKpiDetailModule } from '@app/modals/modal-organization-hierarchy-kpi-detail/modal-organization-hierarchy-kpi-detail.module';
 import { ModalOrganizationHierarchyCriticalClientsModule } from '@app/modals/modal-organization-hierarchy-critical-clients/modal-organization-hierarchy-critical-clients.module';
+import { C4uOrgEconomyCardsModule } from '@app/components/c4u-org-economy-cards/c4u-org-economy-cards.module';
 
 const routes: Routes = [
   {
@@ -45,7 +46,8 @@ const routes: Routes = [
     C4uShimmerModule,
     C4uInfoButtonModule,
     ModalOrganizationHierarchyKpiDetailModule,
-    ModalOrganizationHierarchyCriticalClientsModule
+    ModalOrganizationHierarchyCriticalClientsModule,
+    C4uOrgEconomyCardsModule
   ]
 })
 export class OrganizationHierarchyReportModule {}

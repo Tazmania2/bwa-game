@@ -8,6 +8,7 @@ import {
 import { Subject, firstValueFrom } from 'rxjs';
 import { debounceTime, distinctUntilChanged, take, takeUntil } from 'rxjs/operators';
 import * as moment from 'moment';
+import { environment } from '../../../../environments/environment';
 import { dateFromMonthFilterOffset } from '@utils/month-filter-offset.util';
 import { ActionLogService } from '@services/action-log.service';
 import { SessaoProvider } from '@providers/sessao/sessao.provider';
@@ -1068,12 +1069,70 @@ export class OrganizationHierarchyReportComponent implements OnInit, OnDestroy {
 
   /** KPIs de listagem de clientes cujo drill-down está pausado por performance. */
   private isClientListDrilldownDisabled(kpi: OrgHierarchyKpiDetailKey): boolean {
+    if (this.clientListDrilldownEnabled) {
+      return false;
+    }
     return (
       kpi === 'clients_served' ||
       kpi === 'clients_acessorias_g4' ||
       kpi === 'clients_acessorias_onboarding' ||
       kpi === 'clients_acessorias_risco_de_churn'
     );
+  }
+
+  /**
+   * Drill-down por tag / lista de clientes.
+   *
+   * Desligado por PADRAO. Nao e cautela generica: o relatorio hierarquico e
+   * lido do Snowflake dentro do request do usuario (12.558 ms medidos em
+   * producao em 2026-08-03 com depth=1, a chamada mais leve possivel), e foi
+   * por isso que alguem desligou este drill-down antes. Ligar antes do espelho
+   * em Postgres estar no ar traz a lentidao de volta.
+   *
+   * Sequencia para ligar: deployar `feat/org-hierarchy-postgres-cache-master`
+   * em g4u-mvp-api, popular o cache, medir, e so entao
+   * ORG_HIERARCHY_TAG_DRILLDOWN=true.
+   */
+  get clientListDrilldownEnabled(): boolean {
+    return environment.orgHierarchyTagDrilldown === true;
+  }
+
+  /**
+   * Segmentacoes do cartao "Clientes atendidos" (feature 2 do sprint).
+   *
+   * Os tres valores ja eram exibidos; o que muda e passarem a ser clicaveis
+   * quando o drill-down estiver ligado. Vivem aqui, e nao triplicados no
+   * template, para que rotulo, valor e chave de KPI nao possam divergir.
+   */
+  get heroClientTagBreakdown(): {
+    label: string;
+    value: number;
+    kpi: OrgHierarchyKpiDetailKey;
+  }[] {
+    const mtd = this.root?.mtd;
+    if (!mtd) {
+      return [];
+    }
+    return [
+      { label: 'G4', value: mtd.clients_acessorias_g4 ?? 0, kpi: 'clients_acessorias_g4' },
+      {
+        label: 'Onboarding',
+        value: mtd.clients_acessorias_onboarding ?? 0,
+        kpi: 'clients_acessorias_onboarding',
+      },
+      {
+        label: 'Risco churn',
+        value: mtd.clients_acessorias_risco_de_churn ?? 0,
+        kpi: 'clients_acessorias_risco_de_churn',
+      },
+    ];
+  }
+
+  openClientTagDrillDown(kpi: OrgHierarchyKpiDetailKey): void {
+    if (!this.root || !this.clientListDrilldownEnabled) {
+      return;
+    }
+    this.openKpiDrillDown(kpi, this.root, kpi as OrgHierarchyClientListKey);
   }
 
   exportClientsServedXlsx(): void {

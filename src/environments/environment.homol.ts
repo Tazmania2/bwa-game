@@ -19,7 +19,19 @@ export const environment = {
   // Feature Flags
   enableAnalytics: false,
   orgHierarchyAsyncExport: true,
-  
+
+  /** Ver environment.ts. FALSE ate o espelho em Postgres estar no ar. */
+  orgHierarchyTagDrilldown:
+    String(process.env['ORG_HIERARCHY_TAG_DRILLDOWN'] ?? process.env['org_hierarchy_tag_drilldown'] ?? 'false')
+      .trim()
+      .toLowerCase() === 'true',
+
+  /** Ver environment.ts. FALSE: nao existe coluna de custo no data lake. */
+  orgEconomyCards:
+    String(process.env['ORG_ECONOMY_CARDS'] ?? process.env['org_economy_cards'] ?? 'false')
+      .trim()
+      .toLowerCase() === 'true',
+
   // Logo Configuration (supports both uppercase and lowercase env var names)
   logoUrl: process.env['LOGO_URL'] || process.env['logo_url'] || '',
   

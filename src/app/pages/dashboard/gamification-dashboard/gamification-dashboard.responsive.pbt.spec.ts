@@ -58,7 +58,9 @@ describe('GamificationDashboardComponent - Property 11: Responsive Layout Adapta
     getPlayerKPIs: jasmine.createSpy('getPlayerKPIs').and.returnValue(of([
       { name: 'KPI 1', current: 75, target: 100 },
       { name: 'KPI 2', current: 50, target: 80 }
-    ]))
+    ])),
+    applyOnTimeSegmentGoals: jasmine.createSpy('applyOnTimeSegmentGoals').and.callFake((kpis: unknown) => kpis || []),
+    applyOnTimeDeliveryGoalToKpis: jasmine.createSpy('applyOnTimeDeliveryGoalToKpis').and.callFake((kpis: unknown) => kpis || [])
   };
 
   const mockToastService = {

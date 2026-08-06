@@ -69,8 +69,14 @@ describe('GamificationDashboardComponent - Performance Tests', () => {
     );
     playerServiceSpy.getPlayerCnpj.and.returnValue(of([]));
 
-    const kpiServiceSpy = jasmine.createSpyObj('KPIService', ['getPlayerKPIs']);
+    const kpiServiceSpy = jasmine.createSpyObj('KPIService', [
+      'getPlayerKPIs',
+      'applyOnTimeSegmentGoals',
+      'applyOnTimeDeliveryGoalToKpis'
+    ]);
     kpiServiceSpy.getPlayerKPIs.and.returnValue(of([]));
+    kpiServiceSpy.applyOnTimeSegmentGoals.and.callFake((kpis: unknown) => kpis || []);
+    kpiServiceSpy.applyOnTimeDeliveryGoalToKpis.and.callFake((kpis: unknown) => kpis || []);
 
     const toastServiceSpy = jasmine.createSpyObj('ToastService', ['error', 'alert']);
 

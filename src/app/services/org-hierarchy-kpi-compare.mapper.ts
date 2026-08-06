@@ -553,7 +553,11 @@ export function resolveOrgKpiMonthlyHistoryForChart(
     full_value?: number | null;
     cache_month?: string;
   }> | undefined,
-  params?: OrganizationHierarchyReportParams | null | undefined
+  // So `cache_month` e lido aqui. Exigir o objeto inteiro obrigava quem chama a
+  // montar cinco datas que esta funcao nunca olha — e era o que impedia o spec
+  // de compilar. Um `Pick` continua aceitando o params completo dos chamadores
+  // reais e declara a dependencia de verdade.
+  params?: Pick<OrganizationHierarchyReportParams, 'cache_month'> | null | undefined
 ): OrgKpiMonthlyHistoryRow[] {
   const refCacheMonth = params?.cache_month ?? null;
   const fromSeries = buildMonthlyHistory(kpi, context?.mtd_monthly_series, refCacheMonth);

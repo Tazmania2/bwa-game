@@ -58,7 +58,36 @@ module.exports = {
                 SUPABASE_COMPANIES_TABLE: getEnv('SUPABASE_COMPANIES_TABLE', 'companies'),
                 SUPABASE_DB_SCHEMA: getEnv('SUPABASE_DB_SCHEMA', 'public'),
                 SUPABASE_USE_MOCK: getEnv('SUPABASE_USE_MOCK', ''),
+                // Sem esta linha a flag NAO existe no bundle: o DefinePlugin
+                // substitui `process.env` por este objeto literal, entao
+                // qualquer chave ausente vira `undefined` e o valor do .env e
+                // ignorado em silencio.
+                ORG_HIERARCHY_TAG_DRILLDOWN: getEnv('ORG_HIERARCHY_TAG_DRILLDOWN', ''),
                 SUPABASE_MOCK_FEED_ALL_USERS: getEnv('SUPABASE_MOCK_FEED_ALL_USERS', ''),
+                // Chaves que environment*.ts LE e que faltavam nesta lista, ou
+                // seja: liam `undefined` em todos os builds e o valor do .env
+                // era ignorado em silencio. ORG_HIERARCHY_ASYNC_EXPORT estava
+                // documentado como desligavel e nao era. GAME4U_USE_API tem o
+                // default `true`, portanto nao havia forma nenhuma de o
+                // desligar. Auditado com um diff entre as chaves lidas em
+                // src/environments e as declaradas aqui — repetir esse diff
+                // sempre que se acrescentar uma flag.
+                ORG_HIERARCHY_ASYNC_EXPORT: getEnv('ORG_HIERARCHY_ASYNC_EXPORT', ''),
+                SHOW_MAINTENANCE_BANNER: getEnv('SHOW_MAINTENANCE_BANNER', ''),
+                GAME4U_USE_API: getEnv('GAME4U_USE_API', ''),
+                GAME4U_SUPABASE_FALLBACK: getEnv('GAME4U_SUPABASE_FALLBACK', ''),
+                SUPABASE_GAME_USER_ACTIONS_TABLE: getEnv('SUPABASE_GAME_USER_ACTIONS_TABLE', ''),
+                SUPABASE_GAME_DELIVERIES_TABLE: getEnv('SUPABASE_GAME_DELIVERIES_TABLE', ''),
+                SUPABASE_GAME_TEAM_FILTER_COLUMN: getEnv('SUPABASE_GAME_TEAM_FILTER_COLUMN', ''),
+                SUPABASE_GAME_USER_EMAIL_COLUMN: getEnv('SUPABASE_GAME_USER_EMAIL_COLUMN', ''),
+                // Flag do sprint/moco-01, false por defeito enquanto os
+                // dados forem fixture. Ver environment.ts.
+                ORG_ECONOMY_CARDS: getEnv('ORG_ECONOMY_CARDS', ''),
+                // NAO acrescentar SUPABASE_SERVICE_ROLE_KEY nem
+                // SUPABASE_SERVICE_ROLE_SECRET. environment.ts le-as, mas uma
+                // service-role key ignora RLS e este bundle vai inteiro para o
+                // browser. Faltarem desta lista e a unica coisa que hoje as
+                // impede de ser publicadas — a ausencia e a protecao.
                 // Lowercase (Vercel compatibility)
                 backend_url_base: backendUrlBase,
                 g4u_api_base: backendUrlBase,
@@ -74,6 +103,19 @@ module.exports = {
                 supabase_db_schema: getEnv('supabase_db_schema', 'public'),
                 supabase_use_mock: getEnv('supabase_use_mock', ''),
                 supabase_mock_feed_all_users: getEnv('supabase_mock_feed_all_users', ''),
+                // Variantes minusculas das chaves acima. environment*.ts le
+                // ambas as caixas; declarar so uma deixava metade do contrato
+                // por cumprir no caminho Vercel.
+                org_hierarchy_tag_drilldown: getEnv('org_hierarchy_tag_drilldown', ''),
+                org_hierarchy_async_export: getEnv('org_hierarchy_async_export', ''),
+                show_maintenance_banner: getEnv('show_maintenance_banner', ''),
+                game4u_use_api: getEnv('game4u_use_api', ''),
+                game4u_supabase_fallback: getEnv('game4u_supabase_fallback', ''),
+                supabase_game_user_actions_table: getEnv('supabase_game_user_actions_table', ''),
+                supabase_game_deliveries_table: getEnv('supabase_game_deliveries_table', ''),
+                supabase_game_team_filter_column: getEnv('supabase_game_team_filter_column', ''),
+                supabase_game_user_email_column: getEnv('supabase_game_user_email_column', ''),
+                org_economy_cards: getEnv('org_economy_cards', ''),
                 // Same values on all keys so bracket/dot access and CI mirrors all resolve.
                 GAMIFICACAO_API_URL: gamificacaoApiUrl,
                 GAMIFICACAO_API_TOKEN: gamificacaoApiToken,

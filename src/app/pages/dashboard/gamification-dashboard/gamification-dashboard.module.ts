@@ -13,6 +13,7 @@ import { C4uSeasonProgressModule } from '@components/c4u-season-progress/c4u-sea
 import { C4uSeletorMesModule } from '@components/c4u-seletor-mes/c4u-seletor-mes.module';
 import { C4uKpiCircularProgressModule } from '@components/c4u-kpi-circular-progress/c4u-kpi-circular-progress.module';
 import { C4uMonthlyPointsGoalProgressModule } from '@components/c4u-monthly-points-goal-progress/c4u-monthly-points-goal-progress.module';
+import { C4uWeeklyGoalBreakdownModule } from '@components/c4u-weekly-goal-breakdown/c4u-weekly-goal-breakdown.module';
 import { C4uActivityProgressModule } from '@components/c4u-activity-progress/c4u-activity-progress.module';
 import { C4uCompanyTableModule } from '@components/c4u-company-table/c4u-company-table.module';
 import { C4uShimmerModule } from '@components/c4u-shimmer/c4u-shimmer.module';
@@ -52,6 +53,7 @@ const routes: Routes = [
     C4uSeletorMesModule,
     C4uKpiCircularProgressModule,
     C4uMonthlyPointsGoalProgressModule,
+    C4uWeeklyGoalBreakdownModule,
     C4uActivityProgressModule,
     C4uCompanyTableModule,
     C4uShimmerModule,

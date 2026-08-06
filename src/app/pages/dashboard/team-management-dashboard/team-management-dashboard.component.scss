@@ -922,6 +922,105 @@
       @include mobile-only {
         gap: $spacing-md;
       }
+
+      &--goals-row {
+        display: grid;
+        align-items: start;
+        justify-items: center;
+        gap: $spacing-sm;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+
+        c4u-monthly-points-goal-progress,
+        c4u-kpi-circular-progress {
+          width: 100%;
+          max-width: 100%;
+          min-width: 0;
+
+          ::ng-deep .kpi-progress-wrapper {
+            height: 80px;
+            width: 80px;
+          }
+
+          ::ng-deep .valor {
+            font-size: 20px;
+          }
+
+          ::ng-deep .kpi-label {
+            font-size: 11px;
+            white-space: nowrap;
+          }
+        }
+
+        c4u-monthly-points-goal-progress {
+          ::ng-deep c4u-kpi-circular-progress {
+            width: 100%;
+            max-width: 100%;
+          }
+        }
+
+        @media (min-width: 1440px) {
+          gap: $spacing-md;
+
+          c4u-monthly-points-goal-progress,
+          c4u-kpi-circular-progress {
+            ::ng-deep .kpi-progress-wrapper {
+              height: 96px;
+              width: 96px;
+            }
+
+            ::ng-deep .valor {
+              font-size: 24px;
+            }
+
+            ::ng-deep .kpi-label {
+              font-size: 12px;
+            }
+          }
+        }
+
+        @include tablet-only {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: $spacing-xs;
+
+          c4u-monthly-points-goal-progress,
+          c4u-kpi-circular-progress {
+            ::ng-deep .kpi-progress-wrapper {
+              height: 68px;
+              width: 68px;
+            }
+
+            ::ng-deep .valor {
+              font-size: 17px;
+            }
+
+            ::ng-deep .kpi-label {
+              font-size: 10px;
+            }
+          }
+        }
+
+        @include mobile-only {
+          gap: $spacing-md;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+
+          c4u-monthly-points-goal-progress,
+          c4u-kpi-circular-progress {
+            ::ng-deep .kpi-progress-wrapper {
+              height: 72px;
+              width: 72px;
+            }
+
+            ::ng-deep .kpi-label {
+              font-size: 11px;
+              white-space: normal;
+            }
+
+            ::ng-deep .valor {
+              font-size: 18px;
+            }
+          }
+        }
+      }
     }
 
     // Tab Content

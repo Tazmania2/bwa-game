@@ -1,7 +1,9 @@
 <div class="kpi-circular-progress"
      [class.kpi-circular-progress--pending]="isPending"
+     [class.kpi-circular-progress--disabled]="isDisabled"
      role="progressbar"
      [attr.aria-busy]="isPending"
+     [attr.aria-disabled]="isDisabled || null"
      [attr.aria-label]="ariaLabel"
      [attr.aria-valuenow]="current"
      [attr.aria-valuemin]="0"
@@ -24,7 +26,7 @@
       [theme]="progressColor">
     </c4u-porcentagem-circular>
   </div>
-  <div class="kpi-value" aria-hidden="true">
+  <div class="kpi-value" *ngIf="!hideValue" aria-hidden="true">
     <span *ngIf="isPending" class="loading-dots loading-dots--lg" aria-hidden="true">
       <span>.</span><span>.</span><span>.</span>
     </span>

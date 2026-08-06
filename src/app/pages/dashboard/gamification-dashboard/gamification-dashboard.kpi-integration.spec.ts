@@ -72,7 +72,13 @@ describe('GamificationDashboard - Company KPI Integration Tests', () => {
       'usesGame4uWalletFromStats'
     ]);
 
-    const kpiServiceSpy = jasmine.createSpyObj('KPIService', ['getPlayerKPIs']);
+    const kpiServiceSpy = jasmine.createSpyObj('KPIService', [
+      'getPlayerKPIs',
+      'applyOnTimeSegmentGoals',
+      'applyOnTimeDeliveryGoalToKpis'
+    ]);
+    kpiServiceSpy.applyOnTimeSegmentGoals.and.callFake((kpis: unknown) => kpis || []);
+    kpiServiceSpy.applyOnTimeDeliveryGoalToKpis.and.callFake((kpis: unknown) => kpis || []);
 
     const toastServiceSpy = jasmine.createSpyObj('ToastService', [
       'error',

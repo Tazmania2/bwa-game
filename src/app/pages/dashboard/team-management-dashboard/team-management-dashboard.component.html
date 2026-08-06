@@ -217,8 +217,9 @@
           <div class="compact-item" [title]="kpiSidebarTitle(kpi)">
             <i class="ri-time-line compact-icon entregas" *ngIf="kpi.id === 'entregas-prazo'"></i>
             <i class="ri-building-line compact-icon clientes" *ngIf="kpi.id === 'numero-empresas'"></i>
-            <span class="compact-value" *ngIf="!getKpiCircularIsMissing(kpi)">{{ kpiSidebarValue(kpi) }}</span>
-            <span class="compact-value" *ngIf="getKpiCircularIsMissing(kpi)">?</span>
+            <span class="compact-value" *ngIf="kpi.isDisabled">na</span>
+            <span class="compact-value" *ngIf="!kpi.isDisabled && !getKpiCircularIsMissing(kpi)">{{ kpiSidebarValue(kpi) }}</span>
+            <span class="compact-value" *ngIf="!kpi.isDisabled && getKpiCircularIsMissing(kpi)">?</span>
           </div>
         </ng-container>
 
@@ -367,7 +368,7 @@
               
               <div
                 *ngIf="!(isLoadingKPIs || isLoadingMonthlyPointsProgress)"
-                class="kpi-grid"
+                class="kpi-grid kpi-grid--goals-row"
                 role="group"
                 aria-labelledby="kpi-section-title">
                 <c4u-monthly-points-goal-progress
@@ -378,37 +379,41 @@
                   [isLoading]="isLoadingMonthlyPointsProgress"
                   [color]="monthlyPointsGoalColor">
                 </c4u-monthly-points-goal-progress>
-                <!--
-                  KPI "Clientes na Carteira" (numero-empresas) — meta de empresas na carteira: comentado;
-                  meta de pontos do período no componente acima.
-                  <ng-container *ngFor="let kpi of teamKPIs; let i = index; trackBy: trackByKpiId">
-                    <c4u-kpi-circular-progress
-                      *ngIf="kpi.id === 'numero-empresas'"
-                      [label]="kpi.label"
-                      [current]="roundValue(kpi.current)"
-                      [target]="roundValue(kpi.target)"
-                      [superTarget]="kpi.superTarget ? roundValue(kpi.superTarget) : undefined"
-                      [color]="kpi.color"
-                      [unit]="kpi.unit"
-                      [colorIndex]="i"
-                      [isMissing]="!!kpi.isMissing">
-                    </c4u-kpi-circular-progress>
-                  </ng-container>
-                -->
-                <ng-container *ngFor="let kpi of teamKPIs; let i = index; trackBy: trackByKpiId">
+                <c4u-weekly-goal-breakdown
+                  [monthTarget]="monthlyPointsProgressData.target"
+                  [dailyRows]="weeklyGoalDailyRows"
+                  [monthRef]="selectedMonth ?? null"
+                  [isLoading]="isLoadingMonthlyPointsProgress">
+                </c4u-weekly-goal-breakdown>
+                <ng-container *ngFor="let kpi of otherTeamKpis; let i = index; trackBy: trackByKpiId">
                   <c4u-kpi-circular-progress
-                    *ngIf="kpi.id !== 'numero-empresas'"
+                    size="small"
+                    [hideValue]="true"
                     [label]="kpi.label"
-                    [current]="kpi.id === 'entregas-prazo' ? getKpiCurrentValue(kpi) : roundValue(getKpiCurrentValue(kpi))"
+                    [current]="roundValue(getKpiCurrentValue(kpi))"
                     [target]="roundValue(getKpiTargetValue(kpi))"
                     [superTarget]="kpi.superTarget ? roundValue(kpi.superTarget) : undefined"
                     [color]="kpi.color"
                     [unit]="kpi.unit"
                     [colorIndex]="i"
-                    [isPending]="isEntregasPrazoCircularPending(kpi)"
                     [isMissing]="getKpiCircularIsMissing(kpi)">
                   </c4u-kpi-circular-progress>
                 </ng-container>
+                <c4u-kpi-circular-progress
+                  *ngFor="let kpi of onTimeKpis; let i = index; trackBy: trackByKpiId"
+                  size="small"
+                  [hideValue]="true"
+                  [label]="kpi.label"
+                  [current]="kpi.id === 'entregas-prazo' ? getKpiCurrentValue(kpi) : roundValue(getKpiCurrentValue(kpi))"
+                  [target]="roundValue(getKpiTargetValue(kpi))"
+                  [superTarget]="kpi.superTarget ? roundValue(kpi.superTarget) : undefined"
+                  [color]="kpi.color"
+                  [unit]="kpi.unit"
+                  [colorIndex]="i"
+                  [isPending]="isEntregasPrazoCircularPending(kpi)"
+                  [isMissing]="getKpiCircularIsMissing(kpi)"
+                  [isDisabled]="!!kpi.isDisabled">
+                </c4u-kpi-circular-progress>
               </div>
             </section>
             

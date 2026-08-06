@@ -295,24 +295,44 @@
                   </button>
                 </div>
                 <p class="hero-kpi__value">{{ root.mtd.clients_served | number:'1.0-0':'pt-BR' }}</p>
+                <!--
+                  Segmentacoes (feature 2). Clicaveis somente com
+                  ORG_HIERARCHY_TAG_DRILLDOWN=true; por padrao continuam
+                  estaticas, exatamente como antes. O drill-down por tag foi
+                  desligado por performance e so deve voltar depois que o
+                  relatorio hierarquico deixar de ser lido do Snowflake dentro
+                  do request. Ver clientListDrilldownEnabled no componente.
+                -->
                 <div class="hero-kpi__breakdown">
-                  <!-- Drill-down por tag desabilitado temporariamente (performance). -->
-                  <span class="hero-kpi__breakdown-item">
-                    <span class="hero-kpi__breakdown-value">{{ root.mtd.clients_acessorias_g4 | number:'1.0-0':'pt-BR' }}</span>
-                    <span class="hero-kpi__breakdown-label">G4</span>
-                  </span>
-                  <span class="hero-kpi__breakdown-item">
-                    <span class="hero-kpi__breakdown-value">{{ root.mtd.clients_acessorias_onboarding | number:'1.0-0':'pt-BR' }}</span>
-                    <span class="hero-kpi__breakdown-label">Onboarding</span>
-                  </span>
-                  <span class="hero-kpi__breakdown-item">
-                    <span class="hero-kpi__breakdown-value">{{ root.mtd.clients_acessorias_risco_de_churn | number:'1.0-0':'pt-BR' }}</span>
-                    <span class="hero-kpi__breakdown-label">Risco churn</span>
-                  </span>
+                  <ng-container *ngFor="let tag of heroClientTagBreakdown">
+                    <button
+                      *ngIf="clientListDrilldownEnabled; else staticTagItem"
+                      type="button"
+                      class="hero-kpi__breakdown-item hero-kpi__breakdown-item--link"
+                      (click)="openClientTagDrillDown(tag.kpi); $event.stopPropagation()"
+                      [attr.aria-label]="'Abrir detalhamento de clientes ' + tag.label">
+                      <span class="hero-kpi__breakdown-value">{{ tag.value | number:'1.0-0':'pt-BR' }}</span>
+                      <span class="hero-kpi__breakdown-label">{{ tag.label }}</span>
+                    </button>
+                    <ng-template #staticTagItem>
+                      <span class="hero-kpi__breakdown-item">
+                        <span class="hero-kpi__breakdown-value">{{ tag.value | number:'1.0-0':'pt-BR' }}</span>
+                        <span class="hero-kpi__breakdown-label">{{ tag.label }}</span>
+                      </span>
+                    </ng-template>
+                  </ng-container>
                 </div>
               </div>
             </div>
           </section>
+
+          <!--
+            Economia (feature 10). Secao propria, fora de "Indicadores
+            principais": aqueles cartoes sao contagens operacionais, estes sao
+            reais. O componente carrega a propria fonte e se esconde sozinho
+            quando nao ha indicadores.
+          -->
+          <c4u-org-economy-cards></c4u-org-economy-cards>
 
           <c4u-card *ngIf="showPaceSection" class="dashboard-section pace-section" aria-labelledby="pace-heading">
             <div class="pace-section__header">

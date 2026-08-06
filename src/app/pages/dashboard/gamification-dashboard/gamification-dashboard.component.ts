@@ -30,6 +30,11 @@ import { ProgressListType } from '@modals/modal-progress-list/modal-progress-lis
 import { ModalSeasonFaqComponent } from '@modals/modal-season-faq/modal-season-faq.component';
 import { PONTOS_POR_ATIVIDADE_FINALIZADA_ACTION_LOG } from '@app/constants/pontos-por-atividade-action-log';
 import { getOnTimeDeliveryGoalForMonth } from '@app/constants/on-time-delivery-goal';
+import { SlaGoalsService } from '@services/sla-goals.service';
+import {
+  EMPTY_ON_TIME_SEGMENT_PERCENTS,
+  type OnTimeSegmentPercents
+} from '@utils/on-time-pct.util';
 import { dateFromMonthFilterOffset, MONTH_FILTER_TODA_TEMPORADA } from '@utils/month-filter-offset.util';
 import {
   extractGamificacaoEmpIdFromDeliveryKey,
@@ -159,6 +164,7 @@ export class GamificationDashboardComponent implements OnInit, OnDestroy, AfterV
   dashboardCachedParams: PlayerDashboardCachedParams | null = null;
   /** % entregas no prazo do mês (`month_on_time_delivery_pct` em `dashboard/cached`). */
   monthOnTimeDeliveryPct: number | null = null;
+  monthOnTimeSegmentPercents: OnTimeSegmentPercents = { ...EMPTY_ON_TIME_SEGMENT_PERCENTS };
 
   /** Insights operacionais (user-actions do mês). */
   dashboardInsights: DashboardInsightsSnapshot | null = null;
@@ -1202,7 +1208,11 @@ export class GamificationDashboardComponent implements OnInit, OnDestroy, AfterV
     const fromCache = this.getEntregasPrazoPercentFromDashboardCache();
     if (fromCache !== null) {
       this.applyEntregasPrazoKpiValue(idx, fromCache);
-      this.playerKPIs = this.kpiService.applyOnTimeDeliveryGoalToKpis(this.playerKPIs, this.selectedMonth);
+      this.playerKPIs = this.kpiService.applyOnTimeSegmentGoals(
+        this.playerKPIs,
+        this.selectedMonth,
+        this.monthOnTimeSegmentPercents
+      );
       return;
     }
     if (this.isLoadingParticipacao || this.isLoadingParticipacaoKpi) {
@@ -1230,7 +1240,11 @@ export class GamificationDashboardComponent implements OnInit, OnDestroy, AfterV
     }
 
     this.applyEntregasPrazoKpiValue(idx, avg);
-    this.playerKPIs = this.kpiService.applyOnTimeDeliveryGoalToKpis(this.playerKPIs, this.selectedMonth);
+    this.playerKPIs = this.kpiService.applyOnTimeSegmentGoals(
+      this.playerKPIs,
+      this.selectedMonth,
+      this.monthOnTimeSegmentPercents
+    );
   }
 
   private applyEntregasPrazoKpiValue(idx: number, avg: number): void {
@@ -1275,7 +1289,11 @@ export class GamificationDashboardComponent implements OnInit, OnDestroy, AfterV
       .subscribe({
         next: (kpis) => {
           console.log('📊 KPIs loaded:', kpis, `(${kpis?.length || 0} KPIs)`);
-          this.playerKPIs = this.kpiService.applyOnTimeDeliveryGoalToKpis(kpis || [], this.selectedMonth);
+          this.playerKPIs = this.kpiService.applyOnTimeSegmentGoals(
+            kpis || [],
+            this.selectedMonth,
+            this.monthOnTimeSegmentPercents
+          );
           this.syncClientesKpiWithTabs();
           if (this.playerService.usesGame4uWalletFromStats()) {
             this.syncEntregasPrazoKpiFromParticipacao();
@@ -1345,6 +1363,7 @@ export class GamificationDashboardComponent implements OnInit, OnDestroy, AfterV
     this.dashboardRefreshedAt = null;
     this.dashboardCachedParams = null;
     this.monthOnTimeDeliveryPct = null;
+    this.monthOnTimeSegmentPercents = { ...EMPTY_ON_TIME_SEGMENT_PERCENTS };
 
     const usuario = this.sessaoProvider.usuario as { _id?: string; email?: string } | null;
     const playerId: string = (usuario?._id || usuario?.email || '') as string;
@@ -1377,6 +1396,7 @@ export class GamificationDashboardComponent implements OnInit, OnDestroy, AfterV
             this.processMetrics = { pendentes: 0, incompletas: 0, finalizadas: 0 };
             this.monthlyPointsGoalTarget = null;
             this.monthOnTimeDeliveryPct = null;
+            this.monthOnTimeSegmentPercents = { ...EMPTY_ON_TIME_SEGMENT_PERCENTS };
             this.clientesAtendidosThisMonthCount = month != null ? null : this.clientesAtendidosThisMonthCount;
           } else {
             this.playerDashboardCacheMissing = false;
@@ -1386,6 +1406,8 @@ export class GamificationDashboardComponent implements OnInit, OnDestroy, AfterV
             this.monthlyPointsGoalTarget = g > 0 ? g : null;
             this.monthOnTimeDeliveryPct =
               month != null ? bundle.monthOnTimeDeliveryPct : null;
+            this.monthOnTimeSegmentPercents =
+              month != null ? bundle.onTimeSegmentPercents : { ...EMPTY_ON_TIME_SEGMENT_PERCENTS };
             if (month != null) {
               this.clientesAtendidosThisMonthCount = bundle.monthClientsServed;
             }
@@ -1413,6 +1435,7 @@ export class GamificationDashboardComponent implements OnInit, OnDestroy, AfterV
           this.processMetrics = { pendentes: 0, incompletas: 0, finalizadas: 0 };
           this.monthlyPointsGoalTarget = null;
           this.monthOnTimeDeliveryPct = null;
+          this.monthOnTimeSegmentPercents = { ...EMPTY_ON_TIME_SEGMENT_PERCENTS };
           this.isLoadingProgress = false;
           this.isLoadingMonthlyGoal = false;
           this.isLoadingClientesAtendidosCount = false;
@@ -1522,6 +1545,7 @@ export class GamificationDashboardComponent implements OnInit, OnDestroy, AfterV
     this.dashboardRefreshedAt = null;
     this.dashboardCachedParams = null;
     this.monthOnTimeDeliveryPct = null;
+    this.monthOnTimeSegmentPercents = { ...EMPTY_ON_TIME_SEGMENT_PERCENTS };
     this.playerKPIs = [];
 
     // Show loading states immediately
@@ -1962,6 +1986,17 @@ export class GamificationDashboardComponent implements OnInit, OnDestroy, AfterV
    */
   get enabledKPIs(): KPIData[] {
     return this.playerKPIs.filter(k => k.id !== 'numero-empresas');
+  }
+
+  get onTimeKpis(): KPIData[] {
+    return SlaGoalsService.ON_TIME_KPI_ORDER
+      .map(id => this.playerKPIs.find(kpi => kpi.id === id))
+      .filter((kpi): kpi is KPIData => !!kpi);
+  }
+
+  get otherPlayerKpis(): KPIData[] {
+    const known = new Set<string>([...SlaGoalsService.ON_TIME_KPI_ORDER, 'numero-empresas']);
+    return this.playerKPIs.filter(kpi => !known.has(kpi.id));
   }
 
   /**

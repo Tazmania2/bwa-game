@@ -18,7 +18,24 @@ export const environment = {
   // Feature Flags
   enableAnalytics: true,
   orgHierarchyAsyncExport: true,
-  
+
+  /**
+   * Drill-down por tag no dashboard organizacional. FALSE em producao ate o
+   * espelho do relatorio em Postgres estar deployado — hoje o relatorio e lido
+   * do Snowflake dentro do request (12.558 ms medidos em 2026-08-03, depth=1).
+   * Ver o comentario extenso em environment.ts.
+   */
+  orgHierarchyTagDrilldown:
+    String(process.env['ORG_HIERARCHY_TAG_DRILLDOWN'] ?? process.env['org_hierarchy_tag_drilldown'] ?? 'false')
+      .trim()
+      .toLowerCase() === 'true',
+
+  /** Ver environment.ts. FALSE: nao existe coluna de custo no data lake. */
+  orgEconomyCards:
+    String(process.env['ORG_ECONOMY_CARDS'] ?? process.env['org_economy_cards'] ?? 'false')
+      .trim()
+      .toLowerCase() === 'true',
+
   // Logo Configuration (supports both uppercase and lowercase env var names)
   logoUrl: process.env['LOGO_URL'] || process.env['logo_url'] || '',
   

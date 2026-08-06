@@ -1,0 +1,33 @@
+<!--
+  `hasAchievedSource` primeiro: sem serie diaria nao ha realizado, e um
+  medidor com meta e sem realizado mostra quatro zeros — pior que nao existir.
+-->
+<div class="weekly-goal" *ngIf="isEnabled && hasAchievedSource && (monthTarget > 0 || isLoading)">
+  <p class="weekly-goal__title">{{ label }}</p>
+
+  <ng-container *ngIf="!isLoading; else weeklySkeleton">
+    <!--
+      Mesmo medidor circular dos demais marcadores do painel
+      (`c4u-kpi-circular-progress`), em size="small". Reusar o componente em vez
+      de desenhar um anel proprio mantem cor, estado vazio e acessibilidade
+      identicos aos outros marcadores da tela.
+    -->
+    <div class="weekly-goal__markers">
+      <c4u-kpi-circular-progress
+        *ngFor="let slice of slices; let i = index; trackBy: trackByWeek"
+        size="small"
+        [label]="slice.week + 'ª sem'"
+        [current]="slice.achievedPoints"
+        [target]="slice.targetPoints"
+        [unit]="'pts'"
+        [colorIndex]="i">
+      </c4u-kpi-circular-progress>
+    </div>
+  </ng-container>
+
+  <ng-template #weeklySkeleton>
+    <div class="weekly-goal__markers" aria-hidden="true">
+      <span class="weekly-goal__shimmer" *ngFor="let slot of [1, 2, 3, 4]"></span>
+    </div>
+  </ng-template>
+</div>

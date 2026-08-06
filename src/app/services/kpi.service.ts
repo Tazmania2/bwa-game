@@ -7,6 +7,8 @@ import { KPIMapper } from './kpi-mapper.service';
 import { KPIData } from '@model/gamification-dashboard.model';
 import { SessaoProvider } from '@providers/sessao/sessao.provider';
 import { PlayerService } from './player.service';
+import { SlaGoalsService } from './sla-goals.service';
+import type { OnTimeSegmentPercents } from '@utils/on-time-pct.util';
 
 interface CacheEntry<T> {
   data: Observable<T>;
@@ -35,7 +37,8 @@ export class KPIService {
     private backendApi: BackendApiService,
     private mapper: KPIMapper,
     private playerService: PlayerService,
-    private sessao: SessaoProvider
+    private sessao: SessaoProvider,
+    private slaGoals: SlaGoalsService
   ) {}
 
   /**
@@ -288,6 +291,23 @@ export class KPIService {
         color: kpi.isMissing ? 'gray' : this.getKPIColorByGoals(kpi.current, goal, superTarget)
       };
     });
+  }
+
+  /**
+   * Meta vigente de «entregas-prazo» mais os três anéis por tag Acessórias.
+   * Usado no painel do jogador e no de equipe. O % atual vem da API cached.
+   */
+  applyOnTimeSegmentGoals(
+    kpis: KPIData[],
+    selectedMonth?: Date | null,
+    segments?: OnTimeSegmentPercents | null
+  ): KPIData[] {
+    const base = this.applyOnTimeDeliveryGoalToKpis(kpis, selectedMonth);
+    const slaKpis = this.slaGoals.toKpiData(segments, (current, target, superTarget) =>
+      this.getKPIColorByGoals(current, target, superTarget)
+    );
+    const withoutSla = base.filter(kpi => !SlaGoalsService.SLA_KPI_IDS.includes(kpi.id));
+    return [...withoutSla, ...slaKpis];
   }
 
   /**

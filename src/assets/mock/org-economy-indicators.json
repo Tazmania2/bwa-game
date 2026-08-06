@@ -1,0 +1,26 @@
+{
+  "_comment": "MOCK — indicadores de economia do dashboard organizacional (sprint/moco-01, feature 10). NAO existe fonte real: nenhuma coluna de custo existe nos transforms Mozart (nenhum `custo`, `cost_`, `cost_per`) nem na API. Os nomes de campo seguem a convencao `mtd_*` / `prev_mtd_*` ja usada no mart 13, para que ligar o dado real seja troca de fonte e nao renomeacao.",
+  "_source": "mock",
+  "cache_month": "2026-08-01",
+  "currency": "BRL",
+  "indicators": [
+    {
+      "id": "cost_per_delivery",
+      "label": "Custo por entrega",
+      "mtd_value": 12.4,
+      "prev_mtd_value": 13.5
+    },
+    {
+      "id": "cost_per_client",
+      "label": "Custo por cliente",
+      "mtd_value": 184.7,
+      "prev_mtd_value": 176.2
+    },
+    {
+      "id": "cost_per_point",
+      "label": "Custo por ponto",
+      "mtd_value": 0.86,
+      "prev_mtd_value": 0.92
+    }
+  ]
+}
