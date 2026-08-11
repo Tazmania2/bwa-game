@@ -9,7 +9,9 @@ import { C4uSeletorMesComponent } from './c4u-seletor-mes.component';
 import { SessaoProvider } from '@providers/sessao/sessao.provider';
 import { SeasonDatesService } from '@services/season-dates.service';
 import { ActionLogService } from '@services/action-log.service';
+import { UserProfileService } from '@services/user-profile.service';
 import { configureTestBed } from '@app/testing/test-fixtures';
+import { of } from 'rxjs';
 
 describe('C4uSeletorMesComponent', () => {
   let component: C4uSeletorMesComponent;
@@ -17,15 +19,31 @@ describe('C4uSeletorMesComponent', () => {
   let mockSessaoProvider: jasmine.SpyObj<SessaoProvider>;
   let mockSeasonDatesService: jasmine.SpyObj<SeasonDatesService>;
   let mockActionLogService: jasmine.SpyObj<ActionLogService>;
+  let mockUserProfileService: jasmine.SpyObj<UserProfileService>;
 
   beforeEach(async () => {
     mockSessaoProvider = jasmine.createSpyObj('SessaoProvider', ['isAdmin']);
-    mockSeasonDatesService = jasmine.createSpyObj('SeasonDatesService', ['getMonthsSinceSeasonStart']);
+    mockSeasonDatesService = jasmine.createSpyObj('SeasonDatesService', [
+      'getMonthsSinceSeasonStart',
+      'getSeasonDates',
+      'getSeasonStartDate'
+    ]);
     mockActionLogService = jasmine.createSpyObj('ActionLogService', ['getPlayerActionLogForMonth']);
+    mockUserProfileService = jasmine.createSpyObj('UserProfileService', ['isDiretor']);
     
     // Default mock behavior
     mockSessaoProvider.isAdmin.and.returnValue(false);
+    Object.defineProperty(mockSessaoProvider, 'usuario', { get: () => ({ roles: [] }) });
+    mockUserProfileService.isDiretor.and.returnValue(false);
     mockSeasonDatesService.getMonthsSinceSeasonStart.and.returnValue(Promise.resolve(3));
+    mockSeasonDatesService.getSeasonDates.and.returnValue(
+      Promise.resolve({
+        start: new Date(2026, 7, 1),
+        end: new Date(2026, 11, 31)
+      })
+    );
+    mockSeasonDatesService.getSeasonStartDate.and.returnValue(Promise.resolve(new Date(2026, 7, 1)));
+    mockActionLogService.getPlayerActionLogForMonth.and.returnValue(of([]));
 
     configureTestBed({
       declarations: [C4uSeletorMesComponent],
@@ -37,7 +55,8 @@ describe('C4uSeletorMesComponent', () => {
       providers: [
         { provide: SessaoProvider, useValue: mockSessaoProvider },
         { provide: SeasonDatesService, useValue: mockSeasonDatesService },
-        { provide: ActionLogService, useValue: mockActionLogService }
+        { provide: ActionLogService, useValue: mockActionLogService },
+        { provide: UserProfileService, useValue: mockUserProfileService }
       ]
     });
 

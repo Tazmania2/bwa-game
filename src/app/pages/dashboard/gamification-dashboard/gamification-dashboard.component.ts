@@ -230,14 +230,11 @@ export class GamificationDashboardComponent implements OnInit, OnDestroy, AfterV
   // Refresh state
   lastRefreshTime: Date | null = null;
 
-  /** Intervalo da campanha ativa (GET /campaign via {@link SeasonDatesService}). */
-  private seasonDates: { start: Date; end: Date } = (() => {
-    const y = new Date().getFullYear();
-    return {
-      start: new Date(y, 0, 1, 0, 0, 0, 0),
-      end: new Date(y, 11, 31, 23, 59, 59, 999)
-    };
-  })();
+  /** Intervalo da temporada hardcoded (01/08/2026–31/12/2026). */
+  private seasonDates: { start: Date; end: Date } = {
+    start: new Date(2026, 7, 1, 0, 0, 0, 0),
+    end: new Date(2026, 11, 31, 23, 59, 59, 999)
+  };
 
   /** Ajusta `selectedMonth` à campanha só na primeira carga do painel. */
   private initialSeasonMonthApplied = false;
@@ -1414,13 +1411,7 @@ export class GamificationDashboardComponent implements OnInit, OnDestroy, AfterV
             const refreshed = new Date(bundle.refreshedAt);
             this.dashboardRefreshedAt = Number.isFinite(refreshed.getTime()) ? refreshed : null;
             this.dashboardCachedParams = bundle.params;
-            if (this.seasonDates && bundle.params?.season_start && bundle.params?.season_end) {
-              const ss = new Date(bundle.params.season_start);
-              const se = new Date(bundle.params.season_end);
-              if (Number.isFinite(ss.getTime()) && Number.isFinite(se.getTime())) {
-                this.seasonDates = { start: ss, end: se };
-              }
-            }
+            // Temporário: manter temporada hardcoded (não sobrescrever com params da API).
           }
           this.syncEntregasPrazoKpiFromParticipacao();
           this.isLoadingProgress = false;

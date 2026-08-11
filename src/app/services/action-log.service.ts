@@ -60,6 +60,7 @@ import {
   managerMatchesDashboardCachedRole,
   parseManagementManagerUserId
 } from '@utils/management-dashboard-role';
+import { getSeasonProxyMonth } from '@utils/hardcoded-season';
 import {
   computeGame4uDrPrazoMetaBoost,
   computeMonthlyPointsFromGame4uActions,
@@ -630,8 +631,32 @@ export class ActionLogService {
     if (month != null) {
       return month;
     }
-    const now = new Date();
-    return new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+    // Temporário: «temporada» = agosto/2026.
+    return getSeasonProxyMonth();
+  }
+
+  /**
+   * Totais de temporada / carteira a partir de `month_*` de agosto (`month=2026-08`).
+   * Não usa `season_*` da API (pode incluir dados anteriores a agosto).
+   */
+  private mapSeasonProxyMetricsFromMonthFields(dash: {
+    month_points_done_delivered?: number;
+    month_finished_tasks_count?: number;
+    month_clients_served?: number;
+  }): {
+    seasonWalletPoints: number;
+    seasonTasksFinished: number;
+    seasonClientsTotal: number;
+  } {
+    return {
+      seasonWalletPoints: Math.floor(Number(dash.month_points_done_delivered) || 0),
+      seasonTasksFinished: Math.floor(Number(dash.month_finished_tasks_count) || 0),
+      seasonClientsTotal: Math.floor(Number(dash.month_clients_served) || 0)
+    };
+  }
+
+  private isSameDashboardCachedMonth(a: Date, b: Date): boolean {
+    return this.toDashboardCachedMonthParam(a) === this.toDashboardCachedMonthParam(b);
   }
 
   /**
@@ -714,34 +739,41 @@ export class ActionLogService {
 
   /**
    * Bundle do painel de supervisão (progresso, meta, clientes no mês, temporada) numa única chamada cacheada.
+   * Carteira / temporada usam sempre o cache de agosto (`month=2026-08`).
    */
   getSupervisionTeamDashboardCachedBundle(
     bwaTeamScopeId: string,
     month?: Date
   ): Observable<SupervisionTeamDashboardCachedBundle | null> {
-    return this.fetchSupervisionTeamDashboardCached(bwaTeamScopeId, month).pipe(
-      map(dash => {
-        if (!dash) {
+    const kpiMonth = this.resolveDashboardCachedMonth(month);
+    const seasonMonth = getSeasonProxyMonth();
+    const kpi$ = this.fetchSupervisionTeamDashboardCached(bwaTeamScopeId, kpiMonth);
+    const season$ = this.isSameDashboardCachedMonth(kpiMonth, seasonMonth)
+      ? kpi$
+      : this.fetchSupervisionTeamDashboardCached(bwaTeamScopeId, seasonMonth);
+
+    return forkJoin({ kpi: kpi$, season: season$ }).pipe(
+      map(({ kpi, season }) => {
+        if (!kpi) {
           return null;
         }
-        const { activity, processo } = this.mapPlayerDashboardCachedToProgressMetrics(dash, month);
-        const goal = Math.floor(Number(dash.month_goal_points) || 0);
+        const { activity, processo } = this.mapPlayerDashboardCachedToProgressMetrics(kpi, month);
+        const goal = Math.floor(Number(kpi.month_goal_points) || 0);
+        const seasonMetrics = this.mapSeasonProxyMetricsFromMonthFields(season ?? kpi);
         return {
-          refreshedAt: dash.refreshed_at,
-          teamId: Math.floor(Number(dash.team_id) || 0),
-          teamName: dash.team_name ?? null,
-          playersCount: Math.floor(Number(dash.players_count) || 0),
-          params: dash.params,
+          refreshedAt: kpi.refreshed_at,
+          teamId: Math.floor(Number(kpi.team_id) || 0),
+          teamName: kpi.team_name ?? null,
+          playersCount: Math.floor(Number(kpi.players_count) || 0),
+          params: kpi.params,
           activity,
           processo,
           monthlyGoalTarget: goal,
-          monthClientsServed: Math.floor(Number(dash.month_clients_served) || 0),
-          seasonWalletPoints: Math.floor(Number(dash.season_points_total) || 0),
-          seasonTasksFinished: Math.floor(Number(dash.season_tasks_finished_total) || 0),
-          seasonClientsTotal: Math.floor(Number(dash.season_clients_total) || 0),
-          monthOnTimeDeliveryPct: readMonthOnTimeDeliveryPct(dash),
-          onTimeSegmentPercents: readOnTimeSegmentPercents(dash),
-          refreshError: dash.refresh_error ?? null
+          monthClientsServed: Math.floor(Number(kpi.month_clients_served) || 0),
+          ...seasonMetrics,
+          monthOnTimeDeliveryPct: readMonthOnTimeDeliveryPct(kpi),
+          onTimeSegmentPercents: readOnTimeSegmentPercents(kpi),
+          refreshError: kpi.refresh_error ?? null
         };
       })
     );
@@ -1355,18 +1387,34 @@ export class ActionLogService {
 
   /**
    * Bundle do painel de gestão (GERENTE / DIRETOR / C_LEVEL) — KPIs de `overview.manager`.
+   * Carteira / temporada usam sempre o cache de agosto (`month=2026-08`).
    */
   getManagementDashboardCachedBundle(
     month?: Date,
     userId?: string,
     role?: ManagementDashboardCachedRole
   ): Observable<SupervisionTeamDashboardCachedBundle | null> {
-    return this.fetchManagementDashboardCachedOverview(month, userId, role).pipe(
-      map(overview => {
-        if (!overview?.manager) {
+    const kpiMonth = this.resolveDashboardCachedMonth(month);
+    const seasonMonth = getSeasonProxyMonth();
+    const kpi$ = this.fetchManagementDashboardCachedOverview(kpiMonth, userId, role);
+    const season$ = this.isSameDashboardCachedMonth(kpiMonth, seasonMonth)
+      ? kpi$
+      : this.fetchManagementDashboardCachedOverview(seasonMonth, userId, role);
+
+    return forkJoin({ kpi: kpi$, season: season$ }).pipe(
+      map(({ kpi, season }) => {
+        if (!kpi?.manager) {
           return null;
         }
-        return this.mapManagerDashboardCachedToBundle(overview.manager, month);
+        const bundle = this.mapManagerDashboardCachedToBundle(kpi.manager, month);
+        if (season?.manager) {
+          const seasonMetrics = this.mapSeasonProxyMetricsFromMonthFields(season.manager);
+          return { ...bundle, ...seasonMetrics };
+        }
+        return {
+          ...bundle,
+          ...this.mapSeasonProxyMetricsFromMonthFields(kpi.manager)
+        };
       })
     );
   }
@@ -1378,6 +1426,7 @@ export class ActionLogService {
     const { activity, processo } = this.mapPlayerDashboardCachedToProgressMetrics(manager, month);
     const goal = Math.floor(Number(manager.month_goal_points) || 0);
     const firstTeamId = manager.team_ids?.[0] ?? manager.teams?.[0]?.team_id ?? 0;
+    const seasonMetrics = this.mapSeasonProxyMetricsFromMonthFields(manager);
     return {
       refreshedAt: manager.refreshed_at,
       teamId: Math.floor(Number(firstTeamId) || 0),
@@ -1388,9 +1437,7 @@ export class ActionLogService {
       processo,
       monthlyGoalTarget: goal,
       monthClientsServed: Math.floor(Number(manager.month_clients_served) || 0),
-      seasonWalletPoints: Math.floor(Number(manager.season_points_total) || 0),
-      seasonTasksFinished: Math.floor(Number(manager.season_tasks_finished_total) || 0),
-      seasonClientsTotal: Math.floor(Number(manager.season_clients_total) || 0),
+      ...seasonMetrics,
       monthOnTimeDeliveryPct: readMonthOnTimeDeliveryPct(manager),
       onTimeSegmentPercents: readOnTimeSegmentPercents(manager),
       refreshError: manager.refresh_error ?? null
@@ -1420,12 +1467,13 @@ export class ActionLogService {
         }
       };
     }
-    const seasonPts = Math.floor(Number(dash.season_points_total) || 0);
+    // Temporário: sem mês = totais de agosto (`month_*`), não `season_*` da API.
+    const seasonPts = Math.floor(Number(dash.month_points_done_delivered) || 0);
     return {
       activity: {
         pendentes: 0,
         emExecucao: 0,
-        finalizadas: Math.floor(Number(dash.season_tasks_finished_total) || 0),
+        finalizadas: Math.floor(Number(dash.month_finished_tasks_count) || 0),
         pontos: seasonPts,
         pontosDone: seasonPts,
         pontosTodosStatus: seasonPts
@@ -1433,38 +1481,45 @@ export class ActionLogService {
       processo: {
         pendentes: 0,
         incompletas: 0,
-        finalizadas: Math.floor(Number(dash.season_clients_total) || 0)
+        finalizadas: Math.floor(Number(dash.month_clients_served) || 0)
       }
     };
   }
 
   /**
    * Bundle do painel gamificação (progresso, meta, clientes no mês, temporada) numa única chamada cacheada.
+   * Carteira / temporada usam sempre o cache de agosto (`month=2026-08`).
    */
   getGamificationDashboardCachedBundle(
     playerId: string,
     month?: Date
   ): Observable<GamificationDashboardCachedBundle | null> {
-    return this.fetchPlayerDashboardCached(playerId, month).pipe(
-      map(dash => {
-        if (!dash) {
+    const kpiMonth = this.resolveDashboardCachedMonth(month);
+    const seasonMonth = getSeasonProxyMonth();
+    const kpi$ = this.fetchPlayerDashboardCached(playerId, kpiMonth);
+    const season$ = this.isSameDashboardCachedMonth(kpiMonth, seasonMonth)
+      ? kpi$
+      : this.fetchPlayerDashboardCached(playerId, seasonMonth);
+
+    return forkJoin({ kpi: kpi$, season: season$ }).pipe(
+      map(({ kpi, season }) => {
+        if (!kpi) {
           return null;
         }
-        const { activity, processo } = this.mapPlayerDashboardCachedToProgressMetrics(dash, month);
-        const goal = Math.floor(Number(dash.month_goal_points) || 0);
+        const { activity, processo } = this.mapPlayerDashboardCachedToProgressMetrics(kpi, month);
+        const goal = Math.floor(Number(kpi.month_goal_points) || 0);
+        const seasonMetrics = this.mapSeasonProxyMetricsFromMonthFields(season ?? kpi);
         return {
-          refreshedAt: dash.refreshed_at,
-          params: dash.params,
+          refreshedAt: kpi.refreshed_at,
+          params: kpi.params,
           activity,
           processo,
           monthlyGoalTarget: goal,
-          monthClientsServed: Math.floor(Number(dash.month_clients_served) || 0),
-          seasonWalletPoints: Math.floor(Number(dash.season_points_total) || 0),
-          seasonTasksFinished: Math.floor(Number(dash.season_tasks_finished_total) || 0),
-          seasonClientsTotal: Math.floor(Number(dash.season_clients_total) || 0),
-          monthOnTimeDeliveryPct: readMonthOnTimeDeliveryPct(dash),
-          onTimeSegmentPercents: readOnTimeSegmentPercents(dash),
-          refreshError: dash.refresh_error ?? null
+          monthClientsServed: Math.floor(Number(kpi.month_clients_served) || 0),
+          ...seasonMetrics,
+          monthOnTimeDeliveryPct: readMonthOnTimeDeliveryPct(kpi),
+          onTimeSegmentPercents: readOnTimeSegmentPercents(kpi),
+          refreshError: kpi.refresh_error ?? null
         };
       })
     );
@@ -1930,20 +1985,17 @@ export class ActionLogService {
       }
       const tid = this.normalizeGame4uTeamId(teamId);
       if (!tid) {
-        return this.fetchPlayerDashboardCached(playerId, month).pipe(
+        // Temporário: progresso de temporada = cache de agosto (`month=2026-08`).
+        const seasonMonth = getSeasonProxyMonth();
+        return this.fetchPlayerDashboardCached(playerId, seasonMonth).pipe(
           map(dash => {
             if (!dash) {
               return { tarefasFinalizadas: 0 };
             }
-            if (month != null) {
-              return {
-                tarefasFinalizadas: Math.floor(Number(dash.month_finished_tasks_count) || 0),
-                deliveryStatsTotal: Math.floor(Number(dash.month_clients_served) || 0)
-              };
-            }
+            const season = this.mapSeasonProxyMetricsFromMonthFields(dash);
             return {
-              tarefasFinalizadas: Math.floor(Number(dash.season_tasks_finished_total) || 0),
-              deliveryStatsTotal: Math.floor(Number(dash.season_clients_total) || 0)
+              tarefasFinalizadas: season.seasonTasksFinished,
+              deliveryStatsTotal: season.seasonClientsTotal
             };
           })
         );
@@ -1995,7 +2047,7 @@ export class ActionLogService {
 
   /**
    * Snapshot Game4U para carteira + sidebar no painel de gamificação.
-   * Usa `GET /game/reports/dashboard/cached` (`season_*` no payload).
+   * Usa `GET /game/reports/dashboard/cached?month=2026-08` (`month_*` no payload).
    */
   getMonthlyGame4uPlayerDashboardData(
     playerId: string,
@@ -2019,7 +2071,10 @@ export class ActionLogService {
         sidebar: { tarefasFinalizadas: 0 }
       });
     }
-    return this.fetchPlayerDashboardCached(playerId, month).pipe(
+    // Carteira / temporada = sempre agosto/2026 (ignora o mês do filtro do painel).
+    void month;
+    void teamId;
+    return this.fetchPlayerDashboardCached(playerId, getSeasonProxyMonth()).pipe(
       map(dash => {
         if (!dash) {
           return {
@@ -2028,14 +2083,19 @@ export class ActionLogService {
             sidebar: { tarefasFinalizadas: 0 }
           };
         }
-        const tasks = Math.floor(Number(dash.season_tasks_finished_total) || 0);
-        const deliveries = Math.floor(Number(dash.season_clients_total) || 0);
-        const pts = Math.floor(Number(dash.season_points_total) || 0);
-        const wallet: PointWallet = { moedas: 0, bloqueados: 0, desbloqueados: pts };
+        const season = this.mapSeasonProxyMetricsFromMonthFields(dash);
+        const wallet: PointWallet = {
+          moedas: 0,
+          bloqueados: 0,
+          desbloqueados: season.seasonWalletPoints
+        };
         return {
           wallet,
-          pontosActionLog: pts,
-          sidebar: { tarefasFinalizadas: tasks, deliveryStatsTotal: deliveries }
+          pontosActionLog: season.seasonWalletPoints,
+          sidebar: {
+            tarefasFinalizadas: season.seasonTasksFinished,
+            deliveryStatsTotal: season.seasonClientsTotal
+          }
         };
       }),
       catchError(error => {
@@ -2051,7 +2111,7 @@ export class ActionLogService {
 
   /**
    * Snapshot Game4U para sidebar do **painel de equipe** (vista agregada sem colaborador):
-   * `GET /game/reports/finished/summary` com `team_id` (= id BWA da equipe), sem `email`.
+   * `GET /game/reports/supervision/dashboard/cached?month=2026-08`.
    */
   getMonthlyGame4uTeamDashboardData(
     bwaTeamScopeId: string,
@@ -2074,7 +2134,8 @@ export class ActionLogService {
         sidebar: { tarefasFinalizadas: 0 }
       });
     }
-    return this.fetchSupervisionTeamDashboardCached(tid, month).pipe(
+    void month;
+    return this.fetchSupervisionTeamDashboardCached(tid, getSeasonProxyMonth()).pipe(
       map(dash => {
         if (!dash) {
           return {
@@ -2083,14 +2144,19 @@ export class ActionLogService {
             sidebar: { tarefasFinalizadas: 0 }
           };
         }
-        const pts = Math.floor(Number(dash.season_points_total) || 0);
-        const tasks = Math.floor(Number(dash.season_tasks_finished_total) || 0);
-        const deliveries = Math.floor(Number(dash.season_clients_total) || 0);
-        const wallet: PointWallet = { moedas: 0, bloqueados: 0, desbloqueados: pts };
+        const season = this.mapSeasonProxyMetricsFromMonthFields(dash);
+        const wallet: PointWallet = {
+          moedas: 0,
+          bloqueados: 0,
+          desbloqueados: season.seasonWalletPoints
+        };
         return {
           wallet,
-          pontosActionLog: pts,
-          sidebar: { tarefasFinalizadas: tasks, deliveryStatsTotal: deliveries }
+          pontosActionLog: season.seasonWalletPoints,
+          sidebar: {
+            tarefasFinalizadas: season.seasonTasksFinished,
+            deliveryStatsTotal: season.seasonClientsTotal
+          }
         };
       })
     );
