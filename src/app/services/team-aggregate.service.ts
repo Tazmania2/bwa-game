@@ -1,4 +1,5 @@
 ﻿import { Injectable } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Observable, of, throwError, forkJoin, EMPTY } from 'rxjs';
 import { PONTOS_POR_ATIVIDADE_FINALIZADA_ACTION_LOG } from '@app/constants/pontos-por-atividade-action-log';
 import { map, catchError, tap, switchMap, expand, reduce } from 'rxjs/operators';
@@ -703,14 +704,9 @@ export class TeamAggregateService {
    */
   private handleAggregateError(methodName: string, error: any): Observable<never> {
     console.error(`TeamAggregateService.${methodName} error:`, error);
-    
-    let errorMessage = 'Erro ao carregar dados da equipe';
-    
-    if (error.message) {
-      errorMessage = error.message;
-    }
-    
-    return throwError(() => new Error(errorMessage));
+    return throwError(
+      () => new Error('Não foi possível carregar os dados agora. Tente novamente mais tarde.')
+    );
   }
 
   /**
@@ -1149,7 +1145,10 @@ export class TeamAggregateService {
         }),
         catchError(error => {
           console.error('Error in getTeamFinishedDeliveriesParticipacaoPage (cached):', error);
-          return of({ items: [], offset: off, limit: lim, fromCachedDeliveries: true });
+          if (error instanceof HttpErrorResponse && error.status === 404) {
+            return of({ items: [], offset: off, limit: lim, fromCachedDeliveries: true });
+          }
+          return throwError(() => error);
         })
       );
   }

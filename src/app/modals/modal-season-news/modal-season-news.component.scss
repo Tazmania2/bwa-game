@@ -1,0 +1,251 @@
+:host {
+  display: block;
+  max-width: min(980px, 100vw - 1.5rem);
+  max-height: min(90vh, 860px);
+}
+
+.season-news-body {
+  max-height: min(72vh, 700px);
+  padding-right: 0.25rem;
+  gap: 1.25rem;
+}
+
+.season-news-hero {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  padding: 0.85rem 0.9rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.season-news-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 10px;
+  font-size: 1.25rem;
+  color: #d4a574;
+  background: rgba(212, 165, 116, 0.15);
+}
+
+.season-news-hero-text {
+  min-width: 0;
+  flex: 1;
+}
+
+.season-news-headline {
+  margin: 0 0 0.35rem;
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.season-news-lead {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.68);
+}
+
+.season-news-section {
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+
+  &:last-child {
+    padding-bottom: 0;
+    border-bottom: none;
+  }
+
+  &--alert {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.55rem;
+    min-height: 6.5rem;
+    padding: 1.35rem 1.25rem;
+    border-radius: 12px;
+    border: 1px solid rgba(253, 164, 175, 0.32);
+    background: rgba(253, 164, 175, 0.1);
+  }
+}
+
+.season-news-section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 0.5rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+
+  i {
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.45);
+  }
+}
+
+.season-news-section--alert .season-news-section-title {
+  margin-bottom: 0;
+  color: rgba(253, 164, 175, 0.95);
+
+  i {
+    color: rgba(253, 164, 175, 0.9);
+  }
+}
+
+.season-news-section-text {
+  margin: 0 0 0.85rem;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.78);
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.season-news-section--alert .season-news-section-text {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.season-news-section--rules {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.season-news-rules-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(212, 165, 116, 0.35);
+  background: rgba(212, 165, 116, 0.1);
+  color: inherit;
+  text-decoration: none;
+  transition: background 0.15s ease, border-color 0.15s ease;
+
+  &:hover,
+  &:focus-visible {
+    background: rgba(212, 165, 116, 0.16);
+    border-color: rgba(212, 165, 116, 0.55);
+    outline: none;
+  }
+}
+
+.season-news-rules-btn__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 2.35rem;
+  height: 2.35rem;
+  border-radius: 10px;
+  font-size: 1.2rem;
+  color: #d4a574;
+  background: rgba(212, 165, 116, 0.18);
+}
+
+.season-news-rules-btn__text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.season-news-rules-btn__label {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.season-news-rules-btn__hint {
+  font-size: 0.8rem;
+  line-height: 1.35;
+  color: rgba(255, 255, 255, 0.58);
+}
+
+.season-news-rules-btn__action {
+  flex-shrink: 0;
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.season-news-goals {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(9.5rem, 1fr));
+  gap: 1rem 1.15rem;
+  width: 100%;
+  align-items: start;
+}
+
+.season-news-goal {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
+  padding: 0.65rem 0.35rem 0.4rem;
+  border-radius: 12px;
+
+  // Largura útil do circular no modal (size-small nativo é estreito demais)
+  ::ng-deep c4u-kpi-circular-progress.size-small {
+    width: 100%;
+    max-width: 9.75rem;
+  }
+
+  ::ng-deep .kpi-label {
+    font-size: 0.72rem !important;
+    line-height: 1.25 !important;
+  }
+}
+
+.season-news-new-badge {
+  position: absolute;
+  top: 0.35rem;
+  right: 0.35rem;
+  z-index: 1;
+  padding: 0.12rem 0.4rem;
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #0b1220;
+  background: linear-gradient(135deg, #7dd3fc 0%, #a78bfa 100%);
+  box-shadow: 0 0 10px rgba(125, 211, 252, 0.45);
+}
+
+@media (max-width: 900px) {
+  .season-news-goals {
+    grid-template-columns: repeat(3, minmax(8.5rem, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  :host {
+    max-width: min(100vw - 1rem, 980px);
+  }
+
+  .season-news-goals {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.85rem;
+  }
+
+  .season-news-section--alert {
+    min-height: 5.75rem;
+    padding: 1.15rem 1rem;
+  }
+}

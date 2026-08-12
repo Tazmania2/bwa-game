@@ -265,7 +265,20 @@
       aria-labelledby="progress-section-title">
       <h3 id="progress-section-title" class="section-title">Meu Progresso</h3>
       <p
-        *ngIf="playerDashboardCacheMissing && selectedMonth"
+        *ngIf="hasPanelLoadError"
+        class="dashboard-cache-notice dashboard-cache-notice--error"
+        role="alert">
+        {{ panelLoadErrorMessage }}
+      </p>
+      <button
+        *ngIf="hasPanelLoadError"
+        type="button"
+        class="empty-state-retry-btn"
+        (click)="retryPanelLoad()">
+        Tente novamente mais tarde
+      </button>
+      <p
+        *ngIf="!hasPanelLoadError && playerDashboardCacheMissing && selectedMonth"
         class="dashboard-cache-notice"
         role="status">
         Dados deste mês ainda não estão disponíveis. Tente outro período ou aguarde a atualização do painel.
@@ -277,9 +290,10 @@
       </c4u-dashboard-goals-skeleton>
       
       <c4u-activity-progress
-        *ngIf="!isLoadingProgress && activityMetrics && processMetrics"
+        *ngIf="!hasPanelLoadError && !isLoadingProgress && activityMetrics && processMetrics"
         [activities]="activityMetrics"
         [processos]="processMetrics"
+        [detailsClickable]="false"
         (cardClicked)="onProgressCardClicked($event)">
       </c4u-activity-progress>
     </section>
@@ -344,7 +358,8 @@
         </c4u-dashboard-goals-skeleton>
 
         <div *ngIf="!isLoadingParticipacao && participacaoClientes.length > 0" class="carteira-list">
-          <div *ngFor="let cliente of participacaoClientes" class="carteira-item" role="article" (click)="openCompanyDetailModal(cliente)" style="cursor: pointer;" [title]="getClienteAtendidoTooltip(cliente)">
+          <!-- Temporário: click do modal de detalhes de clientes desativado. -->
+          <div *ngFor="let cliente of participacaoClientes" class="carteira-item" role="article" [title]="getClienteAtendidoTooltip(cliente)">
             <div class="carteira-item-info">
               <i class="ri-building-line"></i>
               <span class="carteira-cnpj">{{ getClienteAtendidoListTitle(cliente) }}</span>
@@ -393,13 +408,16 @@
           </button>
         </div>
         
-        <div *ngIf="!isLoadingParticipacao && participacaoClientes.length === 0" class="empty-state">
-          <p>Ainda não encontramos clientes atendidos neste mês. Volte novamente mais tarde.</p>
+        <div
+          *ngIf="!isLoadingParticipacao && (hasParticipacaoLoadError || participacaoClientes.length === 0)"
+          class="empty-state"
+          [attr.role]="hasParticipacaoLoadError ? 'alert' : 'status'">
+          <p>Os clientes atendidos deste mês não estão disponíveis no momento. Tente novamente mais tarde.</p>
           <button
             type="button"
             class="empty-state-retry-btn"
             (click)="retryClientesAtendidosThisMonth()">
-            Tentar carregar novamente
+            Tente novamente mais tarde
           </button>
         </div>
       </c4u-card>

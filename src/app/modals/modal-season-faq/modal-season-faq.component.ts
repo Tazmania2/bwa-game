@@ -48,10 +48,10 @@ export class ModalSeasonFaqComponent {
       theme: 'sky',
     },
     {
-      label: 'Regras de pontuação (PDF)',
+      label: 'Regras BWA Game Temporada 1 (PDF)',
       description:
-        'Balanceamento, multiplicadores, bônus e penalidades por prazo. Base oficial do cálculo de pontos.',
-      url: `${RULEBOOK_BASE_URL}/REGRAS_BWA%20GAME_062026V1_PERFILJOGADOR.pdf`,
+        'Regras oficiais v2 (agosto/2026): pontuação, metas, conversão de pontos em moedas e faixas de resultado.',
+      url: `${RULEBOOK_BASE_URL}/temporada-1-agosto/REGRAS_BWA%20GAME_12082026_V2.pdf`,
       icon: 'ri-medal-line',
       theme: 'gold',
     },

@@ -60,6 +60,24 @@
   }
 }
 
+.metric-button--static {
+  cursor: default;
+  pointer-events: none;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  &:active {
+    transform: none;
+  }
+
+  &:focus {
+    outline: none;
+  }
+}
+
 .metric-static {
   cursor: default;
   text-align: left;

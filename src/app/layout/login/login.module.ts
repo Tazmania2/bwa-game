@@ -5,7 +5,6 @@ import {FormsModule, ReactiveFormsModule} from "@angular/forms";
 import {C4uSpinnerModule} from "@components/c4u-spinner/c4u-spinner.module";
 import {LoginComponent} from "@layout/login/login.component";
 import { C4uCardModule } from '@components/c4u-card/c4u-card.module';
-import { C4uLoginMaintenanceModule } from '@components/c4u-login-maintenance/c4u-login-maintenance.module';
 
 
 export const LoginRoutes: Routes = [
@@ -23,7 +22,6 @@ export const LoginRoutes: Routes = [
         C4uSpinnerModule,
         ReactiveFormsModule,
         C4uCardModule,
-        C4uLoginMaintenanceModule,
     ]
 })
 export class LoginModule {

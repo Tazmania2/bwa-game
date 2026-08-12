@@ -73,7 +73,6 @@ module.exports = {
                 // src/environments e as declaradas aqui — repetir esse diff
                 // sempre que se acrescentar uma flag.
                 ORG_HIERARCHY_ASYNC_EXPORT: getEnv('ORG_HIERARCHY_ASYNC_EXPORT', ''),
-                SHOW_MAINTENANCE_BANNER: getEnv('SHOW_MAINTENANCE_BANNER', ''),
                 GAME4U_USE_API: getEnv('GAME4U_USE_API', ''),
                 GAME4U_SUPABASE_FALLBACK: getEnv('GAME4U_SUPABASE_FALLBACK', ''),
                 SUPABASE_GAME_USER_ACTIONS_TABLE: getEnv('SUPABASE_GAME_USER_ACTIONS_TABLE', ''),

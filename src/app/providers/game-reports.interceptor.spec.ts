@@ -16,7 +16,8 @@ describe('GameReportsInterceptor', () => {
 
   beforeEach(() => {
     apiErrorHandler = jasmine.createSpyObj('ApiErrorHandlerService', [
-      'showSnowflakeUnavailableToast'
+      'showSnowflakeUnavailableToast',
+      'showDashboardPanelUnavailableToast'
     ]);
 
     TestBed.configureTestingModule({
@@ -64,8 +65,29 @@ describe('GameReportsInterceptor', () => {
     );
 
     expect(finalError?.status).toBe(503);
-    expect(apiErrorHandler.showSnowflakeUnavailableToast).toHaveBeenCalledTimes(1);
+    expect(apiErrorHandler.showDashboardPanelUnavailableToast).toHaveBeenCalledTimes(1);
   }));
+
+  it('shows friendly toast on statement timeout without retry', done => {
+    http.get('/api/game/reports/finished/deliveries/cached?month=2026-08').subscribe({
+      next: () => fail('should error'),
+      error: (err: HttpErrorResponse) => {
+        expect(err.status).toBe(500);
+        expect(apiErrorHandler.showDashboardPanelUnavailableToast).toHaveBeenCalledTimes(1);
+        done();
+      }
+    });
+
+    const req = httpMock.expectOne('/api/game/reports/finished/deliveries/cached?month=2026-08');
+    req.flush(
+      {
+        statusCode: 500,
+        message:
+          'get_player_finished_deliveries_cache failed: canceling statement due to statement timeout [57014]'
+      },
+      { status: 500, statusText: 'Internal Server Error' }
+    );
+  });
 
   it('does not retry non-report endpoints', done => {
     http.get('/api/game/stats').subscribe({
@@ -73,6 +95,7 @@ describe('GameReportsInterceptor', () => {
       error: (err: HttpErrorResponse) => {
         expect(err.status).toBe(503);
         expect(apiErrorHandler.showSnowflakeUnavailableToast).not.toHaveBeenCalled();
+        expect(apiErrorHandler.showDashboardPanelUnavailableToast).not.toHaveBeenCalled();
         done();
       }
     });

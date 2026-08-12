@@ -21,10 +21,18 @@ describe('GameRulesUpdateService', () => {
       const items = service.getVisibleAnnouncements(july, 'player');
 
       expect(items.length).toBe(1);
-      expect(items[0].title).toContain('Nova meta');
+      expect(items[0].title).toContain('Metas de entregas no prazo');
       expect(items[0].previousValueLabel).toBe(`${ON_TIME_DELIVERY_GOAL_LEGACY}%`);
       expect(items[0].newValueLabel).toBe(`${ON_TIME_DELIVERY_GOAL_CURRENT}%`);
-      expect(items[0].body).toContain('95%');
+      expect(items[0].body).toContain('3 novas metas');
+      expect(items[0].body).not.toContain('90%');
+      expect(items[0].newGoals?.length).toBe(3);
+      expect(items[0].newGoals?.every(goal => goal.valueLabel === '100%')).toBeTrue();
+      expect(items[0].newGoals?.map(goal => goal.label)).toEqual([
+        'Clientes G4 no prazo',
+        'Onboarding no prazo',
+        'Clientes em risco no prazo'
+      ]);
     } finally {
       jasmine.clock().uninstall();
     }

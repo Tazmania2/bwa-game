@@ -6,6 +6,7 @@ import {Router} from "@angular/router";
 import {firstValueFrom, timeout, catchError, throwError} from "rxjs";
 import {CacheManagerService} from "@services/cache-manager.service";
 import {SessionTimeoutService} from "@services/session-timeout.service";
+import {SeasonNewsModalService} from "@services/season-news-modal.service";
 
 const TKN_KEY = 'g4utkn'
 
@@ -20,6 +21,7 @@ export class SessaoProvider {
     // Lazy-loaded services to avoid circular dependencies
     private _cacheManager: CacheManagerService | null = null;
     private _sessionTimeout: SessionTimeoutService | null = null;
+    private _seasonNewsModal: SeasonNewsModalService | null = null;
 
     constructor(
         private auth: AuthProvider, 
@@ -43,12 +45,23 @@ export class SessaoProvider {
         return this._sessionTimeout;
     }
 
+    private get seasonNewsModal(): SeasonNewsModalService {
+        if (!this._seasonNewsModal) {
+            this._seasonNewsModal = this.injector.get(SeasonNewsModalService);
+        }
+        return this._seasonNewsModal;
+    }
+
     public async login(email: string, password: string) {
         console.log('🔐 SessaoProvider.login called');
         const loginResponse = await this.auth.login(email, password);
         console.log('🔐 Login response received:', loginResponse);
         this.storeLoginInfo(loginResponse)
-        return await this.init(true);
+        const user = await this.init(true);
+        if (user) {
+            this.seasonNewsModal.markPendingAfterLogin();
+        }
+        return user;
     }
 
     public async init(canActivate: boolean): Promise<boolean> {

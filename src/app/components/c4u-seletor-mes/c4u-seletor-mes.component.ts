@@ -5,6 +5,8 @@ import * as moment from "moment";
 import {TemporadaDashboard} from 'src/app/model/temporadaDashboard.model';
 import {SeasonDatesService} from "@services/season-dates.service";
 import {ActionLogService} from "@services/action-log.service";
+import {UserProfileService} from "@services/user-profile.service";
+import {detectManagementDashboardCachedRole} from "@utils/management-dashboard-role";
 import {firstValueFrom} from "rxjs";
 
 @Component({
@@ -50,8 +52,20 @@ export class C4uSeletorMesComponent implements OnInit, OnChanges {
     constructor(
       private sessao: SessaoProvider,
       private seasonDatesService: SeasonDatesService,
-      private actionLogService: ActionLogService
+      private actionLogService: ActionLogService,
+      private userProfileService: UserProfileService
     ) {}
+
+    /** ADMIN e DIRETOR podem ver meses anteriores a agosto; demais perfis não. */
+    private canViewBeforeAugust(): boolean {
+      if (this.sessao.isAdmin()) {
+        return true;
+      }
+      if (this.userProfileService.isDiretor()) {
+        return true;
+      }
+      return detectManagementDashboardCachedRole(this.sessao.usuario?.roles) === 'DIRETOR';
+    }
 
     async ngOnInit() {
       await this.initializeMonths();
@@ -77,16 +91,15 @@ export class C4uSeletorMesComponent implements OnInit, OnChanges {
         const { start, end } = await this.seasonDatesService.getSeasonDates();
         this.seasonStartMonth = moment(start).startOf('month');
         this.seasonEndMonth = moment(end).startOf('month');
+        const privileged = this.canViewBeforeAugust();
 
-        if (this.sessao.isAdmin()) {
+        if (privileged) {
           this.PREV_MONTHS = 6;
           this.monthAnchor = moment().startOf('month');
           if (this.monthAnchor.isAfter(this.seasonEndMonth)) {
             this.monthAnchor = this.seasonEndMonth.clone();
           }
-          if (this.monthAnchor.isBefore(this.seasonStartMonth)) {
-            this.monthAnchor = this.seasonStartMonth.clone();
-          }
+          // ADMIN / DIRETOR: podem ir antes do início da temporada (agosto).
         } else {
           const nowMonth = moment().startOf('month');
           let anchor = nowMonth.clone();
@@ -105,9 +118,11 @@ export class C4uSeletorMesComponent implements OnInit, OnChanges {
           this.PREV_MONTHS = Math.max(1, Math.min(span, Math.max(1, maxSpan)));
         }
 
-        await this.checkAndIncludeJanuary();
+        if (privileged) {
+          await this.checkAndIncludeJanuary();
+        }
 
-        if (!this.sessao.isAdmin()) {
+        if (!privileged) {
           const maxBack =
             this.monthAnchor.clone().startOf('month').diff(this.seasonStartMonth.clone().startOf('month'), 'months') +
             1;
@@ -119,8 +134,8 @@ export class C4uSeletorMesComponent implements OnInit, OnChanges {
       } catch (error) {
         this.PREV_MONTHS = 1;
         this.monthAnchor = moment().startOf('month');
-        this.seasonStartMonth = moment().subtract(11, 'months').startOf('month');
-        this.seasonEndMonth = moment().add(6, 'months').startOf('month');
+        this.seasonStartMonth = moment('2026-08-01').startOf('month');
+        this.seasonEndMonth = moment('2026-12-31').startOf('month');
         this.populateFields(this.PREV_MONTHS, true);
         this.monthsReady = true;
       } finally {
@@ -132,9 +147,14 @@ export class C4uSeletorMesComponent implements OnInit, OnChanges {
     }
 
     /**
-     * Verifica se há dados de janeiro para o jogador e inclui janeiro na lista se necessário
+     * Verifica se há dados de janeiro para o jogador e inclui janeiro na lista se necessário.
+     * Só para ADMIN / DIRETOR (podem ver antes de agosto).
      */
     private async checkAndIncludeJanuary(): Promise<void> {
+      if (!this.canViewBeforeAugust()) {
+        return;
+      }
+
       const playerId = this.playerId || (this.sessao.usuario as { _id?: string; email?: string } | null)?._id || 
                       (this.sessao.usuario as { _id?: string; email?: string } | null)?.email;
       
@@ -166,15 +186,10 @@ export class C4uSeletorMesComponent implements OnInit, OnChanges {
                           }
             // Para meses posteriores, se PREV_MONTHS não inclui janeiro, garantimos que inclua
             else if (currentMonth > 1) {
-              const seasonStart = await this.seasonDatesService.getSeasonStartDate();
-              if (seasonStart.getFullYear() === 2026 && seasonStart.getMonth() === 0) {
-                // Temporada começou em janeiro, então precisamos garantir que janeiro esteja incluído
-                // PREV_MONTHS deve ser pelo menos (currentMonth + 1) para incluir janeiro
-                const minMonths = currentMonth + 1;
-                if (this.PREV_MONTHS < minMonths) {
-                  this.PREV_MONTHS = minMonths;
-                                  }
-              }
+              const minMonths = currentMonth + 1;
+              if (this.PREV_MONTHS < minMonths) {
+                this.PREV_MONTHS = minMonths;
+                                }
             }
           }
         }
@@ -185,7 +200,9 @@ export class C4uSeletorMesComponent implements OnInit, OnChanges {
 
     private async refreshMonthsList(): Promise<void> {
       try {
-        await this.checkAndIncludeJanuary();
+        if (this.canViewBeforeAugust()) {
+          await this.checkAndIncludeJanuary();
+        }
         this.populateFields(this.PREV_MONTHS);
       } finally {
         this.isLoading = false;
@@ -194,14 +211,13 @@ export class C4uSeletorMesComponent implements OnInit, OnChanges {
 
     private populateFields(value: number, suppressEmit: boolean = false) {
         this.months = []; // Limpa meses anteriores
+        const privileged = this.canViewBeforeAugust();
 
         if (value && value > 0) {
-            if (this.sessao.isAdmin()) {
+            if (privileged) {
                 for (let i = 0; i < value; i++) {
                     const month = this.monthAnchor.clone().subtract(i, 'months');
-                    if (month.isBefore(this.seasonStartMonth, 'month')) {
-                        break;
-                    }
+                    // ADMIN / DIRETOR: não cortar em agosto.
                     this.months.push({
                         id: this.months.length,
                         name: month.format('MMM/YY').toUpperCase(),

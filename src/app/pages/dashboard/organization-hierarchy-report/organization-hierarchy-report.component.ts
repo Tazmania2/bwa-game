@@ -452,11 +452,16 @@ export class OrganizationHierarchyReportComponent implements OnInit, OnDestroy {
     this.openCriticalClientDrillDown(client);
   }
 
-  openClassificationDrillDown(tier: OrgClientClassificationTier): void {
-    if (!this.root || tier.count <= 0) {
+  openClassificationDrillDown(_tier: OrgClientClassificationTier): void {
+    // Drill-down desabilitado temporariamente.
+    return;
+
+    /*
+    if (!this.root || _tier.count <= 0) {
       return;
     }
-    this.openKpiDrillDown(tier.kpi, this.root);
+    this.openKpiDrillDown(_tier.kpi, this.root);
+    */
   }
 
   criticalClientTierLabel(client: CriticalClientItem): string {
@@ -705,11 +710,16 @@ export class OrganizationHierarchyReportComponent implements OnInit, OnDestroy {
     this.cdr.markForCheck();
   }
 
-  onPipelineSegmentClick(segment: OrgPipelineSegment): void {
+  onPipelineSegmentClick(_segment: OrgPipelineSegment): void {
+    // Drill-down desabilitado temporariamente.
+    return;
+
+    /*
     if (!this.root) {
       return;
     }
-    this.openKpiDrillDown(segment.kpi, this.root);
+    this.openKpiDrillDown(_segment.kpi, this.root);
+    */
   }
 
   get filteredHighlightDestaque(): OrgHierarchyHighlightItem[] {
@@ -999,53 +1009,63 @@ export class OrganizationHierarchyReportComponent implements OnInit, OnDestroy {
       .trim();
   }
 
-  openKpiDrillDownFromTree(payload: {
+  openKpiDrillDownFromTree(_payload: {
     kpi: OrgHierarchyKpiDetailKey;
     nodeType: OrgHierarchyNodeType;
     nodeId: string;
     nodeLabel: string;
   }): void {
+    // Drill-down desabilitado temporariamente.
+    return;
+
+    /*
     // Drill-down de listagem de clientes (total e tags) desabilitado temporariamente — performance.
-    if (this.isClientListDrilldownDisabled(payload.kpi)) {
+    if (this.isClientListDrilldownDisabled(_payload.kpi)) {
       return;
     }
 
-    const node = findOrgHierarchyNodeById(this.root, payload.nodeId);
+    const node = findOrgHierarchyNodeById(this.root, _payload.nodeId);
     this.kpiDrilldownContext = {
       kind: 'kpi',
-      kpi: payload.kpi,
-      nodeType: payload.nodeType,
-      nodeId: payload.nodeId,
-      nodeLabel: payload.nodeLabel,
+      kpi: _payload.kpi,
+      nodeType: _payload.nodeType,
+      nodeId: _payload.nodeId,
+      nodeLabel: _payload.nodeLabel,
       months: 4,
       compareContext: node ? buildOrgKpiDrilldownCompareContext(node) : null,
       reportParams: this.report?.params ?? null
     };
     this.cdr.markForCheck();
+    */
   }
 
   openKpiDrillDown(
-    kpi: OrgHierarchyKpiDetailKey,
-    node: OrgHierarchyNode,
-    clientListKey?: OrgHierarchyClientListKey | null
+    _kpi: OrgHierarchyKpiDetailKey,
+    _node: OrgHierarchyNode,
+    _clientListKey?: OrgHierarchyClientListKey | null
   ): void {
+    // Drill-down desabilitado temporariamente.
+    return;
+
+    /*
     // Drill-down de listagem de clientes (total e tags) desabilitado temporariamente — performance.
-    if (this.isClientListDrilldownDisabled(kpi)) {
+    if (this.isClientListDrilldownDisabled(_kpi)) {
       return;
     }
 
     this.kpiDrilldownContext = {
       kind: 'kpi',
-      kpi,
-      nodeType: node.node_type,
-      nodeId: node.node_id,
-      nodeLabel: node.label,
+      kpi: _kpi,
+      nodeType: _node.node_type,
+      nodeId: _node.node_id,
+      nodeLabel: _node.label,
       months: 4,
-      compareContext: buildOrgKpiDrilldownCompareContext(node),
+      compareContext: buildOrgKpiDrilldownCompareContext(_node),
       reportParams: this.report?.params ?? null,
-      clientListKey: clientListKey ?? null
+      clientListKey: _clientListKey ?? null
     };
     this.cdr.markForCheck();
+    */
   }
 
   /**
@@ -1149,22 +1169,27 @@ export class OrganizationHierarchyReportComponent implements OnInit, OnDestroy {
   }
 
   openCriticalClientDrillDown(
-    client: CriticalClientItem,
-    issue: CriticalClientIssueFilter = 'all'
+    _client: CriticalClientItem,
+    _issue: CriticalClientIssueFilter = 'all'
   ): void {
+    // Drill-down desabilitado temporariamente.
+    return;
+
+    /*
     const node = this.root;
     if (!node) {
       return;
     }
     this.kpiDrilldownContext = {
       kind: 'critical_client',
-      client,
-      issue,
+      client: _client,
+      issue: _issue,
       nodeType: node.node_type,
       nodeId: node.node_id,
       nodeLabel: node.label
     };
     this.cdr.markForCheck();
+    */
   }
 
   exportCriticalClientsDeliveries(): void {

@@ -1054,6 +1054,20 @@
     margin-bottom: $spacing-lg;
     box-sizing: border-box;
 
+    .dashboard-cache-notice {
+      margin: 0 0 $spacing-md;
+      padding: $spacing-sm $spacing-md;
+      border-radius: 6px;
+      background: rgba(255, 193, 7, 0.12);
+      color: $text-secondary;
+      font-size: 0.9rem;
+
+      &--error {
+        background: rgba(239, 68, 68, 0.12);
+        color: #fecaca;
+      }
+    }
+
     .section-header {
       display: flex;
       justify-content: space-between;

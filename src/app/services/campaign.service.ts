@@ -3,6 +3,10 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { joinApiPath } from 'src/environments/backend-url';
+import {
+  HARDCODED_SEASON_END,
+  HARDCODED_SEASON_START
+} from '@utils/hardcoded-season';
 
 export interface Campaign {
   id: number;
@@ -79,12 +83,22 @@ export class CampaignService {
       const list = this.normalizeCampaignList(raw);
       const picked = this.selectActiveCampaign(list);
       if (picked) {
-        return { ...picked, isDefault: false };
+        // Temporário: forçar intervalo 01/08/2026–31/12/2026 independentemente da API.
+        return this.applyHardcodedSeasonDates({ ...picked, isDefault: false });
       }
     } catch (error) {
       console.warn('[Campaign] GET /campaign failed, using default season', error);
     }
     return this.getDefaultCampaign();
+  }
+
+  /** Sobrescreve starts_at / finishes_at com a temporada hardcoded. */
+  private applyHardcodedSeasonDates(campaign: Campaign): Campaign {
+    return {
+      ...campaign,
+      starts_at: HARDCODED_SEASON_START,
+      finishes_at: HARDCODED_SEASON_END
+    };
   }
 
   private normalizeCampaignList(raw: Campaign[] | { data?: Campaign[] }): Campaign[] {
@@ -132,17 +146,14 @@ export class CampaignService {
   }
 
   private getDefaultCampaign(): Campaign {
-    const now = new Date();
-    const startDate = new Date(now.getFullYear(), 0, 1);
-    const endDate = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999);
-
+    const startDate = this.parseStartOfDayLocal(HARDCODED_SEASON_START);
     return {
       id: 0,
       created_at: startDate.toISOString(),
-      name: `Temporada ${now.getFullYear()}`,
+      name: 'Temporada 2026',
       client_id: 'default',
-      starts_at: this.formatToDateString(startDate),
-      finishes_at: this.formatToDateString(endDate),
+      starts_at: HARDCODED_SEASON_START,
+      finishes_at: HARDCODED_SEASON_END,
       isDefault: true
     };
   }
