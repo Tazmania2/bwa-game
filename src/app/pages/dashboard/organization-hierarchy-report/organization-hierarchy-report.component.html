@@ -175,11 +175,11 @@
               <h2 id="hero-kpis-heading" class="section-eyebrow">Indicadores principais</h2>
             </div>
             <div class="hero-grid hero-grid--primary">
+              <!-- Drill-down desabilitado temporariamente: (click)="openKpiDrillDown('points_delivered', root!)" -->
               <button
                 type="button"
                 class="hero-kpi"
-                (click)="openKpiDrillDown('points_delivered', root!)"
-                [attr.aria-label]="'Abrir histórico de pontos entregues (MTD)'">
+                [attr.aria-label]="'Pontos entregues (MTD)'">
                 <p class="hero-kpi__label">Pontos entregues (MTD)</p>
                 <div class="hero-kpi__row" *ngIf="showHeroPointsGoal; else heroPointsRawValue">
                   <p class="hero-kpi__value">{{ heroPointsGoalPctLabel }}</p>
@@ -209,11 +209,11 @@
                 </div>
               </button>
 
+              <!-- Drill-down desabilitado temporariamente: (click)="openKpiDrillDown('on_time_pct', root!)" -->
               <button
                 type="button"
                 class="hero-kpi"
-                (click)="openKpiDrillDown('on_time_pct', root!)"
-                [attr.aria-label]="'Abrir histórico de entregas no prazo (MTD)'">
+                [attr.aria-label]="'Entregas no prazo (MTD)'">
                 <p class="hero-kpi__label">% no prazo</p>
                 <div class="hero-kpi__row">
                   <p class="hero-kpi__value">{{ heroOnTimePctLabel || '—' }}</p>
@@ -239,11 +239,11 @@
                 </div>
               </button>
 
+              <!-- Drill-down desabilitado temporariamente: (click)="openKpiDrillDown('finished', root!)" -->
               <button
                 type="button"
                 class="hero-kpi"
-                (click)="openKpiDrillDown('finished', root!)"
-                [attr.aria-label]="'Abrir histórico de entregas concluídas (MTD)'">
+                [attr.aria-label]="'Entregas concluídas (MTD)'">
                 <p class="hero-kpi__label">Entregas concluídas</p>
                 <ng-container *ngIf="showHeroDeliveriesGoal; else heroFinishedNoGoal">
                   <div class="hero-kpi__row">
@@ -439,12 +439,12 @@
               class="operational-alerts"
               role="region"
               aria-label="Alertas operacionais prioritários">
+              <!-- Drill-down desabilitado temporariamente: (click)="openKpiDrillDown(alert.kpi, root!)" -->
               <button
                 *ngFor="let alert of operationalRiskAlerts; trackBy: trackByOperationalAlert"
                 type="button"
                 class="operational-alert operational-alert--{{ alert.severity }}"
-                [attr.title]="alert.description"
-                (click)="openKpiDrillDown(alert.kpi, root!)">
+                [attr.title]="alert.description">
                 <i
                   class="operational-alert__icon"
                   [class.ri-alarm-warning-fill]="alert.severity === 'critical'"
@@ -459,6 +459,7 @@
             </div>
 
             <div class="pipeline-bar" role="img" [attr.aria-label]="'Distribuição dos pendentes em aberto'">
+              <!-- Drill-down desabilitado temporariamente: (click)="onPipelineSegmentClick(seg)" -->
               <button
                 *ngFor="let seg of pipelineSegments; trackBy: trackByPipelineSegment"
                 type="button"
@@ -466,17 +467,16 @@
                 [class.pipeline-bar__segment--emphasis]="seg.emphasis"
                 [style.width]="pipelineSegmentWidth(seg.value)"
                 [attr.title]="(seg.tooltip ? seg.tooltip + ' · ' : '') + seg.label + ' · ' + (seg.value | number:'1.0-0':'pt-BR')"
-                [attr.aria-label]="seg.label + ': ' + seg.value"
-                (click)="onPipelineSegmentClick(seg)">
+                [attr.aria-label]="seg.label + ': ' + seg.value">
               </button>
             </div>
 
             <div class="pipeline-legend">
+              <!-- Drill-down desabilitado temporariamente: (click)="onPipelineSegmentClick(seg)" -->
               <button
                 *ngFor="let seg of pipelineLegendSegments; trackBy: trackByPipelineSegment"
                 type="button"
                 class="pipeline-chip pipeline-chip--{{ seg.tone }}"
-                (click)="onPipelineSegmentClick(seg)"
                 [attr.title]="seg.tooltip || null">
                 <span class="pipeline-chip__dot"></span>
                 <span class="pipeline-chip__value">{{ seg.value | number:'1.0-0':'pt-BR' }}</span>
@@ -547,16 +547,11 @@
                   </tr>
                 </thead>
                 <tbody>
+                  <!-- Drill-down desabilitado temporariamente: (click)/(keydown) openCriticalClientDrillDown(client) -->
                   <tr
                     *ngFor="let client of criticalClientsTop; trackBy: trackByCriticalClient"
-                    class="critical-clients-table__row--clickable"
                     [class.critical-clients-table__row--alert]="criticalClientHasIssues(client)"
-                    tabindex="0"
-                    role="button"
-                    [attr.aria-label]="'Ver entregas de ' + client.company_label"
-                    (click)="openCriticalClientDrillDown(client)"
-                    (keydown.enter)="openCriticalClientDrillDown(client)"
-                    (keydown.space)="$event.preventDefault(); openCriticalClientDrillDown(client)">
+                    [attr.aria-label]="client.company_label">
                     <td class="critical-clients-table__name-col">
                       <span class="critical-clients-table__name-cell">
                         <span class="critical-clients-table__name">{{ client.company_label }}</span>
@@ -577,23 +572,23 @@
                       </span>
                     </td>
                     <td class="simple-table__num">
+                      <!-- Drill-down desabilitado temporariamente: (click)="openCriticalClientDrillDown(client, 'overdue')" -->
                       <button
                         type="button"
                         class="critical-metric critical-metric--danger critical-metric--link"
                         *ngIf="client.mtd_overdue_unjustified > 0; else zeroOverdue"
-                        [attr.aria-label]="'Ver atrasos pendentes de ' + client.company_label"
-                        (click)="openCriticalClientDrillDown(client, 'overdue'); $event.stopPropagation()">
+                        [attr.aria-label]="'Atrasos pendentes de ' + client.company_label">
                         {{ client.mtd_overdue_unjustified | number:'1.0-0':'pt-BR' }}
                       </button>
                       <ng-template #zeroOverdue>—</ng-template>
                     </td>
                     <td class="simple-table__num">
+                      <!-- Drill-down desabilitado temporariamente: (click)="openCriticalClientDrillDown(client, 'late_finish')" -->
                       <button
                         type="button"
                         class="critical-metric critical-metric--warning critical-metric--link"
                         *ngIf="client.mtd_late_finish > 0; else zeroLate"
-                        [attr.aria-label]="'Ver entregas tardias de ' + client.company_label"
-                        (click)="openCriticalClientDrillDown(client, 'late_finish'); $event.stopPropagation()">
+                        [attr.aria-label]="'Entregas tardias de ' + client.company_label">
                         {{ client.mtd_late_finish | number:'1.0-0':'pt-BR' }}
                       </button>
                       <ng-template #zeroLate>—</ng-template>
@@ -670,13 +665,13 @@
               </div>
               <ul class="classification-compact__list">
                 <li *ngFor="let tier of clientClassificationTiers; trackBy: trackByClassificationLevel">
+                  <!-- Drill-down desabilitado temporariamente: (click)="openClassificationDrillDown(tier)" -->
                   <button
                     type="button"
                     class="classification-compact__item"
                     [disabled]="tier.count <= 0"
                     [ngClass]="'classification-compact__item--level-' + tier.level"
-                    [attr.aria-label]="'Ver clientes ' + tier.label"
-                    (click)="openClassificationDrillDown(tier)">
+                    [attr.aria-label]="tier.label">
                     <span class="classification-compact__dot classification-compact__dot--level-{{ tier.level }}"></span>
                     <span class="classification-compact__name">{{ tier.label }}</span>
                     <span class="classification-compact__count">{{ tier.count | number:'1.0-0':'pt-BR' }}</span>
@@ -1052,6 +1047,7 @@
                 </button>
               </div>
             </div>
+            <!-- Drill-down desabilitado temporariamente: (kpiClick)="openKpiDrillDownFromTree($event)" -->
             <c4u-org-hierarchy-tree-table
               *ngIf="treeViewMode === 'table'"
               [root]="root"
@@ -1059,10 +1055,10 @@
               [showAllMetrics]="treeShowAllMetrics"
               [expandedIds]="expandedNodeIds"
               (toggleNode)="toggleTreeNode($event)"
-              (kpiClick)="openKpiDrillDownFromTree($event)"
               (expandAll)="expandAllTreeNodes()"
               (collapseAll)="collapseAllTreeNodes()">
             </c4u-org-hierarchy-tree-table>
+            <!-- Drill-down desabilitado temporariamente: (kpiClick)="openKpiDrillDownFromTree($event)" -->
             <c4u-org-hierarchy-flowchart
               *ngIf="treeViewMode === 'flowchart'"
               [root]="root"
@@ -1070,7 +1066,6 @@
               [searchHighlightIds]="flowchartSearchHighlightIds"
               [onTimeDeliveryGoal]="onTimeDeliveryGoalPct"
               (toggleNode)="toggleTreeNode($event)"
-              (kpiClick)="openKpiDrillDownFromTree($event)"
               (expandAll)="expandAllTreeNodes()"
               (collapseAll)="collapseAllTreeNodes()"
               (searchChange)="onFlowchartSearchChange($event)">

@@ -15,7 +15,6 @@ import { SessionTimeoutService } from '@services/session-timeout.service';
 import { CampaignService } from '@services/campaign.service';
 import { Subscription } from 'rxjs';
 import { parseFragmentParams } from '../../utils/url-fragment-params';
-import { environment } from '../../../environments/environment';
 import { UserProfileService } from '@services/user-profile.service';
 import { canAccessAdminLogin } from '@utils/admin-login-access';
 
@@ -33,11 +32,8 @@ export class LoginComponent implements OnInit, OnDestroy {
   systemParams: SystemParams | null = null;
   bwaLogoUrl: string;
 
-  /** Rota `/login-admin`: formulário disponível mesmo em manutenção. */
+  /** Rota `/login-admin`: restringe o login a admin ou diretor. */
   readonly isAdminLoginRoute: boolean;
-
-  /** Substitui o formulário de login quando a plataforma está em manutenção. */
-  readonly isLoginUnderMaintenance: boolean;
 
   private loadingTexts: string[] = [
     'Entrando...',
@@ -69,8 +65,6 @@ export class LoginComponent implements OnInit, OnDestroy {
   ) {
     this.bwaLogoUrl = this.logoService.getLogoUrl();
     this.isAdminLoginRoute = this.resolveAdminLoginRoute();
-    this.isLoginUnderMaintenance =
-      !!environment.showMaintenanceBanner && !this.isAdminLoginRoute;
   }
 
   private resolveAdminLoginRoute(): boolean {

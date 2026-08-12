@@ -11,8 +11,12 @@ import {
   GameRulesUpdateAnnouncement,
   GameRulesUpdateAudience
 } from '@model/game-rules-update.model';
+import { ON_TIME_SEGMENT_GOAL_FALLBACK } from '@utils/on-time-pct.util';
 
 const DISMISS_STORAGE_PREFIX = 'bwa-game-rules-update-dismissed:';
+
+/** Id novo para reexibir o aviso após inclusão das 3 metas por tag. */
+const ON_TIME_GOALS_ANNOUNCEMENT_ID = 'on-time-delivery-and-segment-goals-2026-07';
 
 @Injectable({
   providedIn: 'root'
@@ -25,7 +29,7 @@ export class GameRulesUpdateService {
   }> = ON_TIME_DELIVERY_GOAL_INCREASE_ENABLED
     ? [
         {
-          id: 'on-time-delivery-goal-2026-07',
+          id: ON_TIME_GOALS_ANNOUNCEMENT_ID,
           effectiveFrom: ON_TIME_DELIVERY_GOAL_EFFECTIVE_FROM,
           build: (audience, effectiveMonth) => this.buildOnTimeGoalJuly2026(audience, effectiveMonth)
         }
@@ -79,27 +83,35 @@ export class GameRulesUpdateService {
     effectiveMonth: Date
   ): GameRulesUpdateAnnouncement {
     const effectiveMonthLabel = formatMonthYearPtBr(effectiveMonth);
+    const segmentGoalLabel = `${ON_TIME_SEGMENT_GOAL_FALLBACK}%`;
+    const newGoals = [
+      { label: 'Clientes G4 no prazo', valueLabel: segmentGoalLabel },
+      { label: 'Onboarding no prazo', valueLabel: segmentGoalLabel },
+      { label: 'Clientes em risco no prazo', valueLabel: segmentGoalLabel }
+    ];
+
     const sharedBody =
       'Buscamos excelência na experiência dos clientes: prazos cumpridos significam confiança, previsibilidade e saúde da operação. ' +
-      'Atingir essa meta fortalece a conversão de pontos em moedas e o impacto positivo que entregamos todos os dias.';
+      'Atingir essas metas fortalece a conversão de pontos em moedas e o impacto positivo que entregamos todos os dias.';
 
     const audienceLead: Record<GameRulesUpdateAudience, string> = {
       player:
-        'A partir deste mês, sua meta de entregas no prazo passa de 90% para 95%. É um passo a mais rumo à excelência na carteira que você atende.',
+        'Agora há 3 novas metas no painel: Clientes G4 no prazo, Onboarding no prazo e Clientes em risco no prazo. Cada uma tem meta de 100%.',
       collaborator:
-        'A partir deste mês, a meta de entregas no prazo deste colaborador passa de 90% para 95% — um novo patamar de qualidade na carteira.',
+        'Agora há 3 novas metas no painel deste colaborador: Clientes G4 no prazo, Onboarding no prazo e Clientes em risco no prazo. Cada uma tem meta de 100%.',
       team:
-        'A partir deste mês, a meta coletiva de entregas no prazo do time passa de 90% para 95%. Juntos, elevamos o padrão de qualidade para todos os clientes.'
+        'Agora o painel do time também acompanha 3 novas metas: Clientes G4 no prazo, Onboarding no prazo e Clientes em risco no prazo. Cada uma tem meta de 100%.'
     };
 
     return {
-      id: 'on-time-delivery-goal-2026-07',
+      id: ON_TIME_GOALS_ANNOUNCEMENT_ID,
       effectiveFrom: ON_TIME_DELIVERY_GOAL_EFFECTIVE_FROM,
-      title: 'Nova meta de entregas no prazo',
+      title: 'Metas de entregas no prazo atualizadas',
       body: `${audienceLead[audience]} ${sharedBody}`,
       previousValueLabel: `${ON_TIME_DELIVERY_GOAL_LEGACY}%`,
       newValueLabel: `${ON_TIME_DELIVERY_GOAL_CURRENT}%`,
-      effectiveMonthLabel
+      effectiveMonthLabel,
+      newGoals
     };
   }
 }

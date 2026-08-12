@@ -424,6 +424,12 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
 
   /** Cache de supervisão (`GET /game/reports/supervision/dashboard/cached`) indisponível para o mês. */
   teamSupervisionCacheMissing = false;
+  /** Falha ao carregar endpoints que montam o painel (5xx/timeout). */
+  hasPanelLoadError = false;
+  readonly panelLoadErrorMessage =
+    'Não foi possível carregar os dados agora. Tente novamente mais tarde.';
+  /** Falha ao carregar clientes atendidos (finished/deliveries). */
+  hasParticipacaoLoadError = false;
   /** `refreshed_at` do cache de supervisão (quando disponível). */
   teamDashboardRefreshedAt: Date | null = null;
   readonly dashboardSyncLabel = 'Sincronizado com Acessórias';
@@ -2213,6 +2219,7 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
   private async loadManagementOverviewFromCache(): Promise<void> {
     const month = this.selectedMonth;
     this.teamSupervisionCacheMissing = false;
+    this.hasPanelLoadError = false;
     this.teamDashboardRefreshedAt = null;
     this.teamDashboardCachedParams = null;
     this.teamMonthOnTimeDeliveryPct = null;
@@ -2231,6 +2238,7 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
       );
       if (!bundle) {
         this.teamSupervisionCacheMissing = true;
+        this.hasPanelLoadError = false;
         this.teamActivityMetrics = { pendentes: 0, emExecucao: 0, finalizadas: 0, pontos: 0 };
         this.teamProcessMetrics = { pendentes: 0, incompletas: 0, finalizadas: 0 };
         this.monthlyPointsGoalTarget = null;
@@ -2246,10 +2254,12 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
       this.teamMonthOnTimeDeliveryPct = bundle.monthOnTimeDeliveryPct;
       this.teamOnTimeSegmentPercents = bundle.onTimeSegmentPercents;
       this.teamSupervisionCacheMissing = false;
+      this.hasPanelLoadError = false;
       this.isLoadingMonthlyPointsProgress = false;
     } catch (error) {
       console.error('Error loading management/dashboard/cached/overview:', error);
-      this.teamSupervisionCacheMissing = month != null;
+      this.teamSupervisionCacheMissing = false;
+      this.hasPanelLoadError = true;
       this.teamMonthOnTimeDeliveryPct = null;
       this.teamOnTimeSegmentPercents = { ...EMPTY_ON_TIME_SEGMENT_PERCENTS };
     }
@@ -2262,6 +2272,7 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
     const scope = this.getGame4uTeamScopeId() ?? '';
     const month = this.selectedMonth;
     this.teamSupervisionCacheMissing = false;
+    this.hasPanelLoadError = false;
     this.teamDashboardRefreshedAt = null;
     this.teamDashboardCachedParams = null;
     this.teamMonthOnTimeDeliveryPct = null;
@@ -2280,6 +2291,7 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
       );
       if (!bundle) {
         this.teamSupervisionCacheMissing = true;
+        this.hasPanelLoadError = false;
         this.teamActivityMetrics = { pendentes: 0, emExecucao: 0, finalizadas: 0, pontos: 0 };
         this.teamProcessMetrics = { pendentes: 0, incompletas: 0, finalizadas: 0 };
         this.monthlyPointsGoalTarget = null;
@@ -2295,10 +2307,12 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
       this.teamMonthOnTimeDeliveryPct = bundle.monthOnTimeDeliveryPct;
       this.teamOnTimeSegmentPercents = bundle.onTimeSegmentPercents;
       this.teamSupervisionCacheMissing = false;
+      this.hasPanelLoadError = false;
       this.isLoadingMonthlyPointsProgress = false;
     } catch (error) {
       console.error('Error loading supervision/dashboard/cached:', error);
-      this.teamSupervisionCacheMissing = month != null;
+      this.teamSupervisionCacheMissing = false;
+      this.hasPanelLoadError = true;
       this.teamMonthOnTimeDeliveryPct = null;
       this.teamOnTimeSegmentPercents = { ...EMPTY_ON_TIME_SEGMENT_PERCENTS };
     }
@@ -3680,6 +3694,7 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
     opts?: { useTeamDeliveriesAggregate?: boolean; teamRange?: { start: Date; end: Date } }
   ): Promise<void> {
     this.isLoadingCarteira = true;
+    this.hasParticipacaoLoadError = false;
     this.isLoadingParticipacaoKpi = false;
     this.isLoadingCarteiraMore = false;
     this.participacaoHasMore = false;
@@ -4004,6 +4019,7 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
         }
       });
       this.teamCarteiraClientes = uniqueBase;
+      this.hasParticipacaoLoadError = false;
       this.isLoadingCarteira = false;
       this.isLoadingParticipacaoKpi = !skipKpi && uniqueBase.length > 0;
       this.updateFormattedSidebarData();
@@ -4020,6 +4036,7 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
     } catch (err: unknown) {
       console.error('📊 Failed to load participação (painel equipe):', err);
       this.teamCarteiraClientes = [];
+      this.hasParticipacaoLoadError = true;
       this.isLoadingCarteira = false;
       this.isLoadingParticipacaoKpi = false;
       this.isLoadingCarteiraMore = false;
@@ -4142,6 +4159,7 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
 
   retryClientesAtendidosThisMonth(): void {
     this.isLoadingCarteira = true;
+    this.hasParticipacaoLoadError = false;
     this.cdr.markForCheck();
     const dateRange = this.calculateDateRange();
     if (this.selectedCollaborator) {
@@ -4149,6 +4167,13 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
       return;
     }
     void this.loadTeamCarteiraData(dateRange);
+  }
+
+  /** CTA genérico para falhas dos endpoints que montam o painel. */
+  retryPanelLoad(): void {
+    this.hasPanelLoadError = false;
+    this.cdr.markForCheck();
+    void this.loadTeamData();
   }
 
   /**
@@ -5746,6 +5771,10 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
    * Handle progress card click to open modal
    */
   onProgressCardClicked(type: ProgressCardType): void {
+    // Temporário: modais de entregas pendentes / finalizadas desativados.
+    void type;
+    return;
+    /*
     // Map ProgressCardType to ProgressListType
     switch (type) {
       case 'atividades-finalizadas':
@@ -5767,6 +5796,7 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
         this.progressModalType = 'atividades';
     }
     this.isProgressModalOpen = true;
+    */
   }
 
   /**
@@ -5778,10 +5808,15 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
   }
 
   onExecutiveInsightsAlertClicked(focus: DashboardInsightsAlertFocus): void {
+    // Temporário: modais de detalhes de entregas desativados.
+    void focus;
+    return;
+    /*
     this.progressModalType = 'atividades-pendentes';
     this.progressModalActivityFocusFilter = focus;
     this.isProgressModalOpen = true;
     this.cdr.markForCheck();
+    */
   }
 
   /**
@@ -6135,11 +6170,14 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
    * Open company detail modal
    */
   openCompanyDetailModal(company: CompanyDisplay): void {
-    this.selectedCarteiraCompany = company;
-    this.isCompanyCarteiraDetailModalOpen = true;
-    this.focusedElementBeforeModal = document.activeElement as HTMLElement;
-    const companyName = this.getClienteAtendidoDisplayName(company);
-    this.announceToScreenReader(`Abrindo detalhes de ${companyName}`);
+    // Temporário: modal de detalhes de clientes desativado.
+    void company;
+    return;
+    // this.selectedCarteiraCompany = company;
+    // this.isCompanyCarteiraDetailModalOpen = true;
+    // this.focusedElementBeforeModal = document.activeElement as HTMLElement;
+    // const companyName = this.getClienteAtendidoDisplayName(company);
+    // this.announceToScreenReader(`Abrindo detalhes de ${companyName}`);
   }
 
   /**

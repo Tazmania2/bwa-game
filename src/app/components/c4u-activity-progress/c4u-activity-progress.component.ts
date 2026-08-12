@@ -34,9 +34,15 @@ export class C4uActivityProgressComponent {
 
   @Input() monthlyPointsBreakdown: MonthlyPointsBreakdown | null = null;
 
+  /** Temporário: desativa abertura dos modais de detalhe ao clicar nos cards. */
+  @Input() detailsClickable = true;
+
   @Output() cardClicked = new EventEmitter<ProgressCardType>();
 
   onCardClick(type: ProgressCardType): void {
+    if (!this.detailsClickable) {
+      return;
+    }
     this.cardClicked.emit(type);
   }
 

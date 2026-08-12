@@ -1,0 +1,93 @@
+<c4u-modal modalTitle="Novidades da Temporada 1" icon="ri-megaphone-line">
+  <div class="season-news-body" flex direction="column" flexItem="1" scroll>
+    <div class="season-news-hero">
+      <span class="season-news-badge" aria-hidden="true">
+        <i class="ri-trophy-line"></i>
+      </span>
+      <div class="season-news-hero-text">
+        <h3 class="season-news-headline">A Temporada 1 começou</h3>
+        <p class="season-news-lead">
+          Bem-vindo ao novo ciclo do BWA Game. Confira o que muda a partir de agora.
+        </p>
+      </div>
+    </div>
+
+    <section class="season-news-section" aria-labelledby="season-news-goals-title">
+      <h4 id="season-news-goals-title" class="season-news-section-title">
+        <i class="ri-focus-3-line" aria-hidden="true"></i>
+        Metas do painel
+      </h4>
+      <p class="season-news-section-text">
+        Agora são 5 metas. As 3 novas desta temporada estão marcadas com a tag Novo.
+      </p>
+      <div class="season-news-goals" role="list">
+        <div
+          *ngFor="let goal of goalExamples; trackBy: trackByLabel"
+          class="season-news-goal"
+          [class.season-news-goal--new]="goal.isNew"
+          role="listitem">
+          <span *ngIf="goal.isNew" class="season-news-new-badge">Novo</span>
+          <c4u-kpi-circular-progress
+            size="small"
+            [hideValue]="true"
+            [label]="goal.label"
+            [current]="goal.current"
+            [target]="goal.target"
+            [superTarget]="goal.superTarget"
+            [unit]="goal.unit"
+            [color]="goal.color"
+            helpDescription="Exemplo ilustrativo das metas da Temporada 1.">
+          </c4u-kpi-circular-progress>
+        </div>
+      </div>
+    </section>
+
+    <section class="season-news-section" aria-labelledby="season-news-coins-title">
+      <h4 id="season-news-coins-title" class="season-news-section-title">
+        <i class="ri-coin-line" aria-hidden="true"></i>
+        Pontos e moedas
+      </h4>
+      <p class="season-news-section-text">
+        A partir da virada do próximo mês, os pontos passarão a ser convertidos em moedas.
+        Essas moedas poderão ser trocadas por participação de lucros e resultados.
+      </p>
+    </section>
+
+    <section
+      class="season-news-section season-news-section--alert"
+      aria-labelledby="season-news-reset-title">
+      <h4 id="season-news-reset-title" class="season-news-section-title">
+        <i class="ri-refresh-line" aria-hidden="true"></i>
+        Pontos da temporada beta
+      </h4>
+      <p class="season-news-section-text">
+        Os pontos da temporada beta (até julho) foram zerados.
+        A contagem da Temporada 1 começa do zero.
+      </p>
+    </section>
+
+    <section class="season-news-section season-news-section--rules" aria-labelledby="season-news-rules-title">
+      <h4 id="season-news-rules-title" class="season-news-section-title">
+        <i class="ri-book-open-line" aria-hidden="true"></i>
+        Material oficial
+      </h4>
+      <a
+        class="season-news-rules-btn"
+        [href]="rulesPdfUrl"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Abrir regras BWA Game Temporada 1 em PDF (nova aba)">
+        <span class="season-news-rules-btn__icon" aria-hidden="true">
+          <i class="ri-file-pdf-2-line"></i>
+        </span>
+        <span class="season-news-rules-btn__text">
+          <span class="season-news-rules-btn__label">Ver regras da Temporada 1 (PDF)</span>
+          <span class="season-news-rules-btn__hint">Pontuação, metas e conversão em moedas</span>
+        </span>
+        <span class="season-news-rules-btn__action" aria-hidden="true">
+          <i class="ri-external-link-line"></i>
+        </span>
+      </a>
+    </section>
+  </div>
+</c4u-modal>

@@ -157,6 +157,12 @@ export class GamificationDashboardComponent implements OnInit, OnDestroy, AfterV
   isLoadingMonthlyGoal = false;
   /** Sem cache para o mês do filtro (HTTP 404). */
   playerDashboardCacheMissing = false;
+  /** Falha ao carregar endpoints que montam o painel (5xx/timeout). */
+  hasPanelLoadError = false;
+  readonly panelLoadErrorMessage =
+    'Não foi possível carregar os dados agora. Tente novamente mais tarde.';
+  /** Falha ao carregar clientes atendidos (finished/deliveries). */
+  hasParticipacaoLoadError = false;
   /** `refreshed_at` do cache denormalizado (quando disponível). */
   dashboardRefreshedAt: Date | null = null;
   readonly dashboardSyncLabel = 'Sincronizado com Acessórias';
@@ -391,8 +397,11 @@ export class GamificationDashboardComponent implements OnInit, OnDestroy, AfterV
       this.loadKPIData();
       if (this.playerService.usesGame4uWalletFromStats()) {
         this.loadGamificationDashboardFromCache();
+        this.loadDashboardInsights();
       } else {
         this.loadProgressData();
+        this.dashboardInsights = null;
+        this.isLoadingDashboardInsights = false;
       }
     });
   }
@@ -742,6 +751,7 @@ export class GamificationDashboardComponent implements OnInit, OnDestroy, AfterV
    */
   private loadParticipacaoData(): void {
     this.isLoadingParticipacao = true;
+    this.hasParticipacaoLoadError = false;
     this.isLoadingParticipacaoKpi = false;
     this.isLoadingParticipacaoMore = false;
     this.participacaoHasMore = false;
@@ -939,6 +949,7 @@ export class GamificationDashboardComponent implements OnInit, OnDestroy, AfterV
             }
           });
           this.participacaoClientes = uniqueBase;
+          this.hasParticipacaoLoadError = false;
           this.isLoadingParticipacao = false;
           this.isLoadingParticipacaoKpi = !skipKpi && uniqueBase.length > 0;
           this.syncClientesKpiWithTabs();
@@ -959,6 +970,7 @@ export class GamificationDashboardComponent implements OnInit, OnDestroy, AfterV
         error: (err: Error) => {
           console.error('📊 Failed to load participação:', err);
           this.participacaoClientes = [];
+          this.hasParticipacaoLoadError = true;
           this.isLoadingParticipacao = false;
           this.isLoadingParticipacaoKpi = false;
           this.isLoadingParticipacaoMore = false;
@@ -1357,6 +1369,7 @@ export class GamificationDashboardComponent implements OnInit, OnDestroy, AfterV
     this.isLoadingMonthlyGoal = true;
     this.monthlyPointsGoalTarget = null;
     this.playerDashboardCacheMissing = false;
+    this.hasPanelLoadError = false;
     this.dashboardRefreshedAt = null;
     this.dashboardCachedParams = null;
     this.monthOnTimeDeliveryPct = null;
@@ -1389,6 +1402,7 @@ export class GamificationDashboardComponent implements OnInit, OnDestroy, AfterV
         next: bundle => {
           if (!bundle) {
             this.playerDashboardCacheMissing = month != null;
+            this.hasPanelLoadError = false;
             this.activityMetrics = { pendentes: 0, emExecucao: 0, finalizadas: 0, pontos: 0 };
             this.processMetrics = { pendentes: 0, incompletas: 0, finalizadas: 0 };
             this.monthlyPointsGoalTarget = null;
@@ -1397,6 +1411,7 @@ export class GamificationDashboardComponent implements OnInit, OnDestroy, AfterV
             this.clientesAtendidosThisMonthCount = month != null ? null : this.clientesAtendidosThisMonthCount;
           } else {
             this.playerDashboardCacheMissing = false;
+            this.hasPanelLoadError = false;
             this.activityMetrics = bundle.activity;
             this.processMetrics = bundle.processo;
             const g = Math.floor(Number(bundle.monthlyGoalTarget) || 0);
@@ -1421,7 +1436,8 @@ export class GamificationDashboardComponent implements OnInit, OnDestroy, AfterV
         },
         error: error => {
           console.error('📊 Failed to load dashboard/cached:', error);
-          this.playerDashboardCacheMissing = month != null;
+          this.playerDashboardCacheMissing = false;
+          this.hasPanelLoadError = true;
           this.activityMetrics = { pendentes: 0, emExecucao: 0, finalizadas: 0, pontos: 0 };
           this.processMetrics = { pendentes: 0, incompletas: 0, finalizadas: 0 };
           this.monthlyPointsGoalTarget = null;
@@ -1653,6 +1669,12 @@ export class GamificationDashboardComponent implements OnInit, OnDestroy, AfterV
     this.loadParticipacaoData();
   }
 
+  /** CTA genérico para falhas dos endpoints que montam o painel. */
+  retryPanelLoad(): void {
+    this.hasPanelLoadError = false;
+    this.loadMonthDependentData();
+  }
+
   /**
    * Handle company selection from table
    */
@@ -1667,11 +1689,14 @@ export class GamificationDashboardComponent implements OnInit, OnDestroy, AfterV
    * Handle company selection from carteira list
    */
   openCompanyDetailModal(company: CompanyDisplay): void {
-    this.selectedCarteiraCompany = company;
-    this.isCompanyCarteiraDetailModalOpen = true;
-    this.focusedElementBeforeModal = document.activeElement as HTMLElement;
-    const companyName = this.getClienteAtendidoListTitle(company);
-    this.announceToScreenReader(`Abrindo detalhes de ${companyName}`);
+    // Temporário: modal de detalhes de clientes desativado.
+    void company;
+    return;
+    // this.selectedCarteiraCompany = company;
+    // this.isCompanyCarteiraDetailModalOpen = true;
+    // this.focusedElementBeforeModal = document.activeElement as HTMLElement;
+    // const companyName = this.getClienteAtendidoListTitle(company);
+    // this.announceToScreenReader(`Abrindo detalhes de ${companyName}`);
   }
 
   /**
@@ -1716,6 +1741,10 @@ export class GamificationDashboardComponent implements OnInit, OnDestroy, AfterV
    * Handle progress card click from c4u-activity-progress
    */
   onProgressCardClicked(cardType: ProgressCardType): void {
+    // Temporário: modais de entregas pendentes / finalizadas desativados.
+    void cardType;
+    return;
+    /*
     this.focusedElementBeforeModal = document.activeElement as HTMLElement;
     
     // Map card type to modal type
@@ -1746,6 +1775,7 @@ export class GamificationDashboardComponent implements OnInit, OnDestroy, AfterV
         this.announceToScreenReader('Abrindo lista de processos finalizados');
         break;
     }
+    */
   }
   
   /**
@@ -1765,6 +1795,10 @@ export class GamificationDashboardComponent implements OnInit, OnDestroy, AfterV
   }
   
   onInsightsAlertClicked(focus: DashboardInsightsAlertFocus): void {
+    // Temporário: modais de detalhes de entregas desativados.
+    void focus;
+    return;
+    /*
     this.focusedElementBeforeModal = document.activeElement as HTMLElement;
     this.progressModalType = 'atividades-pendentes';
     this.progressModalActivityFocusFilter = focus;
@@ -1777,6 +1811,7 @@ export class GamificationDashboardComponent implements OnInit, OnDestroy, AfterV
     };
     this.announceToScreenReader(labels[focus]);
     this.cdr.markForCheck();
+    */
   }
 
   /**

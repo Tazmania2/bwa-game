@@ -385,7 +385,8 @@ describe('C4uSeletorMesComponent', () => {
         const newComponent = new C4uSeletorMesComponent(
           mockSessaoProvider,
           mockSeasonDatesService,
-          mockActionLogService
+          mockActionLogService,
+          mockUserProfileService
         );
         await newComponent.ngOnInit();
 
@@ -398,7 +399,8 @@ describe('C4uSeletorMesComponent', () => {
         const newComponent = new C4uSeletorMesComponent(
           mockSessaoProvider,
           mockSeasonDatesService,
-          mockActionLogService
+          mockActionLogService,
+          mockUserProfileService
         );
         await newComponent.ngOnInit();
 
@@ -407,11 +409,13 @@ describe('C4uSeletorMesComponent', () => {
 
       it('should handle initialization errors gracefully', async () => {
         mockSeasonDatesService.getMonthsSinceSeasonStart.and.returnValue(Promise.reject('Error'));
+        mockSeasonDatesService.getSeasonDates.and.returnValue(Promise.reject('Error'));
         
         const newComponent = new C4uSeletorMesComponent(
           mockSessaoProvider,
           mockSeasonDatesService,
-          mockActionLogService
+          mockActionLogService,
+          mockUserProfileService
         );
         await newComponent.ngOnInit();
 

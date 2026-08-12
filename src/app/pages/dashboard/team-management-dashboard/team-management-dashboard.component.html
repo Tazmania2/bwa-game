@@ -423,6 +423,19 @@
               [class.dashboard-section--loading]="isLoadingMonthlyPointsProgress"
               aria-labelledby="progress-section-title">
               <h3 id="progress-section-title" class="section-title">Progresso da Equipe</h3>
+              <p
+                *ngIf="hasPanelLoadError"
+                class="dashboard-cache-notice dashboard-cache-notice--error"
+                role="alert">
+                {{ panelLoadErrorMessage }}
+              </p>
+              <button
+                *ngIf="hasPanelLoadError"
+                type="button"
+                class="empty-state-retry-btn"
+                (click)="retryPanelLoad()">
+                Tente novamente mais tarde
+              </button>
               
               <c4u-dashboard-goals-skeleton
                 *ngIf="isLoadingMonthlyPointsProgress"
@@ -430,10 +443,11 @@
               </c4u-dashboard-goals-skeleton>
 
               <c4u-activity-progress
-                *ngIf="!isLoadingMonthlyPointsProgress && teamActivityMetrics && teamProcessMetrics"
+                *ngIf="!hasPanelLoadError && !isLoadingMonthlyPointsProgress && teamActivityMetrics && teamProcessMetrics"
                 [activities]="teamActivityMetrics"
                 [processos]="teamProcessMetrics"
                 [monthlyPointsBreakdown]="monthlyPointsBreakdown"
+                [detailsClickable]="false"
                 (cardClicked)="onProgressCardClicked($event)">
               </c4u-activity-progress>
             </section>
@@ -896,14 +910,11 @@
                 </c4u-dashboard-goals-skeleton>
 
                 <div *ngIf="!isLoadingCarteira && teamCarteiraClientes.length > 0" class="carteira-list">
+                  <!-- Temporário: click do modal de detalhes de clientes desativado. -->
                   <div *ngFor="let cliente of teamCarteiraClientes" 
                        class="carteira-item"
-                       (click)="openCompanyDetailModal(cliente)"
                        role="article"
-                       style="cursor: pointer;"
-                       [title]="getClienteAtendidoTooltip(cliente)"
-                       (keydown.enter)="openCompanyDetailModal(cliente)"
-                       (keydown.space)="openCompanyDetailModal(cliente); $event.preventDefault()">
+                       [title]="getClienteAtendidoTooltip(cliente)">
                     <div class="carteira-item-info">
                       <i class="ri-building-line"></i>
                       <span class="carteira-cnpj">{{ getClienteAtendidoListTitle(cliente) }}</span>
@@ -952,15 +963,18 @@
                   </button>
                 </div>
                 
-                <div *ngIf="!isLoadingCarteira && teamCarteiraClientes.length === 0" class="empty-state">
-                  <p>Ainda não encontramos clientes atendidos neste mês. Volte novamente mais tarde.</p>
+                <div
+                  *ngIf="!isLoadingCarteira && (hasParticipacaoLoadError || teamCarteiraClientes.length === 0)"
+                  class="empty-state"
+                  [attr.role]="hasParticipacaoLoadError ? 'alert' : 'status'">
+                  <p>Os clientes atendidos deste mês não estão disponíveis no momento. Tente novamente mais tarde.</p>
                   <button
                     type="button"
                     class="empty-state-retry-btn"
                     [disabled]="isLoadingCarteira"
                     [attr.aria-busy]="isLoadingCarteira ? 'true' : null"
                     (click)="retryClientesAtendidosThisMonth()">
-                    Tentar carregar novamente
+                    Tente novamente mais tarde
                   </button>
                 </div>
               </c4u-card>

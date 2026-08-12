@@ -99,15 +99,8 @@
 
           <td *ngIf="showExtendedTreeColumns" class="org-tree-table__num">
             <ng-container *ngIf="isNodeRow(row); else playerPointsMtd">
-              <button
-                type="button"
-                class="org-tree-table__kpi-btn"
-                (click)="onKpiCellClick(row.node, 'points_delivered', $event)"
-                (keydown.enter)="onKpiCellClick(row.node, 'points_delivered', $event)"
-                (keydown.space)="onKpiCellClick(row.node, 'points_delivered', $event)"
-                aria-label="Ver histórico de Pontos MTD">
-                {{ formatMtdCell(row.node, pointsMtdColumn) }}
-              </button>
+              <!-- Drill-down desabilitado temporariamente: botão com onKpiCellClick('points_delivered') -->
+              <span>{{ formatMtdCell(row.node, pointsMtdColumn) }}</span>
             </ng-container>
             <ng-template #playerPointsMtd>
               {{ formatTeamPlayerNumber(row.player!.points_delivered) }}

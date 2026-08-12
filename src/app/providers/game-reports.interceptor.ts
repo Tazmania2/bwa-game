@@ -8,12 +8,12 @@ import {
 } from '@angular/common/http';
 import { Observable, throwError, timer } from 'rxjs';
 import { catchError, retry } from 'rxjs/operators';
-import { isSnowflakeUnavailable } from '@model/api-error.model';
+import { isGameReportsPanelFailure, isSnowflakeUnavailable } from '@model/api-error.model';
 import { ApiErrorHandlerService } from '@services/api-error-handler.service';
 
 /**
  * `GET /game/reports/**` — retry automático 1× em 503 (backend já tentou reconectar)
- * e toast de aviso após falha definitiva. Não altera fluxo de 401 (sessão).
+ * e toast amigável após falha definitiva (503/5xx/timeout). Não altera fluxo de 401 (sessão).
  */
 @Injectable()
 export class GameReportsInterceptor implements HttpInterceptor {
@@ -37,8 +37,8 @@ export class GameReportsInterceptor implements HttpInterceptor {
         }
       }),
       catchError((error: HttpErrorResponse) => {
-        if (isSnowflakeUnavailable(error)) {
-          this.apiErrorHandler.showSnowflakeUnavailableToast(error);
+        if (isSnowflakeUnavailable(error) || isGameReportsPanelFailure(error)) {
+          this.apiErrorHandler.showDashboardPanelUnavailableToast(error);
         }
         return throwError(() => error);
       })

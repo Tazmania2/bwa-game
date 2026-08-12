@@ -689,7 +689,8 @@ export class ActionLogService {
           return of(null);
         }
         console.error('Error fetching dashboard/cached:', err);
-        return of(null);
+        this.game4uPlayerDashboardCachedCache.delete(cacheKey);
+        return throwError(() => err);
       }),
       shareReplay({ bufferSize: 1, refCount: true, windowTime: this.GAME4U_CACHE_DURATION })
     );
@@ -729,7 +730,8 @@ export class ActionLogService {
             return of(null);
           }
           console.error('Error fetching supervision/dashboard/cached:', err);
-          return of(null);
+          this.game4uSupervisionDashboardCachedCache.delete(cacheKey);
+          return throwError(() => err);
         }),
         shareReplay({ bufferSize: 1, refCount: true, windowTime: this.GAME4U_CACHE_DURATION })
       );
@@ -826,7 +828,8 @@ export class ActionLogService {
             return of(null);
           }
           console.error('Error fetching management/dashboard/cached/overview:', err);
-          return of(null);
+          this.game4uManagementDashboardOverviewCache.delete(cacheKey);
+          return throwError(() => err);
         }),
         shareReplay({ bufferSize: 1, refCount: true, windowTime: this.GAME4U_CACHE_DURATION })
       );
@@ -3870,7 +3873,10 @@ export class ActionLogService {
           }),
           catchError(error => {
             console.error('Error fetching finished deliveries/cached (participação):', error);
-            return of({ items: [], offset: off, limit: lim, fromCachedDeliveries: true });
+            if (error instanceof HttpErrorResponse && error.status === 404) {
+              return of({ items: [], offset: off, limit: lim, fromCachedDeliveries: true });
+            }
+            return throwError(() => error);
           })
         );
     }
@@ -3894,7 +3900,10 @@ export class ActionLogService {
         })),
         catchError(error => {
           console.error('Error fetching finished deliveries page (participação):', error);
-          return of({ items: [], offset: off, limit: lim });
+          if (error instanceof HttpErrorResponse && error.status === 404) {
+            return of({ items: [], offset: off, limit: lim });
+          }
+          return throwError(() => error);
         })
       );
   }
@@ -3949,7 +3958,10 @@ export class ActionLogService {
             'Error fetching management/finished/deliveries/cached (participação):',
             error
           );
-          return of({ items: [], offset: off, limit: lim, fromCachedDeliveries: true });
+          if (error instanceof HttpErrorResponse && error.status === 404) {
+            return of({ items: [], offset: off, limit: lim, fromCachedDeliveries: true });
+          }
+          return throwError(() => error);
         })
       );
   }

@@ -119,29 +119,18 @@ export class C4uOrgHierarchyTreeTableComponent {
 
 
   private readonly kpiDrilldownKeys = new Set<OrgHierarchyKpiDetailKey>([
-
-    'on_time_pct',
-
+    // Drill-down desabilitado temporariamente.
+    // 'on_time_pct',
     // 'clients_served', // drill-down desabilitado temporariamente (performance)
-
-    'finished',
-
-    'points_delivered',
-
-    'pending_open',
-
-    'near_due',
-
-    'overdue_pending',
-
-    'overdue_pending_justified',
-
-    'overdue_pending_unjustified',
-
-    'multa_risk',
-
-    'multa_incurred'
-
+    // 'finished',
+    // 'points_delivered',
+    // 'pending_open',
+    // 'near_due',
+    // 'overdue_pending',
+    // 'overdue_pending_justified',
+    // 'overdue_pending_unjustified',
+    // 'multa_risk',
+    // 'multa_incurred'
   ]);
 
 
