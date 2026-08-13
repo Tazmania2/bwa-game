@@ -31,6 +31,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   loadingText: string = 'Entrando...';
   systemParams: SystemParams | null = null;
   bwaLogoUrl: string;
+  readonly sparks = this.buildSparks();
 
   /** Rota `/login-admin`: restringe o login a admin ou diretor. */
   readonly isAdminLoginRoute: boolean;
@@ -79,6 +80,31 @@ export class LoginComponent implements OnInit, OnDestroy {
       current = current.parent;
     }
     return this.router.url.split('?')[0].includes('/login-admin');
+  }
+
+  private buildSparks(): Array<{ style: Record<string, string> }> {
+    const positions = [
+      [8, 12], [18, 28], [72, 16], [88, 34], [12, 58],
+      [42, 22], [64, 48], [78, 72], [28, 78], [52, 64],
+      [92, 58], [36, 42], [6, 86], [58, 10], [84, 88]
+    ];
+
+    return positions.map(([left, top], index) => {
+      const size = 6 + (index % 4) * 2;
+      const duration = 3.2 + (index % 5) * 0.55;
+      const delay = (index * 0.37) % 4.5;
+
+      return {
+        style: {
+          left: `${left}%`,
+          top: `${top}%`,
+          width: `${size}px`,
+          height: `${size}px`,
+          animationDuration: `${duration}s`,
+          animationDelay: `${delay}s`
+        }
+      };
+    });
   }
 
   // Estado do fluxo: 'login' | 'reset-request' | 'reset-confirm' | 'reset-from-email'

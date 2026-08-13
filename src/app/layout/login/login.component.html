@@ -1,7 +1,9 @@
 <div class="gradient-overlay">
   <img *ngIf="systemParams?.client_login_background_url?.value" [src]="systemParams?.client_login_background_url?.value"
     alt="Plano de fundo do login" class="login-background" draggable="false">
-
+  <div class="login-sparks" aria-hidden="true">
+    <span class="spark" *ngFor="let spark of sparks" [ngStyle]="spark.style"></span>
+  </div>
 </div>
 <div class="login-content">
 

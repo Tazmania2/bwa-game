@@ -749,34 +749,37 @@ export class ActionLogService {
   ): Observable<SupervisionTeamDashboardCachedBundle | null> {
     const kpiMonth = this.resolveDashboardCachedMonth(month);
     const seasonMonth = getSeasonProxyMonth();
-    const kpi$ = this.fetchSupervisionTeamDashboardCached(bwaTeamScopeId, kpiMonth);
-    const season$ = this.isSameDashboardCachedMonth(kpiMonth, seasonMonth)
-      ? kpi$
-      : this.fetchSupervisionTeamDashboardCached(bwaTeamScopeId, seasonMonth);
-
-    return forkJoin({ kpi: kpi$, season: season$ }).pipe(
-      map(({ kpi, season }) => {
+    // Serializa KPI → temporada para não dobrar compute no Snowflake.
+    return this.fetchSupervisionTeamDashboardCached(bwaTeamScopeId, kpiMonth).pipe(
+      switchMap(kpi => {
         if (!kpi) {
-          return null;
+          return of(null);
         }
-        const { activity, processo } = this.mapPlayerDashboardCachedToProgressMetrics(kpi, month);
-        const goal = Math.floor(Number(kpi.month_goal_points) || 0);
-        const seasonMetrics = this.mapSeasonProxyMetricsFromMonthFields(season ?? kpi);
-        return {
-          refreshedAt: kpi.refreshed_at,
-          teamId: Math.floor(Number(kpi.team_id) || 0),
-          teamName: kpi.team_name ?? null,
-          playersCount: Math.floor(Number(kpi.players_count) || 0),
-          params: kpi.params,
-          activity,
-          processo,
-          monthlyGoalTarget: goal,
-          monthClientsServed: Math.floor(Number(kpi.month_clients_served) || 0),
-          ...seasonMetrics,
-          monthOnTimeDeliveryPct: readMonthOnTimeDeliveryPct(kpi),
-          onTimeSegmentPercents: readOnTimeSegmentPercents(kpi),
-          refreshError: kpi.refresh_error ?? null
-        };
+        const season$ = this.isSameDashboardCachedMonth(kpiMonth, seasonMonth)
+          ? of(kpi)
+          : this.fetchSupervisionTeamDashboardCached(bwaTeamScopeId, seasonMonth);
+        return season$.pipe(
+          map(season => {
+            const { activity, processo } = this.mapPlayerDashboardCachedToProgressMetrics(kpi, month);
+            const goal = Math.floor(Number(kpi.month_goal_points) || 0);
+            const seasonMetrics = this.mapSeasonProxyMetricsFromMonthFields(season ?? kpi);
+            return {
+              refreshedAt: kpi.refreshed_at,
+              teamId: Math.floor(Number(kpi.team_id) || 0),
+              teamName: kpi.team_name ?? null,
+              playersCount: Math.floor(Number(kpi.players_count) || 0),
+              params: kpi.params,
+              activity,
+              processo,
+              monthlyGoalTarget: goal,
+              monthClientsServed: Math.floor(Number(kpi.month_clients_served) || 0),
+              ...seasonMetrics,
+              monthOnTimeDeliveryPct: readMonthOnTimeDeliveryPct(kpi),
+              onTimeSegmentPercents: readOnTimeSegmentPercents(kpi),
+              refreshError: kpi.refresh_error ?? null
+            };
+          })
+        );
       })
     );
   }
@@ -1399,25 +1402,33 @@ export class ActionLogService {
   ): Observable<SupervisionTeamDashboardCachedBundle | null> {
     const kpiMonth = this.resolveDashboardCachedMonth(month);
     const seasonMonth = getSeasonProxyMonth();
-    const kpi$ = this.fetchManagementDashboardCachedOverview(kpiMonth, userId, role);
-    const season$ = this.isSameDashboardCachedMonth(kpiMonth, seasonMonth)
-      ? kpi$
-      : this.fetchManagementDashboardCachedOverview(seasonMonth, userId, role);
-
-    return forkJoin({ kpi: kpi$, season: season$ }).pipe(
-      map(({ kpi, season }) => {
+    // Serializa overview KPI → temporada para não dobrar compute no Snowflake.
+    return this.fetchManagementDashboardCachedOverview(kpiMonth, userId, role).pipe(
+      switchMap(kpi => {
         if (!kpi?.manager) {
-          return null;
+          return of(null);
         }
         const bundle = this.mapManagerDashboardCachedToBundle(kpi.manager, month);
-        if (season?.manager) {
-          const seasonMetrics = this.mapSeasonProxyMetricsFromMonthFields(season.manager);
-          return { ...bundle, ...seasonMetrics };
+        if (this.isSameDashboardCachedMonth(kpiMonth, seasonMonth)) {
+          return of({
+            ...bundle,
+            ...this.mapSeasonProxyMetricsFromMonthFields(kpi.manager)
+          });
         }
-        return {
-          ...bundle,
-          ...this.mapSeasonProxyMetricsFromMonthFields(kpi.manager)
-        };
+        return this.fetchManagementDashboardCachedOverview(seasonMonth, userId, role).pipe(
+          map(season => {
+            if (season?.manager) {
+              return {
+                ...bundle,
+                ...this.mapSeasonProxyMetricsFromMonthFields(season.manager)
+              };
+            }
+            return {
+              ...bundle,
+              ...this.mapSeasonProxyMetricsFromMonthFields(kpi.manager)
+            };
+          })
+        );
       })
     );
   }
@@ -1499,31 +1510,34 @@ export class ActionLogService {
   ): Observable<GamificationDashboardCachedBundle | null> {
     const kpiMonth = this.resolveDashboardCachedMonth(month);
     const seasonMonth = getSeasonProxyMonth();
-    const kpi$ = this.fetchPlayerDashboardCached(playerId, kpiMonth);
-    const season$ = this.isSameDashboardCachedMonth(kpiMonth, seasonMonth)
-      ? kpi$
-      : this.fetchPlayerDashboardCached(playerId, seasonMonth);
-
-    return forkJoin({ kpi: kpi$, season: season$ }).pipe(
-      map(({ kpi, season }) => {
+    // Serializa KPI → temporada para não dobrar compute no Snowflake.
+    return this.fetchPlayerDashboardCached(playerId, kpiMonth).pipe(
+      switchMap(kpi => {
         if (!kpi) {
-          return null;
+          return of(null);
         }
-        const { activity, processo } = this.mapPlayerDashboardCachedToProgressMetrics(kpi, month);
-        const goal = Math.floor(Number(kpi.month_goal_points) || 0);
-        const seasonMetrics = this.mapSeasonProxyMetricsFromMonthFields(season ?? kpi);
-        return {
-          refreshedAt: kpi.refreshed_at,
-          params: kpi.params,
-          activity,
-          processo,
-          monthlyGoalTarget: goal,
-          monthClientsServed: Math.floor(Number(kpi.month_clients_served) || 0),
-          ...seasonMetrics,
-          monthOnTimeDeliveryPct: readMonthOnTimeDeliveryPct(kpi),
-          onTimeSegmentPercents: readOnTimeSegmentPercents(kpi),
-          refreshError: kpi.refresh_error ?? null
-        };
+        const season$ = this.isSameDashboardCachedMonth(kpiMonth, seasonMonth)
+          ? of(kpi)
+          : this.fetchPlayerDashboardCached(playerId, seasonMonth);
+        return season$.pipe(
+          map(season => {
+            const { activity, processo } = this.mapPlayerDashboardCachedToProgressMetrics(kpi, month);
+            const goal = Math.floor(Number(kpi.month_goal_points) || 0);
+            const seasonMetrics = this.mapSeasonProxyMetricsFromMonthFields(season ?? kpi);
+            return {
+              refreshedAt: kpi.refreshed_at,
+              params: kpi.params,
+              activity,
+              processo,
+              monthlyGoalTarget: goal,
+              monthClientsServed: Math.floor(Number(kpi.month_clients_served) || 0),
+              ...seasonMetrics,
+              monthOnTimeDeliveryPct: readMonthOnTimeDeliveryPct(kpi),
+              onTimeSegmentPercents: readOnTimeSegmentPercents(kpi),
+              refreshError: kpi.refresh_error ?? null
+            };
+          })
+        );
       })
     );
   }

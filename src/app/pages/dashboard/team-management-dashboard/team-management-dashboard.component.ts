@@ -355,6 +355,13 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
   isLoadingParticipacaoKpi = false;
   private participacaoKpiLoadGen = 0;
 
+  /**
+   * Gerações de carga do painel (troca de time / mês / colaborador).
+   * Incrementar invalida awaits em voo e evita aplicar respostas obsoletas
+   * (e pedido extra de compute no Snowflake).
+   */
+  private panelDataLoadGen = 0;
+
   clientesAtendidosThisMonthCount: number | null = null;
   isLoadingClientesAtendidosCount = false;
 
@@ -1780,26 +1787,29 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
     return allResults;
   }
 
+  /** Inicia uma nova geração de carga do painel (invalida cargas anteriores). */
+  private beginPanelDataLoad(): number {
+    return ++this.panelDataLoadGen;
+  }
+
+  /** True se outra troca de painel/mês/colaborador já supersedeu esta carga. */
+  private isStalePanelLoad(loadGen: number): boolean {
+    return loadGen !== this.panelDataLoadGen;
+  }
+
   /**
    * Load all team data including sidebar metrics, collaborators, goals, and productivity.
-   * 
-   * This method orchestrates loading of all dashboard data by:
-   * 1. Calculating the date range based on selected month
-   * 2. Loading sidebar data (points and progress metrics) in parallel
-   * 3. Loading collaborators list
-   * 4. Loading goals data
-   * 5. Loading productivity graph data
-   * 6. Updating the last refresh timestamp
-   * 
-   * All data loading operations run in parallel using Promise.all for optimal performance.
-   * 
+   *
+   * Ondas sequenciais (não Promise.all) para não saturar o Snowflake:
+   * 1) cache spine → 2) sidebar/lista/metas leves → 3) weekly stats → 4) carteira → 5) KPIs.
+   *
    * @async
    * @returns Promise that resolves when all data is loaded
-   * 
+   *
    * @example
    * // Called when team, collaborator, or month changes
    * await this.loadTeamData();
-   * 
+   *
    * @see {@link loadSidebarData}
    * @see {@link loadCollaborators}
    * @see {@link loadGoalsData}
@@ -1810,10 +1820,15 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
       return;
     }
 
+    const loadGen = this.beginPanelDataLoad();
+
     if (this.isManagementOverview) {
       const ready = await this.ensureAdminManagementPreviewReady();
+      if (this.isStalePanelLoad(loadGen)) {
+        return;
+      }
       if (ready) {
-        await this.loadManagementOverviewData();
+        await this.loadManagementOverviewData(loadGen);
       }
       return;
     }
@@ -1843,7 +1858,7 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
       // If a collaborator is selected, load only that collaborator's data
       if (this.selectedCollaborator) {
         console.log('👤 Loading data for selected collaborator:', this.selectedCollaborator);
-        await this.loadCollaboratorData(this.selectedCollaborator, monthRange);
+        await this.loadCollaboratorData(this.selectedCollaborator, monthRange, loadGen);
       } else {
         // Otherwise, load team aggregated data
         console.log('👥 Loading team aggregated data');
@@ -1859,31 +1874,64 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
           this.teamMonthOnTimeDeliveryPct = null;
           this.teamOnTimeSegmentPercents = { ...EMPTY_ON_TIME_SEGMENT_PERCENTS };
         }
-        // First, reload team members data to recalculate points for the selected month
-        // This is important when the month changes, as points need to be recalculated
+        if (this.isStalePanelLoad(loadGen)) {
+          return;
+        }
+
+        // Recarrega membros / pontos do mês (uma vez; onTeamChange não duplica)
         await this.loadTeamMembersData(this.selectedTeamId, monthRange);
+        if (this.isStalePanelLoad(loadGen)) {
+          return;
+        }
 
         if (!this.playerService.usesGame4uWalletFromStats() && !this.teamSupervisionBundle) {
           await this.loadTeamActivityAndMacroData(monthRange);
+          if (this.isStalePanelLoad(loadGen)) {
+            return;
+          }
         }
-        
-        // Load data in parallel, but KPIs need carteira data first
-        await Promise.all([
-          this.loadSidebarData(seasonRange),
-          this.loadCollaborators(),
-          this.loadGoalsData(monthRange),
-          this.loadMonthlyPointsBreakdown(),
-          this.loadWeeklyGoalDailyRows()
-        ]);
+
+        // Onda local / leve (sem saturar reports)
+        await this.loadSidebarData(seasonRange);
+        if (this.isStalePanelLoad(loadGen)) {
+          return;
+        }
+        await this.loadCollaborators();
+        if (this.isStalePanelLoad(loadGen)) {
+          return;
+        }
+        await this.loadGoalsData(monthRange);
+        if (this.isStalePanelLoad(loadGen)) {
+          return;
+        }
+        await this.loadMonthlyPointsBreakdown();
+        if (this.isStalePanelLoad(loadGen)) {
+          return;
+        }
+
+        // Onda weekly (daily-finished-stats)
+        await this.loadWeeklyGoalDailyRows();
+        if (this.isStalePanelLoad(loadGen)) {
+          return;
+        }
 
         // Productivity charts are loaded only when the user clicks the tab.
         if (this.activeTab === 'productivity') {
           await this.loadProductivityData(this.computeProductivityDateRange());
+          if (this.isStalePanelLoad(loadGen)) {
+            return;
+          }
         }
         
-        // Load carteira data first, then KPIs (which depend on carteira)
+        // Carteira (finished/deliveries) depois KPIs
         await this.loadTeamCarteiraData(monthRange);
+        if (this.isStalePanelLoad(loadGen)) {
+          return;
+        }
         await this.loadTeamKPIs();
+        if (this.isStalePanelLoad(loadGen)) {
+          return;
+        }
 
         // Mini dashboard executivo (top processos / top performers / saúde do mês)
         // — alimentado pelo cache `finished/deliveries/cached` por team_id.
@@ -1897,6 +1945,9 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
         this.updateTeamNameDisplay();
       }
       
+      if (this.isStalePanelLoad(loadGen)) {
+        return;
+      }
       this.lastRefresh = new Date();
     } catch (error) {
       console.error('Error loading team data:', error);
@@ -1914,42 +1965,60 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
    * @param dateRange - Date range for filtering data
    * @returns Promise that resolves when collaborator data is loaded
    */
-  private async loadCollaboratorData(collaboratorId: string, dateRange: { start: Date; end: Date }): Promise<void> {
+  private async loadCollaboratorData(
+    collaboratorId: string,
+    dateRange: { start: Date; end: Date },
+    loadGen: number = this.panelDataLoadGen
+  ): Promise<void> {
     try {
       console.log('👤 Loading data for collaborator:', collaboratorId);
-      
-      // Load collaborator-specific data in parallel
-      const baseLoads: Array<Promise<void>> = [
-        this.loadCollaboratorSidebarData(collaboratorId, dateRange),
-        this.loadCollaborators(), // Still load collaborators list
-        this.loadCollaboratorGoalsData(collaboratorId, dateRange),
-        this.loadMonthlyPointsBreakdown(collaboratorId),
-        this.loadWeeklyGoalDailyRows(collaboratorId)
-      ];
 
-      // Productivity charts are loaded only when the user clicks the tab.
-      if (this.activeTab === 'productivity') {
-        baseLoads.push(this.loadCollaboratorProductivityData(collaboratorId, this.computeProductivityDateRange()));
+      // Sequencial: sidebar (dashboard/cached) primeiro, metas reutilizam métricas já carregadas.
+      await this.loadCollaboratorSidebarData(collaboratorId, dateRange);
+      if (this.isStalePanelLoad(loadGen)) {
+        return;
+      }
+      await this.loadCollaborators();
+      if (this.isStalePanelLoad(loadGen)) {
+        return;
+      }
+      await this.loadCollaboratorGoalsData(collaboratorId, dateRange);
+      if (this.isStalePanelLoad(loadGen)) {
+        return;
+      }
+      await this.loadMonthlyPointsBreakdown(collaboratorId);
+      if (this.isStalePanelLoad(loadGen)) {
+        return;
+      }
+      await this.loadWeeklyGoalDailyRows(collaboratorId);
+      if (this.isStalePanelLoad(loadGen)) {
+        return;
       }
 
-      await Promise.all(baseLoads);
-      
-      // Load carteira data first, then KPIs (which depend on carteira)
+      if (this.activeTab === 'productivity') {
+        await this.loadCollaboratorProductivityData(collaboratorId, this.computeProductivityDateRange());
+        if (this.isStalePanelLoad(loadGen)) {
+          return;
+        }
+      }
+
       await this.loadCollaboratorCarteiraData(collaboratorId, dateRange);
+      if (this.isStalePanelLoad(loadGen)) {
+        return;
+      }
       await this.loadTeamKPIs(collaboratorId);
+      if (this.isStalePanelLoad(loadGen)) {
+        return;
+      }
 
       // Mini dashboard executivo do colaborador (top processos / saúde no mês).
       void this.loadExecutiveInsights();
       this.warmProgressModalUserActionsCache();
 
-      // Update formatted sidebar data after KPIs are loaded (includes metas calculation)
       this.updateFormattedSidebarData();
-      
-      // Update team name display after loading collaborators
       this.updateTeamNameDisplay();
-      
       this.cdr.markForCheck();
-      
+
       console.log('✅ Collaborator data loaded for:', collaboratorId);
     } catch (error) {
       console.error('Error loading collaborator data:', error);
@@ -2578,22 +2647,43 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
       this.goalsErrorMessage = '';
       
       console.log('📊 Loading goals data for collaborator:', collaboratorId);
-      
-      // Get progress metrics for the collaborator
-      const metrics = await lastValueFrom(
-        this.actionLogService
-          .getProgressMetrics(collaboratorId, this.selectedMonth, {
-            gamificationDashboardReportsOnly: true,
-            teamId: this.getGame4uTeamScopeId()
-          })
-          .pipe(takeUntil(this.destroy$), last())
-      ).catch((error) => {
-        console.error('Error loading collaborator progress metrics for goals:', error);
-        return {
-          activity: { pendentes: 0, emExecucao: 0, finalizadas: 0, pontos: 0 },
-          processo: { pendentes: 0, incompletas: 0, finalizadas: 0 }
+
+      let metrics: {
+        activity: { pendentes: number; emExecucao: number; finalizadas: number; pontos: number };
+        processo: { pendentes: number; incompletas: number; finalizadas: number };
+      };
+
+      // Game4U: reutiliza métricas já aplicadas pela sidebar (evita 2º dashboard/cached).
+      if (this.playerService.usesGame4uWalletFromStats()) {
+        metrics = {
+          activity: {
+            pendentes: 0,
+            emExecucao: 0,
+            finalizadas: this.progressMetrics.atividadesFinalizadas,
+            pontos: this.seasonPoints.desbloqueados
+          },
+          processo: {
+            pendentes: 0,
+            incompletas: this.progressMetrics.processosIncompletos,
+            finalizadas: this.progressMetrics.processosFinalizados
+          }
         };
-      });
+      } else {
+        metrics = await lastValueFrom(
+          this.actionLogService
+            .getProgressMetrics(collaboratorId, this.selectedMonth, {
+              gamificationDashboardReportsOnly: true,
+              teamId: this.getGame4uTeamScopeId()
+            })
+            .pipe(takeUntil(this.destroy$), last())
+        ).catch((error) => {
+          console.error('Error loading collaborator progress metrics for goals:', error);
+          return {
+            activity: { pendentes: 0, emExecucao: 0, finalizadas: 0, pontos: 0 },
+            processo: { pendentes: 0, incompletas: 0, finalizadas: 0 }
+          };
+        });
+      }
       
       // Create goal metrics from collaborator's progress metrics
       this.goalMetrics = [
@@ -5281,10 +5371,15 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
 
       localStorage.setItem('selectedTeamId', teamId);
 
+      // Uma única orquestração via loadTeamData / overview (sem loadTeamMembersData duplicado).
       if (isManagementOverview) {
+        const loadGen = this.beginPanelDataLoad();
         const ready = await this.ensureAdminManagementPreviewReady();
+        if (this.isStalePanelLoad(loadGen)) {
+          return;
+        }
         if (ready) {
-          await this.loadManagementOverviewData();
+          await this.loadManagementOverviewData(loadGen);
         } else {
           this.isLoadingSidebar = false;
           this.isLoadingGoals = false;
@@ -5294,7 +5389,6 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
           this.cdr.markForCheck();
         }
       } else {
-        await this.loadTeamMembersData(teamId, this.calculateDateRange());
         await this.loadTeamData();
 
         if (this.selectedCollaborator) {
@@ -5320,7 +5414,7 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
    * Não chama endpoints com `team_id` (supervisão, deliveries, team-stats, KPIs por time):
    * apenas KPIs/progresso agregados do gestor.
    */
-  private async loadManagementOverviewData(): Promise<void> {
+  private async loadManagementOverviewData(loadGen: number = this.beginPanelDataLoad()): Promise<void> {
     if (this.isAdminManagementPreview() && !this.getManagementDashboardApiUserId()) {
       return;
     }
@@ -5352,23 +5446,44 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
       const monthRange = this.calculateDateRange();
       const seasonRange = this.seasonDates;
 
-      // Importante: `loadManagementOverviewFromCache` precisa terminar **antes** das outras tarefas
-      // para que `teamMonthOnTimeDeliveryPct` (= `manager.month_on_time_delivery_pct`) já esteja
-      // populado quando `loadTeamKPIs` rodar `syncEntregasPrazoKpiFromParticipacao`.
+      // Spine: overview cache (KPI mês → temporada, serializado no ActionLogService)
       await this.loadManagementOverviewFromCache();
-      await Promise.all([
-        this.loadSidebarData(seasonRange),
-        this.loadGoalsData(monthRange),
-        this.loadMonthlyPointsBreakdown(),
-        this.loadWeeklyGoalDailyRows(),
-        // KPI «Entregas no Prazo» (circular): scaffold via `kpiService.getPlayerKPIs` e em seguida
-        // `syncEntregasPrazoKpiFromParticipacao` aplica `manager.month_on_time_delivery_pct` do cache.
-        this.loadTeamKPIs(),
-        // «Clientes atendidos»: agregado da gestão via `management/finished/deliveries/cached` (sem team_id).
-        this.loadParticipacaoClientesList('')
-      ]);
+      if (this.isStalePanelLoad(loadGen)) {
+        return;
+      }
 
-      // Reaplica o pct do cache caso `loadParticipacaoClientesList` tenha re-sincronizado depois dos KPIs.
+      // Onda leve (usa bundle já em memória no caminho Game4U)
+      await this.loadSidebarData(seasonRange);
+      if (this.isStalePanelLoad(loadGen)) {
+        return;
+      }
+      await this.loadGoalsData(monthRange);
+      if (this.isStalePanelLoad(loadGen)) {
+        return;
+      }
+      await this.loadMonthlyPointsBreakdown();
+      if (this.isStalePanelLoad(loadGen)) {
+        return;
+      }
+
+      // Weekly (daily-finished-stats) — pesado; isolado
+      await this.loadWeeklyGoalDailyRows();
+      if (this.isStalePanelLoad(loadGen)) {
+        return;
+      }
+
+      // KPI circular (player status + sync pct do cache)
+      await this.loadTeamKPIs();
+      if (this.isStalePanelLoad(loadGen)) {
+        return;
+      }
+
+      // Participação / clientes atendidos (finished/deliveries) — por último
+      await this.loadParticipacaoClientesList('');
+      if (this.isStalePanelLoad(loadGen)) {
+        return;
+      }
+
       this.syncEntregasPrazoKpiFromParticipacao();
 
       // Mini dashboard executivo agregado da gestão (top processos / top performers globais).
