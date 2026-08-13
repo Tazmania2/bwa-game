@@ -16,6 +16,51 @@
   height: 100%;
   z-index: -1;
   background: linear-gradient(to right, rgb(0, 9, 20, 0.9), rgba(0, 9, 20, 0.2));
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.login-sparks {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.spark {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 246, 214, 0.95) 0%, rgba(255, 226, 132, 0.55) 45%, transparent 72%);
+  box-shadow: 0 0 14px rgba(255, 226, 132, 0.45);
+  opacity: 0;
+  animation-name: sparkTwinkle;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  will-change: opacity, transform;
+}
+
+@keyframes sparkTwinkle {
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0.55) translateY(0);
+  }
+  40% {
+    opacity: 0.55;
+    transform: scale(1) translateY(-4px);
+  }
+  60% {
+    opacity: 0.28;
+    transform: scale(0.85) translateY(-2px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spark {
+    animation: none;
+    opacity: 0.22;
+  }
 }
 
 .client-logo {

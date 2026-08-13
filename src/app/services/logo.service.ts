@@ -21,7 +21,7 @@ export class LogoService {
    * The default logo URL used as fallback when no custom logo is configured
    * or when the custom logo URL is invalid.
    */
-  private readonly DEFAULT_LOGO_URL = '/assets/images/logo-bwa-white-inteira-full.png';
+  private readonly DEFAULT_LOGO_URL = '/assets/images/logo_bwa_game_dark_mode.png';
 
   /**
    * Cached resolved logo URL. This is set once during service initialization
