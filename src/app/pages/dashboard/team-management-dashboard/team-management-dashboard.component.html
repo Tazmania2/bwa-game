@@ -360,6 +360,14 @@
               aria-labelledby="kpi-section-title">
               <h3 id="kpi-section-title" class="section-title">Metas da Equipe</h3>
 
+              <!-- F-3 (MD-075): mês sem cache não é mês com zero. -->
+              <p
+                *ngIf="teamSupervisionCacheMissing && !isLoadingKPIs && !isLoadingMonthlyPointsProgress"
+                class="dashboard-cache-notice"
+                role="status">
+                {{ panelCacheMissingMessage }}
+              </p>
+
               <c4u-dashboard-goals-skeleton
                 *ngIf="isLoadingKPIs || isLoadingMonthlyPointsProgress"
                 type="kpi"
@@ -423,6 +431,13 @@
               [class.dashboard-section--loading]="isLoadingMonthlyPointsProgress"
               aria-labelledby="progress-section-title">
               <h3 id="progress-section-title" class="section-title">Progresso da Equipe</h3>
+              <!-- F-3 (MD-075): mês sem cache não é mês com zero. -->
+              <p
+                *ngIf="teamSupervisionCacheMissing && !isLoadingMonthlyPointsProgress"
+                class="dashboard-cache-notice"
+                role="status">
+                {{ panelCacheMissingMessage }}
+              </p>
               <p
                 *ngIf="hasPanelLoadError"
                 class="dashboard-cache-notice dashboard-cache-notice--error"
@@ -443,7 +458,7 @@
               </c4u-dashboard-goals-skeleton>
 
               <c4u-activity-progress
-                *ngIf="!hasPanelLoadError && !isLoadingMonthlyPointsProgress && teamActivityMetrics && teamProcessMetrics"
+                *ngIf="!hasPanelLoadError && !teamSupervisionCacheMissing && !isLoadingMonthlyPointsProgress && teamActivityMetrics && teamProcessMetrics"
                 [activities]="teamActivityMetrics"
                 [processos]="teamProcessMetrics"
                 [monthlyPointsBreakdown]="monthlyPointsBreakdown"

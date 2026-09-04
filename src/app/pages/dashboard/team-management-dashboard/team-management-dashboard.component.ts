@@ -2,7 +2,7 @@
 import { DOCUMENT } from '@angular/common';
 import { Router } from '@angular/router';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { Subject, of, firstValueFrom, lastValueFrom, Observable, forkJoin } from 'rxjs';
+import { Subject, of, firstValueFrom, lastValueFrom, Observable, forkJoin, merge } from 'rxjs';
 import { takeUntil, finalize, map, take, mergeMap, last } from 'rxjs/operators';
 import { PONTOS_POR_ATIVIDADE_FINALIZADA_ACTION_LOG } from '@app/constants/pontos-por-atividade-action-log';
 import { getOnTimeDeliveryGoalForMonth } from '@app/constants/on-time-delivery-goal';
@@ -89,7 +89,8 @@ import { collectOrgHierarchyNodesByType } from '@services/org-hierarchy-report.m
 import type {
   PlayerDashboardCachedParams,
   Game4uReportsFinishedDeliveryRow,
-  Game4uUserActionModel
+  Game4uUserActionModel,
+  OrgHierarchyNode
 } from '@model/game4u-api.model';
 import { UserProfileService } from '@services/user-profile.service';
 import { UserProfile } from '@utils/user-profile';
@@ -432,6 +433,15 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
   /** Cache de supervisão (`GET /game/reports/supervision/dashboard/cached`) indisponível para o mês. */
   teamSupervisionCacheMissing = false;
   /** Falha ao carregar endpoints que montam o painel (5xx/timeout). */
+  /**
+   * F-3 (MD-075). Mostrado quando NAO existe linha de cache para o mes escolhido.
+   * Sem isto o painel desenha zeros e o gestor le-os como desempenho da equipe -
+   * uma afirmacao falsa, nao uma falha de interface. Ver MD-074.
+   */
+  readonly panelCacheMissingMessage =
+    'Ainda não há dados consolidados para este mês. Os números abaixo não representam ' +
+    'o desempenho da equipe — escolha outro mês ou tente novamente mais tarde.';
+
   hasPanelLoadError = false;
   readonly panelLoadErrorMessage =
     'Não foi possível carregar os dados agora. Tente novamente mais tarde.';
@@ -528,6 +538,26 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
   // Cleanup
   private destroy$ = new Subject<void>();
 
+  /**
+   * Dispara a cada recarga do painel (troca de mes, de equipa ou de colaborador).
+   *
+   * NAO existe para impedir escrita velha - disso ja trata a guarda de geracao
+   * (`beginPanelDataLoad` / `isStalePanelLoad`, usada em 30 pontos). Existe para
+   * LIBERTAR A FILA: sem isto as ~200 requisicoes do mes anterior continuam no
+   * ar e as do mes novo ficam atras delas, e o painel mostra o mes antigo
+   * durante minutos porque o novo ainda nao chegou. Ver MD-075.
+   */
+  private reload$ = new Subject<void>();
+
+  /**
+   * Cancelamento das cargas escopadas ao mes: recarga do painel OU saida.
+   *
+   * Deliberadamente NAO se aplica a `loadAvailableTeams` (lista de equipas, do
+   * arranque) nem a `exportClientesAtendidosCsv` (accao do utilizador). Nenhuma
+   * das duas e escopada ao mes, e cancela-las numa troca de mes seria um defeito.
+   */
+  private readonly cancelar$ = merge(this.destroy$, this.reload$);
+
   constructor(
     private teamAggregateService: TeamAggregateService,
     private graphDataProcessor: GraphDataProcessorService,
@@ -586,6 +616,7 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
     this.stopLoadingMessageRotation();
     this.destroy$.next();
     this.destroy$.complete();
+    this.reload$.complete();
   }
 
   private startLoadingMessageRotation(): void {
@@ -1226,7 +1257,7 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
     const report = await firstValueFrom(
       this.actionLogService
         .fetchOrganizationHierarchyReport({ month: this.selectedMonth })
-        .pipe(takeUntil(this.destroy$))
+        .pipe(takeUntil(this.cancelar$))
     ).catch(() => null);
 
     if (!report?.root) {
@@ -1268,7 +1299,7 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
       const fromCache = await firstValueFrom(
         this.actionLogService
           .fetchManagementDashboardCachedListForAdminPreview(this.selectedMonth, this.managementRole)
-          .pipe(takeUntil(this.destroy$))
+          .pipe(takeUntil(this.cancelar$))
       );
 
       let collaborators = (fromCache ?? [])
@@ -1668,7 +1699,7 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
       const actionCountByMember = await firstValueFrom(
         this.teamAggregateService
           .getTeamMemberActionLogCounts(teamId, dateRange.start, dateRange.end)
-          .pipe(takeUntil(this.destroy$))
+          .pipe(takeUntil(this.cancelar$))
       ).catch((error) => {
         console.error('Error loading per-member action_log counts:', error);
         return new Map<string, number>();
@@ -1762,7 +1793,7 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
             endpoint,
             aggregatePayload,
             { headers: { 'Range': rangeHeader } }
-          ).pipe(takeUntil(this.destroy$))
+          ).pipe(takeUntil(this.cancelar$))
         );
         
         if (batchResults && Array.isArray(batchResults)) {
@@ -1789,6 +1820,10 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
 
   /** Inicia uma nova geração de carga do painel (invalida cargas anteriores). */
   private beginPanelDataLoad(): number {
+    // Corta o que a geracao anterior deixou no ar ANTES de comecar a nova. E o
+    // ponto unico por onde toda recarga ja passava, portanto nao ha caminho
+    // esquecido. Ver MD-075 (F-1).
+    this.reload$.next();
     return ++this.panelDataLoadGen;
   }
 
@@ -2136,7 +2171,7 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
         const bundle = await firstValueFrom(
           this.actionLogService
             .getGamificationDashboardCachedBundle(collaboratorId, this.selectedMonth)
-            .pipe(takeUntil(this.destroy$))
+            .pipe(takeUntil(this.cancelar$))
         ).catch((error: unknown) => {
           console.error('Error loading collaborator dashboard/cached:', error);
           this.hasSidebarError = true;
@@ -2174,7 +2209,7 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
               gamificationDashboardReportsOnly: true,
               teamId: this.getGame4uTeamScopeId()
             })
-            .pipe(takeUntil(this.destroy$), last())
+            .pipe(takeUntil(this.cancelar$), last())
         ).catch((error: unknown) => {
           console.error('Error loading collaborator progress metrics:', error);
           this.hasSidebarError = true;
@@ -2303,9 +2338,16 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
       const bundle = await firstValueFrom(
         this.actionLogService
           .getManagementDashboardCachedBundle(month, this.getManagementDashboardApiUserId())
-          .pipe(takeUntil(this.destroy$))
+          .pipe(takeUntil(this.cancelar$))
       );
       if (!bundle) {
+        // F-3 (MD-075). Estes zeros NAO significam "a equipe nao produziu nada":
+        // significam "nao ha linha de cache para este mes". Ficam aqui porque os
+        // componentes filhos esperam numeros, mas `teamSupervisionCacheMissing`
+        // passa a ser MOSTRADO no template - antes servia so para esconder o
+        // "atualizado em", e o gestor lia os zeros como desempenho.
+        // Foi exactamente isto em Agosto/2026: a mart perdeu o mes (MD-074) e o
+        // painel afirmou, com confianca, que a diretoria entregou zero.
         this.teamSupervisionCacheMissing = true;
         this.hasPanelLoadError = false;
         this.teamActivityMetrics = { pendentes: 0, emExecucao: 0, finalizadas: 0, pontos: 0 };
@@ -2356,9 +2398,16 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
       const bundle = await firstValueFrom(
         this.actionLogService
           .getSupervisionTeamDashboardCachedBundle(scope, month)
-          .pipe(takeUntil(this.destroy$))
+          .pipe(takeUntil(this.cancelar$))
       );
       if (!bundle) {
+        // F-3 (MD-075). Estes zeros NAO significam "a equipe nao produziu nada":
+        // significam "nao ha linha de cache para este mes". Ficam aqui porque os
+        // componentes filhos esperam numeros, mas `teamSupervisionCacheMissing`
+        // passa a ser MOSTRADO no template - antes servia so para esconder o
+        // "atualizado em", e o gestor lia os zeros como desempenho.
+        // Foi exactamente isto em Agosto/2026: a mart perdeu o mes (MD-074) e o
+        // painel afirmou, com confianca, que a diretoria entregou zero.
         this.teamSupervisionCacheMissing = true;
         this.hasPanelLoadError = false;
         this.teamActivityMetrics = { pendentes: 0, emExecucao: 0, finalizadas: 0, pontos: 0 };
@@ -2465,7 +2514,7 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
           firstValueFrom(
             this.teamAggregateService
               .getTeamSeasonPoints(this.getGame4uTeamHttpParam(), dateRange.start, dateRange.end)
-              .pipe(takeUntil(this.destroy$))
+              .pipe(takeUntil(this.cancelar$))
           ).catch((error) => {
             console.error('Error loading season points:', error);
             this.hasSidebarError = true;
@@ -2475,7 +2524,7 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
           firstValueFrom(
             this.teamAggregateService
               .getTeamProgressMetrics(this.getGame4uTeamHttpParam(), dateRange.start, dateRange.end)
-              .pipe(takeUntil(this.destroy$))
+              .pipe(takeUntil(this.cancelar$))
           ).catch((error) => {
             console.error('Error loading progress metrics:', error);
             this.hasSidebarError = true;
@@ -2595,7 +2644,7 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
           const members = await firstValueFrom(
             this.teamAggregateService
               .getTeamMembers(this.selectedTeam)
-              .pipe(takeUntil(this.destroy$))
+              .pipe(takeUntil(this.cancelar$))
           ).catch((error) => {
             console.error('Error loading collaborators:', error);
             return [];
@@ -2675,7 +2724,7 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
               gamificationDashboardReportsOnly: true,
               teamId: this.getGame4uTeamScopeId()
             })
-            .pipe(takeUntil(this.destroy$), last())
+            .pipe(takeUntil(this.cancelar$), last())
         ).catch((error) => {
           console.error('Error loading collaborator progress metrics for goals:', error);
           return {
@@ -2790,7 +2839,7 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
                 start: startDate.toISOString(),
                 end: endDate.toISOString()
               })
-              .pipe(takeUntil(this.destroy$))
+              .pipe(takeUntil(this.cancelar$))
           )
         : [];
 
@@ -3027,7 +3076,7 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
           end: endDate.toISOString(),
           ...(managementUserId ? { user_id: managementUserId } : {})
         })
-        .pipe(takeUntil(this.destroy$))
+        .pipe(takeUntil(this.cancelar$))
     );
   }
 
@@ -3249,7 +3298,7 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
     const managers = await firstValueFrom(
       this.actionLogService
         .fetchManagementDashboardCachedList(this.selectedMonth, 'GERENTE')
-        .pipe(takeUntil(this.destroy$))
+        .pipe(takeUntil(this.cancelar$))
     );
 
     const gerenteManagers = (managers ?? []).filter(m => m.user_role === 'GERENTE');
@@ -3329,7 +3378,7 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
           this.selectedMonth,
           this.getManagementDashboardApiUserId()
         )
-        .pipe(takeUntil(this.destroy$))
+        .pipe(takeUntil(this.cancelar$))
     );
     const supervisionTeams = overview?.teams ?? [];
 
@@ -3729,7 +3778,7 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
               bwaTeamId: this.getGame4uTeamScopeId()
             }
           })
-          .pipe(takeUntil(this.destroy$), last())
+          .pipe(takeUntil(this.cancelar$), last())
       ).catch((error) => {
         console.error('Error loading team progress metrics (Game4U):', error);
         return {
@@ -3843,7 +3892,7 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
         this.cdr.markForCheck();
         this.actionLogService
           .getPlayerDashboardMonthClientsServedCount(playerId, this.selectedMonth)
-          .pipe(takeUntil(this.destroy$))
+          .pipe(takeUntil(this.cancelar$))
           .subscribe({
             next: count => {
               this.clientesAtendidosThisMonthCount = Number.isFinite(count) ? Math.floor(count) : null;
@@ -3878,7 +3927,7 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
               this.participacaoPageLimit,
               this.getManagementDashboardApiUserId()
             )
-            .pipe(takeUntil(this.destroy$))
+            .pipe(takeUntil(this.cancelar$))
         );
         this.useParticipacaoReportsPagination = true;
         this.participacaoPagedPlayerId = null;
@@ -3919,7 +3968,7 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
         const page = await firstValueFrom(
           this.teamAggregateService
             .getTeamFinishedDeliveriesParticipacaoPage(teamTid, month, 0, this.participacaoPageLimit)
-            .pipe(takeUntil(this.destroy$))
+            .pipe(takeUntil(this.cancelar$))
         );
         this.useParticipacaoReportsPagination = true;
         const apiReceived = page.apiRowCount ?? page.items?.length ?? 0;
@@ -3970,7 +4019,7 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
         const page = await firstValueFrom(
           this.actionLogService
             .getPlayerFinishedDeliveriesParticipacaoPage(playerId, month, 0, this.participacaoPageLimit)
-            .pipe(takeUntil(this.destroy$))
+            .pipe(takeUntil(this.cancelar$))
         );
         this.useParticipacaoReportsPagination = true;
         this.participacaoPagedPlayerId = playerId;
@@ -4094,7 +4143,7 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
       );
 
       const result = (await firstValueFrom(
-        mapped$.pipe(take(1), takeUntil(this.destroy$))
+        mapped$.pipe(take(1), takeUntil(this.cancelar$))
       )) as {
         baseClientes: CompanyDisplay[];
         skipKpi: boolean;
@@ -4197,7 +4246,7 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
       return;
     }
 
-    page$.pipe(takeUntil(this.destroy$)).subscribe({
+    page$.pipe(takeUntil(this.cancelar$)).subscribe({
       next: async (
         page: TeamFinishedDeliveriesPageResult | PlayerParticipacaoDeliveriesPageResult
       ) => {
@@ -4713,14 +4762,26 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
         return;
       }
 
+      // ── F-2 (MD-075) ────────────────────────────────────────────────────
+      // No painel de gestao, UMA chamada ao hierarchy-report substitui o leque
+      // de ~200 que vem a seguir. Medido a 2026-09-04, no do diretor em Agosto:
+      // 1 chamada / 145 KB / 0,20 s, contra ~200 chamadas / 221 MB / ~260 s.
+      // Devolve false quando nao consegue os dados exactos, e ai cai para o
+      // caminho antigo sem alterar nada do que o utilizador ve.
+      if (scope.isManagement && (await this.loadExecutiveInsightsFromHierarchy(month, loadGen))) {
+        this.isLoadingExecutiveInsights = false;
+        this.cdr.markForCheck();
+        return;
+      }
+
       const [rows, allUserActions] = await Promise.all([
         firstValueFrom(
           this.actionLogService
             .getExecutiveDeliveriesAllPages(scope, month, 100)
-            .pipe(takeUntil(this.destroy$))
+            .pipe(takeUntil(this.cancelar$))
         ),
         firstValueFrom(
-          this.loadExecutiveScopeUserActions(month).pipe(takeUntil(this.destroy$))
+          this.loadExecutiveScopeUserActions(month).pipe(takeUntil(this.cancelar$))
         )
       ]);
 
@@ -4903,6 +4964,184 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
     ).pipe(map(batches => batches.flat()));
   }
 
+  /**
+   * F-2 (MD-075): insights executivos do painel de gestao numa unica chamada.
+   *
+   * `GET /game/reports/organization/hierarchy-report` devolve o no do gestor com
+   * ~120 colunas ja calculadas, servido por `bwa.mart_org_hierarchy_report_cache`
+   * e refrescado de 10 em 10 min pelo pg_cron. Substitui
+   * `loadExecutiveScopeUserActions` (DUAS chamadas `user-actions` por equipe) e
+   * `loadExecutiveTeamRankings` (outro leque igual, pelos mesmos dados).
+   *
+   * `depth: 2` chega: o ranking e sempre UM nivel abaixo do gestor
+   * (C_LEVEL -> diretorias, DIRETOR -> gerencias, GERENTE -> equipes), portanto
+   * bastam os filhos directos. Evita puxar a organizacao inteira.
+   *
+   * Os rankings saem dos NOS FILHOS, nao de `highlights`. Medido ao vivo: o JSON
+   * de highlights da mart traz so `label`, `node_id`, `team_id`, `team_label`,
+   * `mtd_on_time_pct` e `mtd_points_delivered` - nao tem as contagens. Os nos
+   * tem tudo.
+   *
+   * A particao top/atencao usa `partitionExecutivePlayerRankings`, a MESMA do
+   * caminho antigo e com as mesmas opcoes: so muda a origem dos dados, nao o
+   * criterio de quem entra em cada lista.
+   *
+   * @returns `true` se assumiu a carga; `false` para o chamador usar o caminho antigo.
+   */
+  private async loadExecutiveInsightsFromHierarchy(month: Date, loadGen: number): Promise<boolean> {
+    const nodeType = managementRoleToOrgHierarchyNodeType(this.managementRole);
+    if (nodeType == null) {
+      return false;
+    }
+
+    // Gestor real: a API resolve a raiz pelo JWT e nao se manda no.
+    // ADMIN a pre-visualizar: e preciso enderecar o no do gestor escolhido.
+    const previewUserId = this.getManagementDashboardApiUserId();
+    let nodeId: string | undefined;
+    if (previewUserId) {
+      // Mesma chave de cache do seletor de gestores, portanto normalmente ja
+      // esta quente e nao custa uma ida extra.
+      const arvore = await firstValueFrom(
+        this.actionLogService
+          .fetchOrganizationHierarchyReport({ month })
+          .pipe(takeUntil(this.cancelar$))
+      ).catch(() => null);
+      if (loadGen !== this.executiveInsightsLoadGen) {
+        return true;
+      }
+      nodeId = collectOrgHierarchyNodesByType(arvore?.root ?? null, nodeType).find(
+        node => extractOrgHierarchyNodeUserId(node.node_id) === previewUserId
+      )?.node_id;
+      if (!nodeId) {
+        return false;
+      }
+    }
+
+    const report = await firstValueFrom(
+      this.actionLogService
+        .fetchOrganizationHierarchyReport(
+          nodeId ? { month, depth: 2, nodeType, nodeId } : { month, depth: 2 }
+        )
+        .pipe(takeUntil(this.cancelar$))
+    ).catch(() => null);
+
+    if (loadGen !== this.executiveInsightsLoadGen) {
+      return true;
+    }
+
+    const root = report?.root;
+    const filhos = root?.children ?? [];
+    if (!root || filhos.length === 0) {
+      return false;
+    }
+
+    // `on_time_tasks` e a manchete por nome ("N entregas no prazo"). Se a API
+    // ainda nao a expuser, NAO se aproxima a partir da percentagem: cai-se para
+    // o caminho antigo, que a conta a partir das linhas cruas. Ver MD-075.
+    if (filhos.some(node => node.mtd?.on_time_tasks == null)) {
+      return false;
+    }
+
+    const mtd = root.mtd ?? {};
+    const inteiro = (valor: unknown): number => Math.floor(Number(valor) || 0);
+
+    // Apenas os cinco campos que `c4u-dashboard-insights` le. Os restantes de
+    // DashboardInsightsSnapshot nao sao renderizados neste ecra e ficam a zero
+    // em vez de serem inventados a partir de dados que o no nao tem.
+    this.executiveDashboardInsights = {
+      source: 'server',
+      computedAt: new Date().toISOString(),
+      dueSoonDays: 0,
+      pendingTasks: inteiro(mtd.pending_open),
+      finishedTasks: inteiro(mtd.finished),
+      overduePendingTasks: inteiro(mtd.overdue_pending),
+      overduePendingFineRiskTasks: inteiro(mtd.multa_risk),
+      dueSoonTasks: inteiro(mtd.near_due),
+      fineRiskTasks: inteiro(mtd.multa_risk),
+      fineRiskDeliveries: inteiro(mtd.multa_incurred),
+      onTimeFinishedTasks: 0,
+      lateFinishedTasks: 0,
+      justifiedTasks: 0,
+      topActivity: null,
+      topActivities: [],
+      mostProductiveWeekday: null,
+      weekdayDistribution: []
+    };
+
+    const totalEntregas = (root.top_deliveries ?? []).reduce(
+      (soma, item) => soma + inteiro(item.finished_count),
+      0
+    );
+    this.executiveInsightsTopProcesses = (root.top_deliveries ?? []).map(item => ({
+      deliveryTitle: item.delivery_title,
+      tasksTotal: inteiro(item.finished_count),
+      deliveriesCount: inteiro(item.finished_count),
+      // O no da o total por processo, nao a pontualidade dele. `null` esconde o
+      // badge em vez de mostrar um numero que nao veio.
+      onTimePct: null,
+      pct: totalEntregas > 0 ? (inteiro(item.finished_count) * 100) / totalEntregas : 0
+    }));
+
+    const candidatos = filhos.map(node => this.mapHierarchyNodeToExecutiveRank(node));
+    const { top, attention } = partitionExecutivePlayerRankings(candidatos, {
+      minDeliveriesForAttention: EXECUTIVE_ATTENTION_MIN_DELIVERIES,
+      maxOnTimePctForAttention: getOnTimeDeliveryGoalForMonth(this.selectedMonth)
+    });
+
+    if (this.executiveInsightsRankingSegment === 'diretor') {
+      this.executiveInsightsDirectorates = candidatos.map(rank => ({
+        ...rank,
+        status: top.some(t => t.email === rank.email)
+          ? ('destaque' as ExecutiveHierarchyHighlightStatus)
+          : attention.some(a => a.email === rank.email)
+            ? ('atencao' as ExecutiveHierarchyHighlightStatus)
+            : ('neutral' as ExecutiveHierarchyHighlightStatus)
+      }));
+      this.executiveInsightsTopPlayers = [];
+      this.executiveInsightsAttentionPlayers = [];
+    } else {
+      this.executiveInsightsDirectorates = [];
+      this.executiveInsightsTopPlayers = top;
+      this.executiveInsightsAttentionPlayers = attention;
+    }
+
+    this.executiveInsightsTotalTasks = inteiro(mtd.finished);
+    this.executiveInsightsTotalDeliveries = inteiro(mtd.finished);
+    this.executiveInsightsOnTimePctOverall = mtd.on_time_pct ?? null;
+    this.executiveInsightsActivePlayers = inteiro(root.players_count);
+
+    this.refreshExecutiveInsightsHasData();
+    return true;
+  }
+
+  /**
+   * Um no da hierarquia vira uma linha de ranking. Todos os campos que o
+   * template desenha saem directos da janela `mtd` - nenhum e derivado.
+   *
+   * `justifiedDeliveryPct` fica `null` de proposito: o no nao traz justificadas,
+   * e `null` esconde o badge. Um 0 diria "nenhuma justificada", que e diferente
+   * de "nao sei".
+   */
+  private mapHierarchyNodeToExecutiveRank(node: OrgHierarchyNode): ExecutiveInsightsPlayerRank {
+    const mtd = node.mtd ?? {};
+    const inteiro = (valor: unknown): number => Math.floor(Number(valor) || 0);
+    const nome = (node.label ?? '').trim() || node.node_id;
+    return {
+      email: node.node_id,
+      name: nome,
+      initials: this.computeExecutiveInitials(nome),
+      tasksTotal: inteiro(mtd.finished),
+      clientsCount: inteiro(mtd.clients_served),
+      deliveriesCount: inteiro(mtd.finished),
+      judgedDeliveriesCount: mtd.on_time_eligible != null ? inteiro(mtd.on_time_eligible) : undefined,
+      justifiedDeliveriesCount: undefined,
+      onTimeDeliveries: inteiro(mtd.on_time_tasks),
+      onTimeDeliveryPct: mtd.on_time_pct ?? null,
+      justifiedDeliveryPct: null,
+      onTimePct: mtd.on_time_pct ?? null
+    };
+  }
+
   private refreshExecutiveInsightsHasData(): void {
     const hasAction =
       this.executiveDashboardInsights != null &&
@@ -4954,7 +5193,7 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
     const directors = await firstValueFrom(
       this.actionLogService
         .fetchManagementDashboardCachedList(month, 'DIRETOR')
-        .pipe(takeUntil(this.destroy$))
+        .pipe(takeUntil(this.cancelar$))
     ).catch(() => []);
 
     const seeds = collectExecutiveDirectorateSeeds(actions, directors, email =>
@@ -4997,7 +5236,7 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
         firstValueFrom(
           this.actionLogService
             .getTeamUserActionsForInsightsMonth(tid, month)
-            .pipe(takeUntil(this.destroy$))
+            .pipe(takeUntil(this.cancelar$))
         ).catch(() => [] as Game4uUserActionModel[])
       )
     );
@@ -5964,7 +6203,7 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
         const breakdown = await firstValueFrom(
           this.actionLogService
             .getMonthlyPointsBreakdown(collaboratorId, this.selectedMonth)
-            .pipe(takeUntil(this.destroy$))
+            .pipe(takeUntil(this.cancelar$))
         ).catch((error) => {
           console.error(`Error loading monthly points breakdown for collaborator ${collaboratorId}:`, error);
           return { bloqueados: 0, desbloqueados: 0 };
@@ -5993,7 +6232,7 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
           const breakdown = await firstValueFrom(
             this.teamAggregateService
               .getTeamMonthlyPointsBreakdown(this.getGame4uTeamHttpParam(), members, dr.start, dr.end)
-              .pipe(takeUntil(this.destroy$))
+              .pipe(takeUntil(this.cancelar$))
           ).catch((error) => {
             console.error('Error loading team monthly points breakdown:', error);
             return { bloqueados: 0, desbloqueados: 0 };
@@ -6341,7 +6580,7 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
         const kpis = await firstValueFrom(
           this.kpiService
             .getPlayerKPIs(collaboratorId, this.selectedMonth, this.actionLogService, scope)
-            .pipe(takeUntil(this.destroy$))
+            .pipe(takeUntil(this.cancelar$))
         );
         this.teamKPIs = this.kpiService.applyOnTimeSegmentGoals(
           kpis || [],
@@ -6356,7 +6595,7 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
           const kpis = await firstValueFrom(
             this.kpiService
               .getPlayerKPIs(panelId, this.selectedMonth, this.actionLogService, scope)
-              .pipe(takeUntil(this.destroy$))
+              .pipe(takeUntil(this.cancelar$))
           );
           this.teamKPIs = this.kpiService.applyOnTimeSegmentGoals(
             kpis || [],
