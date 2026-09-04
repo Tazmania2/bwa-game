@@ -816,6 +816,15 @@ export interface OrgMetricsWindow {
   overdue_pending_unjustified?: number;
   clients_served?: number;
   on_time_pct?: number;
+  /**
+   * CONTAGEM de entregas no prazo — não a percentagem. É a manchete por
+   * colaborador no painel de gestão ("N entregas no prazo") e NÃO é derivável de
+   * `on_time_pct` sem arredondar. Só a janela `mtd` a traz; `prev_*` vêm
+   * `undefined`, e undefined significa "não sei", não "nenhuma".
+   */
+  on_time_tasks?: number;
+  /** Denominador de `on_time_pct` — entregas elegíveis para a métrica de prazo. */
+  on_time_eligible?: number;
   /** % no prazo MTD por tag Acessórias (somente `mtd`). */
   on_time_pct_acessorias_g4?: number;
   on_time_pct_acessorias_risco_de_churn?: number;

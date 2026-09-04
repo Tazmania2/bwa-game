@@ -89,7 +89,8 @@ import { collectOrgHierarchyNodesByType } from '@services/org-hierarchy-report.m
 import type {
   PlayerDashboardCachedParams,
   Game4uReportsFinishedDeliveryRow,
-  Game4uUserActionModel
+  Game4uUserActionModel,
+  OrgHierarchyNode
 } from '@model/game4u-api.model';
 import { UserProfileService } from '@services/user-profile.service';
 import { UserProfile } from '@utils/user-profile';
@@ -4761,6 +4762,18 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
         return;
       }
 
+      // ── F-2 (MD-075) ────────────────────────────────────────────────────
+      // No painel de gestao, UMA chamada ao hierarchy-report substitui o leque
+      // de ~200 que vem a seguir. Medido a 2026-09-04, no do diretor em Agosto:
+      // 1 chamada / 145 KB / 0,20 s, contra ~200 chamadas / 221 MB / ~260 s.
+      // Devolve false quando nao consegue os dados exactos, e ai cai para o
+      // caminho antigo sem alterar nada do que o utilizador ve.
+      if (scope.isManagement && (await this.loadExecutiveInsightsFromHierarchy(month, loadGen))) {
+        this.isLoadingExecutiveInsights = false;
+        this.cdr.markForCheck();
+        return;
+      }
+
       const [rows, allUserActions] = await Promise.all([
         firstValueFrom(
           this.actionLogService
@@ -4949,6 +4962,184 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
         this.actionLogService.getTeamUserActionsForInsightsMonth(teamId, month)
       )
     ).pipe(map(batches => batches.flat()));
+  }
+
+  /**
+   * F-2 (MD-075): insights executivos do painel de gestao numa unica chamada.
+   *
+   * `GET /game/reports/organization/hierarchy-report` devolve o no do gestor com
+   * ~120 colunas ja calculadas, servido por `bwa.mart_org_hierarchy_report_cache`
+   * e refrescado de 10 em 10 min pelo pg_cron. Substitui
+   * `loadExecutiveScopeUserActions` (DUAS chamadas `user-actions` por equipe) e
+   * `loadExecutiveTeamRankings` (outro leque igual, pelos mesmos dados).
+   *
+   * `depth: 2` chega: o ranking e sempre UM nivel abaixo do gestor
+   * (C_LEVEL -> diretorias, DIRETOR -> gerencias, GERENTE -> equipes), portanto
+   * bastam os filhos directos. Evita puxar a organizacao inteira.
+   *
+   * Os rankings saem dos NOS FILHOS, nao de `highlights`. Medido ao vivo: o JSON
+   * de highlights da mart traz so `label`, `node_id`, `team_id`, `team_label`,
+   * `mtd_on_time_pct` e `mtd_points_delivered` - nao tem as contagens. Os nos
+   * tem tudo.
+   *
+   * A particao top/atencao usa `partitionExecutivePlayerRankings`, a MESMA do
+   * caminho antigo e com as mesmas opcoes: so muda a origem dos dados, nao o
+   * criterio de quem entra em cada lista.
+   *
+   * @returns `true` se assumiu a carga; `false` para o chamador usar o caminho antigo.
+   */
+  private async loadExecutiveInsightsFromHierarchy(month: Date, loadGen: number): Promise<boolean> {
+    const nodeType = managementRoleToOrgHierarchyNodeType(this.managementRole);
+    if (nodeType == null) {
+      return false;
+    }
+
+    // Gestor real: a API resolve a raiz pelo JWT e nao se manda no.
+    // ADMIN a pre-visualizar: e preciso enderecar o no do gestor escolhido.
+    const previewUserId = this.getManagementDashboardApiUserId();
+    let nodeId: string | undefined;
+    if (previewUserId) {
+      // Mesma chave de cache do seletor de gestores, portanto normalmente ja
+      // esta quente e nao custa uma ida extra.
+      const arvore = await firstValueFrom(
+        this.actionLogService
+          .fetchOrganizationHierarchyReport({ month })
+          .pipe(takeUntil(this.cancelar$))
+      ).catch(() => null);
+      if (loadGen !== this.executiveInsightsLoadGen) {
+        return true;
+      }
+      nodeId = collectOrgHierarchyNodesByType(arvore?.root ?? null, nodeType).find(
+        node => extractOrgHierarchyNodeUserId(node.node_id) === previewUserId
+      )?.node_id;
+      if (!nodeId) {
+        return false;
+      }
+    }
+
+    const report = await firstValueFrom(
+      this.actionLogService
+        .fetchOrganizationHierarchyReport(
+          nodeId ? { month, depth: 2, nodeType, nodeId } : { month, depth: 2 }
+        )
+        .pipe(takeUntil(this.cancelar$))
+    ).catch(() => null);
+
+    if (loadGen !== this.executiveInsightsLoadGen) {
+      return true;
+    }
+
+    const root = report?.root;
+    const filhos = root?.children ?? [];
+    if (!root || filhos.length === 0) {
+      return false;
+    }
+
+    // `on_time_tasks` e a manchete por nome ("N entregas no prazo"). Se a API
+    // ainda nao a expuser, NAO se aproxima a partir da percentagem: cai-se para
+    // o caminho antigo, que a conta a partir das linhas cruas. Ver MD-075.
+    if (filhos.some(node => node.mtd?.on_time_tasks == null)) {
+      return false;
+    }
+
+    const mtd = root.mtd ?? {};
+    const inteiro = (valor: unknown): number => Math.floor(Number(valor) || 0);
+
+    // Apenas os cinco campos que `c4u-dashboard-insights` le. Os restantes de
+    // DashboardInsightsSnapshot nao sao renderizados neste ecra e ficam a zero
+    // em vez de serem inventados a partir de dados que o no nao tem.
+    this.executiveDashboardInsights = {
+      source: 'server',
+      computedAt: new Date().toISOString(),
+      dueSoonDays: 0,
+      pendingTasks: inteiro(mtd.pending_open),
+      finishedTasks: inteiro(mtd.finished),
+      overduePendingTasks: inteiro(mtd.overdue_pending),
+      overduePendingFineRiskTasks: inteiro(mtd.multa_risk),
+      dueSoonTasks: inteiro(mtd.near_due),
+      fineRiskTasks: inteiro(mtd.multa_risk),
+      fineRiskDeliveries: inteiro(mtd.multa_incurred),
+      onTimeFinishedTasks: 0,
+      lateFinishedTasks: 0,
+      justifiedTasks: 0,
+      topActivity: null,
+      topActivities: [],
+      mostProductiveWeekday: null,
+      weekdayDistribution: []
+    };
+
+    const totalEntregas = (root.top_deliveries ?? []).reduce(
+      (soma, item) => soma + inteiro(item.finished_count),
+      0
+    );
+    this.executiveInsightsTopProcesses = (root.top_deliveries ?? []).map(item => ({
+      deliveryTitle: item.delivery_title,
+      tasksTotal: inteiro(item.finished_count),
+      deliveriesCount: inteiro(item.finished_count),
+      // O no da o total por processo, nao a pontualidade dele. `null` esconde o
+      // badge em vez de mostrar um numero que nao veio.
+      onTimePct: null,
+      pct: totalEntregas > 0 ? (inteiro(item.finished_count) * 100) / totalEntregas : 0
+    }));
+
+    const candidatos = filhos.map(node => this.mapHierarchyNodeToExecutiveRank(node));
+    const { top, attention } = partitionExecutivePlayerRankings(candidatos, {
+      minDeliveriesForAttention: EXECUTIVE_ATTENTION_MIN_DELIVERIES,
+      maxOnTimePctForAttention: getOnTimeDeliveryGoalForMonth(this.selectedMonth)
+    });
+
+    if (this.executiveInsightsRankingSegment === 'diretor') {
+      this.executiveInsightsDirectorates = candidatos.map(rank => ({
+        ...rank,
+        status: top.some(t => t.email === rank.email)
+          ? ('destaque' as ExecutiveHierarchyHighlightStatus)
+          : attention.some(a => a.email === rank.email)
+            ? ('atencao' as ExecutiveHierarchyHighlightStatus)
+            : ('neutral' as ExecutiveHierarchyHighlightStatus)
+      }));
+      this.executiveInsightsTopPlayers = [];
+      this.executiveInsightsAttentionPlayers = [];
+    } else {
+      this.executiveInsightsDirectorates = [];
+      this.executiveInsightsTopPlayers = top;
+      this.executiveInsightsAttentionPlayers = attention;
+    }
+
+    this.executiveInsightsTotalTasks = inteiro(mtd.finished);
+    this.executiveInsightsTotalDeliveries = inteiro(mtd.finished);
+    this.executiveInsightsOnTimePctOverall = mtd.on_time_pct ?? null;
+    this.executiveInsightsActivePlayers = inteiro(root.players_count);
+
+    this.refreshExecutiveInsightsHasData();
+    return true;
+  }
+
+  /**
+   * Um no da hierarquia vira uma linha de ranking. Todos os campos que o
+   * template desenha saem directos da janela `mtd` - nenhum e derivado.
+   *
+   * `justifiedDeliveryPct` fica `null` de proposito: o no nao traz justificadas,
+   * e `null` esconde o badge. Um 0 diria "nenhuma justificada", que e diferente
+   * de "nao sei".
+   */
+  private mapHierarchyNodeToExecutiveRank(node: OrgHierarchyNode): ExecutiveInsightsPlayerRank {
+    const mtd = node.mtd ?? {};
+    const inteiro = (valor: unknown): number => Math.floor(Number(valor) || 0);
+    const nome = (node.label ?? '').trim() || node.node_id;
+    return {
+      email: node.node_id,
+      name: nome,
+      initials: this.computeExecutiveInitials(nome),
+      tasksTotal: inteiro(mtd.finished),
+      clientsCount: inteiro(mtd.clients_served),
+      deliveriesCount: inteiro(mtd.finished),
+      judgedDeliveriesCount: mtd.on_time_eligible != null ? inteiro(mtd.on_time_eligible) : undefined,
+      justifiedDeliveriesCount: undefined,
+      onTimeDeliveries: inteiro(mtd.on_time_tasks),
+      onTimeDeliveryPct: mtd.on_time_pct ?? null,
+      justifiedDeliveryPct: null,
+      onTimePct: mtd.on_time_pct ?? null
+    };
   }
 
   private refreshExecutiveInsightsHasData(): void {
