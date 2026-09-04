@@ -1637,31 +1637,24 @@ export class ActionLogService {
    * Duas chamadas `GET /game/reports/user-actions` por equipe (ou email) e mês — abertas + finalizadas.
    * Cache partilhado entre insights operacionais e executivos.
    */
-  /**
-   * Aquece o cache de user-actions (abertas + finalizadas) usado pelos insights e pelo modal de progresso.
+  /*
+   * REMOVIDO: warmTeamUserActionsCacheForProgressModal().
+   *
+   * Disparava DUAS requisicoes `user-actions` por equipa com `.subscribe()`
+   * directo, aqui dentro do servico. Duas consequencias, ambas medidas em
+   * producao a 2026-09-04:
+   *
+   *   1. Volume. Para um DIRETOR, ~200 pedidos por carga de painel, para um
+   *      modal ainda por abrir. A API cedeu: 408 nos `user-actions`, 503 no
+   *      `overview` do mes.
+   *   2. Incancelavel POR CONSTRUCAO. Um `.subscribe()` sem `takeUntil` nao
+   *      tem ponto de chamada onde a F-1 (MD-075) pudesse ligar o `cancelar$`.
+   *      A F-1 ligou 33 pontos e este caminho nao tinha nenhum, por isso trocar
+   *      de mes deixava o mes anterior a ocupar a fila durante minutos.
+   *
+   * O modal carrega-se sozinho no `ngOnInit`; ver a nota em
+   * team-management-dashboard.component.ts.
    */
-  warmTeamUserActionsCacheForProgressModal(
-    teamIds: string[],
-    month: Date,
-    email?: string | null
-  ): void {
-    if (!isGame4uDataEnabled() || !this.game4u.isConfigured() || month == null) {
-      return;
-    }
-    const em = (email ?? '').trim();
-    if (em) {
-      this.getTeamOpenUserActionsForInsightsMonth(undefined, month, em).subscribe({ error: () => undefined });
-      this.getTeamFinishedUserActionsForInsightsMonth(undefined, month, em).subscribe({
-        error: () => undefined
-      });
-      return;
-    }
-    const ids = [...new Set(teamIds.map(id => this.normalizeGame4uTeamId(id) ?? '').filter(Boolean))];
-    for (const tid of ids) {
-      this.getTeamOpenUserActionsForInsightsMonth(tid, month).subscribe({ error: () => undefined });
-      this.getTeamFinishedUserActionsForInsightsMonth(tid, month).subscribe({ error: () => undefined });
-    }
-  }
 
   getTeamUserActionsForInsightsMonth(
     teamId: string | number | null | undefined,
@@ -1688,7 +1681,20 @@ export class ActionLogService {
       finished: this.getTeamFinishedUserActionsForInsightsMonth(teamId, month, email)
     }).pipe(
       map(({ open, finished }) => [...(open || []), ...(finished || [])]),
-      shareReplay(1)
+      // `refCount: true` e obrigatorio, nao estetica. `shareReplay(1)` e
+      // `refCount: false`: o ReplaySubject subscreve a fonte HTTP uma vez e
+      // NUNCA se dessubscreve, portanto o `takeUntil(cancelar$)` do chamador
+      // larga o consumidor mas o XHR continua vivo ate ao fim. Era por isso que
+      // a F-1 (MD-075) parecia nao cancelar nada nesta rota. Todas as outras
+      // ~40 chamadas a `shareReplay` neste ficheiro ja usavam `refCount: true`;
+      // estas duas eram as excepcoes.
+      //
+      // Sem `windowTime` de proposito: a expiracao ja e feita pelo Map
+      // (`getCachedData`, 3 min). O que muda aqui e SO o cancelamento. Um
+      // pedido que COMPLETA continua a ser replayado a quem chegue depois
+      // (`resetOnComplete: false` no `share` do RxJS 7); so o pedido que ainda
+      // esta em voo quando o ultimo subscritor sai e que morre - que e o ponto.
+      shareReplay({ bufferSize: 1, refCount: true })
     );
 
     this.setCachedData(this.game4uTeamUserActionsInsightsCache, cacheKey, request$);
@@ -1736,7 +1742,9 @@ export class ActionLogService {
             finished_at_end: this.game4u.toQueryRange(month).end
           });
 
-    const shared$ = request$.pipe(shareReplay(1));
+    // Ver a nota em getTeamUserActionsForInsightsMonth: sem `refCount: true` o
+    // XHR sobrevive ao cancelamento do chamador.
+    const shared$ = request$.pipe(shareReplay({ bufferSize: 1, refCount: true }));
     this.setCachedData(this.game4uTeamUserActionsInsightsCache, cacheKey, shared$);
     return shared$;
   }

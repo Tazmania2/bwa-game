@@ -1971,7 +1971,6 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
         // Mini dashboard executivo (top processos / top performers / saúde do mês)
         // — alimentado pelo cache `finished/deliveries/cached` por team_id.
         void this.loadExecutiveInsights();
-        this.warmProgressModalUserActionsCache();
 
         // Update formatted sidebar data after KPIs are loaded (includes metas calculation)
         this.updateFormattedSidebarData();
@@ -2048,7 +2047,6 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
 
       // Mini dashboard executivo do colaborador (top processos / saúde no mês).
       void this.loadExecutiveInsights();
-      this.warmProgressModalUserActionsCache();
 
       this.updateFormattedSidebarData();
       this.updateTeamNameDisplay();
@@ -4928,17 +4926,26 @@ export class TeamManagementDashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  /** Garante cache de user-actions (mesmo dos insights) para o modal de progresso. */
-  private warmProgressModalUserActionsCache(): void {
-    if (!this.playerService.usesGame4uWalletFromStats() || this.selectedMonth == null) {
-      return;
-    }
-    this.actionLogService.warmTeamUserActionsCacheForProgressModal(
-      this.progressModalTeamIds,
-      this.selectedMonth,
-      this.selectedCollaborator?.trim() || undefined
-    );
-  }
+  /*
+   * REMOVIDO: warmProgressModalUserActionsCache().
+   *
+   * Pre-aquecia o cache do modal de progresso disparando DUAS requisicoes
+   * `user-actions` POR EQUIPA, a cada carga do painel, para um modal que o
+   * utilizador quase nunca abre. Para um DIRETOR isso eram ~200 pedidos de uma
+   * so vez: medido em producao a 2026-09-04, respostas de 1,4 a 3,2 min, dois
+   * 408 e um 503 no `overview` do mes. O painel nao estava lento - estava a
+   * saturar a propria API.
+   *
+   * A F-2 (MD-075) tinha retirado exactamente este leque do caminho dos
+   * insights e deixou-o intacto aqui, na linha seguinte a
+   * `loadExecutiveInsights()`. O leque sobreviveu com outro nome.
+   *
+   * Nada se perde: `<modal-progress-list>` esta atras de
+   * `*ngIf="isProgressModalOpen"` e chama `loadData()` no proprio `ngOnInit`,
+   * portanto carrega-se sozinho ao abrir. O unico custo e a PRIMEIRA abertura
+   * do modal deixar de ser instantanea - paga por quem o abre, em vez de ser
+   * paga por todos em cada troca de mes.
+   */
 
   /** Duas requisições user-actions por equipe (abertas + finalizadas) ou por colaborador. */
   private loadExecutiveScopeUserActions(month: Date): Observable<Game4uUserActionModel[]> {
